@@ -1,15 +1,17 @@
 <template>
-  <img alt="Vue logo" src="./assets/logo.png">
-  <HelloWorld msg="Welcome to Your Vue.js App"/>
+  <IDNHeader />
+  <ResourceForm />
 </template>
 
 <script>
-import HelloWorld from './components/HelloWorld.vue'
+import IDNHeader from "@/components/IDNHeader";
+import ResourceForm from "@/components/ResourceForm";
 
 export default {
   name: 'App',
   components: {
-    HelloWorld
+    IDNHeader,
+    ResourceForm
   }
 }
 </script>
@@ -22,5 +24,13 @@ export default {
   text-align: center;
   color: #2c3e50;
   margin-top: 60px;
+}
+body {
+  margin: 0;
+  background-color: #eee;
+}
+a {
+    color: rgb(221, 37, 37);
+    text-decoration: none;
 }
 </style>
