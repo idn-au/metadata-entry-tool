@@ -4,6 +4,12 @@ This repository contains a single page application (web page) form tool that, wh
 
 Currently this tool is for testing out and understanding the IDN Catalogue Profile's requirements for metadata so it doesn't submit metadata to the IDN systems automatically - it just prints it out for review. Automated submission might be added later.
 
+When running, this application looks something like this:
+
+
+.A screenshot of this application
+image::demo.png[RDF Triple,600,400,align="center"]
+
 == License & Rights
 
 The contents of this repository is licensed under Creative Commons 4.0 International. See the LICENSE file in the repository for details.
