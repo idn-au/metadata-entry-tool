@@ -35,6 +35,7 @@ jobs:
         with:
           node-version: latest
           cache: npm
+          registry-url: "https://npm.pkg.github.com"
       - name: Install npm packages
         run: npm ci
         env:
