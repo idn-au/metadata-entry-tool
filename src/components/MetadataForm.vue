@@ -331,15 +331,7 @@ function validateStatus200(key, loadingKey, message) {
                                     :invalidMessage="validationMessages.iri"
                                     :clearButton="true"
                                     :disabled="data.assignIri"
-                                >
-                                    <template #prepend>
-                                        <span><i class="fa-regular fa-circle-nodes"></i></span>
-                                    </template>
-                                    <template #append>
-                                        <button class="btn">Button</button>
-                                        <span><i class="fa-regular fa-circle-nodes"></i></span>
-                                    </template>
-                                </FormInput>
+                                />
                                 <template #bottom>
                                     <FormInput
                                         label="Assign IRI"

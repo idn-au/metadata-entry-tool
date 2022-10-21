@@ -30,7 +30,8 @@ const props = defineProps({
 
 :deep(.input) {
     resize: none !important;
-    font-family: consolas !important;
-    font-size: 14px;
+    font-family: consolas, monospace !important;
+    font-size: 13px;
+    padding: 10px !important;
 }
 </style>
