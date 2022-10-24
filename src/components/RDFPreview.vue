@@ -8,6 +8,10 @@ const props = defineProps({
     }
 });
 
+function copyRDF() {
+    navigator.clipboard.writeText(props.data.trim())
+}
+
 // turtle syntax highlighting
 </script>
 
@@ -17,6 +21,9 @@ const props = defineProps({
         v-model="props.data"
         :disabled="true"
     />
+    <div>
+        <button class="btn outline" @click="copyRDF">Copy <i class="fa-regular fa-copy"></i></button>
+    </div>
 </template>
 
 <style lang="scss" scoped>

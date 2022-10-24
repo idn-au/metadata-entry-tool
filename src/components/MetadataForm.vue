@@ -1,5 +1,6 @@
 <script setup>
 import { ref, computed, watch } from "vue";
+import FormSection from "@/components/FormSection.vue";
 import FormField from "@/components/FormField.vue";
 import FormInput from "@/components/FormInput.vue";
 import FairScore from "@/components/FairScore.vue";
@@ -100,7 +101,7 @@ const accessRightsOptions = [
     },
 ];
 
-const showRDF = ref(true);
+const showRDF = ref(false);
 const loading = ref({
     accessUrl: false
 });
@@ -133,6 +134,7 @@ const data = ref({
     contactPhone: ""
 });
 
+const btnRef = ref(null);
 
 watch(
     () => data.value.accessUrl,
@@ -296,17 +298,30 @@ function validateStatus200(key, loadingKey, message) {
         loading.value[loadingKey] = false;
     }
 }
+
+function toggleRDF() {
+    showRDF.value = !showRDF.value;
+
+    // for Font Awesome SVG icons (can't dynamically change icons on class)
+    const svg = btnRef.value.lastElementChild;
+    svg.setAttribute("data-icon", showRDF.value ? "chevron-right" : "chevron-left");
+}
 </script>
 
 <template>
     <div id="metadata-container">
         <div id="metadata-header">
-            <h2 id="metadata-title">Metadata Submission Form</h2>
+            <div id="metadata-title">
+                <h2>Metadata Submission Form</h2>
+                <button id="toggle-rdf-btn" class="btn outline" ref="btnRef" @click="toggleRDF">
+                    <span><template v-if="showRDF">Hide</template><template v-else>Show</template> RDF</span>
+                    <i :class="`fa-regular fa-chevron-${showRDF ? 'right' : 'left'}`"></i>
+                </button>
+            </div>
             <div id="metadata-desc">
-                <p id="metadata-text">
+                <p>
                     Fill out the form below to submit to the IDN. FAIR and CARE scores will be updated live as the fields are filled out. The generated RDF can optionally be viewed on the right.
                 </p>
-                <FormInput label="Show RDF" type="checkbox" v-model="showRDF" />
             </div>
         </div>
         <div id="metadata-body" :class="`${showRDF ? 'show-rdf' : ''}`">
@@ -315,318 +330,296 @@ function validateStatus200(key, loadingKey, message) {
                     <h3>Form</h3>
                 </div>
                 <div class="col-body" id="form-items">
-                    <div class="form-section">
-                        <div class="section-fields">
-                            <FormField>
+                    <FormSection :defaultOpen="true">
+                        <FormField>
+                            <FormInput
+                                label="IRI"
+                                type="url"
+                                id="iri"
+                                tooltip="An IRI is like an identifier for this resource"
+                                description="Provide an IRI or choose to have an IRI automatically assigned"
+                                placeholder="e.g. http://example.com/1234"
+                                :required="true"
+                                @onBlur="clearValidate('iri'); validateIsEmpty('iri', 'IRI must not be empty'); validateMatchRegex('iri', /https?:\/\/.+/, 'Invalid IRI')"
+                                v-model="data.iri"
+                                :invalidMessage="validationMessages.iri"
+                                :clearButton="true"
+                                :disabled="data.assignIri"
+                            />
+                            <template #bottom>
                                 <FormInput
-                                    label="IRI"
-                                    type="url"
-                                    id="iri"
-                                    tooltip="An IRI is like an identifier for this resource"
-                                    description="Provide an IRI or choose to have an IRI automatically assigned"
-                                    placeholder="e.g. http://example.com/1234"
-                                    :required="true"
-                                    @onBlur="clearValidate('iri'); validateIsEmpty('iri', 'IRI must not be empty'); validateMatchRegex('iri', /https?:\/\/.+/, 'Invalid IRI')"
-                                    v-model="data.iri"
-                                    :invalidMessage="validationMessages.iri"
-                                    :clearButton="true"
-                                    :disabled="data.assignIri"
+                                    label="Assign IRI"
+                                    type="checkbox"
+                                    id="assignIRI"
+                                    v-model="data.assignIri"
+                                    @onBlur="clearValidate('iri')"
                                 />
-                                <template #bottom>
-                                    <FormInput
-                                        label="Assign IRI"
-                                        type="checkbox"
-                                        v-model="data.assignIri"
-                                        @onBlur="clearValidate('iri')"
-                                    />
-                                </template>
-                            </FormField>
-                            <FormField>
+                            </template>
+                        </FormField>
+                        <FormField>
+                            <FormInput
+                                label="Title"
+                                type="text"
+                                id="title"
+                                :required="true"
+                                @onBlur="clearValidate('title'); validateIsEmpty('title', 'Title must not be empty')"
+                                v-model="data.title"
+                                :invalidMessage="validationMessages.title"
+                                :clearButton="true"
+                            >
+                            </FormInput>
+                        </FormField>
+                        <FormField :span="2">
+                            <FormInput
+                                label="Description"
+                                type="textarea"
+                                id="description"
+                                v-model="data.description"
+                            >
+                            </FormInput>
+                        </FormField>
+                    </FormSection>
+                    <FormSection title="Dates">
+                        <FormField>
+                            <FormInput
+                                label="Created"
+                                type="date"
+                                id="created"
+                                :required="true"
+                                @onBlur="clearValidate('created'); validateIsEmpty('created', 'Created date must not be empty')"
+                                v-model="data.created"
+                                :invalidMessage="validationMessages.created"
+                                :clearButton="true"
+                            >
+                            </FormInput>
+                        </FormField>
+                        <FormField>
+                            <FormInput
+                                label="Modified"
+                                type="date"
+                                id="modified"
+                                :required="true"
+                                @onBlur="clearValidate('modified'); validateIsEmpty('modified', 'Modified date must not be empty')"
+                                v-model="data.modified"
+                                :invalidMessage="validationMessages.modified"
+                                :clearButton="true"
+                            >
+                            </FormInput>
+                        </FormField>
+                        <FormField>
+                            <FormInput
+                                label="Issued"
+                                type="date"
+                                id="issued"
+                                v-model="data.issued"
+                                :clearButton="true"
+                            >
+                            </FormInput>
+                        </FormField>
+                    </FormSection>
+                    <FormSection title="Rights">
+                        <FormField>
+                            <FormInput
+                                label="License"
+                                type="select"
+                                id="license"
+                                v-model="data.license"
+                                :clearButton="true"
+                                :options="licenseOptions"
+                            >
+                            </FormInput>
+                            <template #bottom>
                                 <FormInput
-                                    label="Title"
+                                    v-if="data.license === 'new'"
+                                    label="Enter a new license"
                                     type="text"
-                                    id="title"
-                                    :required="true"
-                                    @onBlur="clearValidate('title'); validateIsEmpty('title', 'Title must not be empty')"
-                                    v-model="data.title"
-                                    :invalidMessage="validationMessages.title"
+                                    v-model="data.customLicense"
                                     :clearButton="true"
+                                />
+                            </template>
+                        </FormField>
+                        <FormField>
+                            <FormInput
+                                label="Rights"
+                                type="text"
+                                id="rights"
+                                v-model="data.rights"
+                                :clearButton="true"
+                            >
+                            </FormInput>
+                        </FormField>
+                        <FormField>
+                            <FormInput
+                                label="Access Rights"
+                                type="select"
+                                id="accessRights"
+                                v-model="data.accessRights"
+                                :clearButton="true"
+                                :options="accessRightsOptions"
+                                placeholder="placeholder"
+                            >
+                            </FormInput>
+                        </FormField>
+                    </FormSection>
+                    <FormSection title="Spatio/Temporal">
+                        <FormField label="Spatial geometry">
+                            <FormInput
+                                label="Geometry"
+                                type="text"
+                                v-model="data.spatialGeom"
+                                :clearButton="true"
+                                placeholder="e.g. POLYGON ((1234 1234, 1235 1245))"
+                                :disabled="data.useSpatialIri"
+                                description="Must be WKT format"
+                                @onBlur="clearValidate('spatialGeom'); validateMatchRegex('spatialGeom', /^\w+\s?\(.+\)$/, 'Invalid WKT')"
+                                :invalidMessage="validationMessages.spatialGeom"
+                            >
+                            </FormInput>
+                            <template #bottom>
+                                <FormInput
+                                    label="Use spatial IRI"
+                                    type="checkbox"
+                                    v-model="data.useSpatialIri"
                                 >
                                 </FormInput>
-                            </FormField>
-                            <FormField :span="2">
                                 <FormInput
-                                    label="Description"
-                                    type="textarea"
-                                    id="description"
-                                    v-model="data.description"
-                                >
-                                </FormInput>
-                            </FormField>
-                        </div>
-                    </div>
-                    <div class="form-section">
-                        <h3 class="section-title">Dates</h3>
-                        <div class="section-fields">
-                            <FormField>
-                                <FormInput
-                                    label="Created"
-                                    type="date"
-                                    id="created"
-                                    :required="true"
-                                    @onBlur="clearValidate('created'); validateIsEmpty('created', 'Created date must not be empty')"
-                                    v-model="data.created"
-                                    :invalidMessage="validationMessages.created"
-                                    :clearButton="true"
-                                >
-                                </FormInput>
-                            </FormField>
-                            <FormField>
-                                <FormInput
-                                    label="Modified"
-                                    type="date"
-                                    id="modified"
-                                    :required="true"
-                                    @onBlur="clearValidate('modified'); validateIsEmpty('modified', 'Modified date must not be empty')"
-                                    v-model="data.modified"
-                                    :invalidMessage="validationMessages.modified"
-                                    :clearButton="true"
-                                >
-                                </FormInput>
-                            </FormField>
-                            <FormField>
-                                <FormInput
-                                    label="Issued"
-                                    type="date"
-                                    id="issued"
-                                    v-model="data.issued"
-                                    :clearButton="true"
-                                >
-                                </FormInput>
-                            </FormField>
-                        </div>
-                    </div>
-                    <div class="form-section">
-                        <h3 class="section-title">Rights</h3>
-                        <div class="section-fields">
-                            <FormField>
-                                <FormInput
-                                    label="License"
-                                    type="select"
-                                    id="license"
-                                    v-model="data.license"
-                                    :clearButton="true"
-                                    :options="licenseOptions"
-                                >
-                                </FormInput>
-                                <template #bottom>
-                                    <FormInput
-                                        v-if="data.license === 'new'"
-                                        label="Enter a new license"
-                                        type="text"
-                                        v-model="data.customLicense"
-                                        :clearButton="true"
-                                    />
-                                </template>
-                            </FormField>
-                            <FormField>
-                                <FormInput
-                                    label="Rights"
-                                    type="text"
-                                    id="rights"
-                                    v-model="data.rights"
-                                    :clearButton="true"
-                                >
-                                </FormInput>
-                            </FormField>
-                            <FormField>
-                                <FormInput
-                                    label="Access Rights"
-                                    type="select"
-                                    id="accessRights"
-                                    v-model="data.accessRights"
-                                    :clearButton="true"
-                                    :options="accessRightsOptions"
-                                    placeholder="placeholder"
-                                >
-                                </FormInput>
-                            </FormField>
-                        </div>
-                    </div>
-                    <div class="form-section">
-                        <h3 class="section-title">Spatio/Temporal</h3>
-                        <div class="section-fields">
-                            <FormField label="Spatial geometry">
-                                <FormInput
-                                    label="Geometry"
-                                    type="text"
-                                    v-model="data.spatialGeom"
-                                    :clearButton="true"
-                                    placeholder="e.g. POLYGON ((1234 1234, 1235 1245))"
-                                    :disabled="data.useSpatialIri"
-                                    description="Must be WKT format"
-                                    @onBlur="clearValidate('spatialGeom'); validateMatchRegex('spatialGeom', /^\w+\s?\(.+\)$/, 'Invalid WKT')"
-                                    :invalidMessage="validationMessages.spatialGeom"
-                                >
-                                </FormInput>
-                                <template #bottom>
-                                    <FormInput
-                                        label="Use spatial IRI"
-                                        type="checkbox"
-                                        v-model="data.useSpatialIri"
-                                    >
-                                    </FormInput>
-                                    <FormInput
-                                        label="Spatial IRI"
-                                        type="url"
-                                        v-model="data.spatialIri"
-                                        :clearButton="true"
-                                        placeholder="e.g. http://example.com/1234"
-                                        :disabled="!data.useSpatialIri"
-                                        description="Must be a valid IRI"
-                                        @onBlur="clearValidate('spatialIri'); validateMatchRegex('spatialIri', /https?:\/\/.+/, 'Invalid IRI')"
-                                        :invalidMessage="validationMessages.spatialIri"
-                                    >
-                                    </FormInput>
-                                </template>
-                            </FormField>
-                            <FormField label="Temporal">
-                                <FormInput
-                                    label="Start"
-                                    type="date"
-                                    v-model="data.temporalStart"
-                                    :clearButton="true"
-                                >
-                                </FormInput>
-                                <template #bottom>
-                                    <FormInput
-                                        label="End"
-                                        type="date"
-                                        v-model="data.temporalEnd"
-                                        :clearButton="true"
-                                    >
-                                    </FormInput>
-                                </template>
-                            </FormField>
-                        </div>
-                    </div>
-                    <div class="form-section">
-                        <h3 class="section-title">Distribution Info</h3>
-                        <div class="section-fields">
-                            <FormField>
-                                <FormInput
-                                    label="Access URL"
+                                    label="Spatial IRI"
                                     type="url"
-                                    id="accessUrl"
-                                    description="Must be a reachable URL"
+                                    v-model="data.spatialIri"
+                                    :clearButton="true"
                                     placeholder="e.g. http://example.com/1234"
-                                    @onBlur="clearValidate('accessUrl'); validateStatus200('accessUrl', 'accessUrl', 'Access URL is unreachable')"
-                                    v-model="data.accessUrl"
-                                    :invalidMessage="validationMessages.accessUrl"
-                                    :clearButton="true"
+                                    :disabled="!data.useSpatialIri"
+                                    description="Must be a valid IRI"
+                                    @onBlur="clearValidate('spatialIri'); validateMatchRegex('spatialIri', /https?:\/\/.+/, 'Invalid IRI')"
+                                    :invalidMessage="validationMessages.spatialIri"
                                 >
-                                    <template #prepend>
-                                        <FormInput
-                                            type="select"
-                                            id="protocol"
-                                            v-model="urlProtocol"
-                                            :options="urlProtocolOptions"
-                                        />
-                                    </template>
-                                    <template #append v-if="loading.accessUrl">
-                                        <span><i class="fa-regular fa-spinner-third"></i></span>
-                                    </template>
                                 </FormInput>
-                            </FormField>
-                        </div>
-                    </div>
-                    <div class="form-section">
-                        <h3 class="section-title">Agent Info</h3>
-                        <div class="section-fields">
-                            <FormField>
+                            </template>
+                        </FormField>
+                        <FormField label="Temporal">
+                            <FormInput
+                                label="Start"
+                                type="date"
+                                v-model="data.temporalStart"
+                                :clearButton="true"
+                            >
+                            </FormInput>
+                            <template #bottom>
                                 <FormInput
-                                    label="Agent"
-                                    type="select"
-                                    id="agent"
-                                    v-model="data.agent"
+                                    label="End"
+                                    type="date"
+                                    v-model="data.temporalEnd"
                                     :clearButton="true"
-                                    :options="agentOptions"
                                 >
                                 </FormInput>
-                                <template #bottom v-if="data.agent === 'new'">
+                            </template>
+                        </FormField>
+                    </FormSection>
+                    <FormSection title="Distribution Info">
+                        <FormField>
+                            <FormInput
+                                label="Access URL"
+                                type="url"
+                                id="accessUrl"
+                                description="Must be a reachable URL"
+                                placeholder="e.g. http://example.com/1234"
+                                @onBlur="clearValidate('accessUrl'); validateStatus200('accessUrl', 'accessUrl', 'Access URL is unreachable')"
+                                v-model="data.accessUrl"
+                                :invalidMessage="validationMessages.accessUrl"
+                                :clearButton="true"
+                            >
+                                <template #prepend>
                                     <FormInput
-                                        label="Enter a new agent"
-                                        type="text"
-                                        v-model="data.customAgent"
-                                        :clearButton="true"
+                                        type="select"
+                                        id="protocol"
+                                        v-model="urlProtocol"
+                                        :options="urlProtocolOptions"
                                     />
                                 </template>
-                            </FormField>
-                            <FormField>
+                                <template #append v-if="loading.accessUrl">
+                                    <span><i class="fa-regular fa-spinner-third"></i></span>
+                                </template>
+                            </FormInput>
+                        </FormField>
+                    </FormSection>
+                    <FormSection title="Agent Info">
+                        <FormField>
+                            <FormInput
+                                label="Agent"
+                                type="select"
+                                id="agent"
+                                v-model="data.agent"
+                                :clearButton="true"
+                                :options="agentOptions"
+                            >
+                            </FormInput>
+                            <template #bottom v-if="data.agent === 'new'">
                                 <FormInput
-                                    label="Role"
-                                    type="select"
-                                    id="role"
-                                    v-model="data.role"
-                                    :clearButton="true"
-                                    :options="roleOptions"
-                                >
-                                </FormInput>
-                            </FormField>
-                        </div>
-                    </div>
-                    <div class="form-section">
-                        <h3 class="section-title">Theme</h3>
-                        <div class="section-fields">
-                            <FormField>
-                                <FormInput
-                                    label="Theme"
-                                    type="select"
-                                    id="theme"
-                                    v-model="data.themes"
-                                    :clearButton="true"
-                                    :options="themeOptions"
-                                    :multiple="true"
-                                >
-                                </FormInput>
-                            </FormField>
-                        </div>
-                    </div>
-                    <div class="form-section">
-                        <h3 class="section-title">Contact Details</h3>
-                        <div class="section-fields">
-                            <FormField>
-                                <FormInput
-                                    label="Name"
+                                    label="Enter a new agent"
                                     type="text"
-                                    id="contactName"
-                                    v-model="data.contactName"
+                                    v-model="data.customAgent"
                                     :clearButton="true"
-                                >
-                                </FormInput>
-                            </FormField>
-                            <FormField>
-                                <FormInput
-                                    label="Email"
-                                    type="email"
-                                    id="contactEmail"
-                                    v-model="data.contactEmail"
-                                    :clearButton="true"
-                                >
-                                </FormInput>
-                            </FormField>
-                            <FormField>
-                                <FormInput
-                                    label="Phone"
-                                    type="tel"
-                                    id="contactPhone"
-                                    v-model="data.contactPhone"
-                                    :clearButton="true"
-                                >
-                                </FormInput>
-                            </FormField>
-                        </div>
-                    </div>
+                                />
+                            </template>
+                        </FormField>
+                        <FormField>
+                            <FormInput
+                                label="Role"
+                                type="select"
+                                id="role"
+                                v-model="data.role"
+                                :clearButton="true"
+                                :options="roleOptions"
+                            >
+                            </FormInput>
+                        </FormField>
+                    </FormSection>
+                    <FormSection title="Theme">
+                        <FormField>
+                            <FormInput
+                                label="Theme"
+                                type="select"
+                                id="theme"
+                                v-model="data.themes"
+                                :clearButton="true"
+                                :options="themeOptions"
+                                :multiple="true"
+                            >
+                            </FormInput>
+                        </FormField>
+                    </FormSection>
+                    <FormSection title="Contact Details">
+                        <FormField>
+                            <FormInput
+                                label="Name"
+                                type="text"
+                                id="contactName"
+                                v-model="data.contactName"
+                                :clearButton="true"
+                            >
+                            </FormInput>
+                        </FormField>
+                        <FormField>
+                            <FormInput
+                                label="Email"
+                                type="email"
+                                id="contactEmail"
+                                v-model="data.contactEmail"
+                                :clearButton="true"
+                            >
+                            </FormInput>
+                        </FormField>
+                        <FormField>
+                            <FormInput
+                                label="Phone"
+                                type="tel"
+                                id="contactPhone"
+                                v-model="data.contactPhone"
+                                :clearButton="true"
+                            >
+                            </FormInput>
+                        </FormField>
+                    </FormSection>
                 </div>
             </div>
             <div class="metadata-col" id="metadata-scores">
@@ -644,9 +637,6 @@ function validateStatus200(key, loadingKey, message) {
                 </div>
                 <div class="col-body">
                     <RDFPreview :data="rdfData" />
-                    <div>
-                        <button class="btn outline">Copy <i class="fa-regular fa-copy"></i></button>
-                    </div>
                 </div>
             </div>
         </div>
@@ -667,7 +657,7 @@ $padding: 12px;
     display: flex;
     flex-direction: column;
     gap: $gap;
-    background-color: #dadada;
+    background-color: #e7e7e7;
     border-radius: 6px;
 
     #metadata-header {
@@ -675,17 +665,30 @@ $padding: 12px;
         flex-direction: column;
         padding: $padding;
 
-        h2#metadata-title {
-            text-align: center;
-        }
-
-        #metadata-desc {
+        #metadata-title {
             display: flex;
             flex-direction: row;
             justify-content: space-between;
             align-items: center;
 
-            #metadata-text {}
+            h2 {
+                text-align: center;
+                position: relative;
+                left: 50%;
+                transform: translateX(-50%);
+            }
+
+            button#toggle-rdf-btn {
+                display: flex;
+                flex-direction: row;
+                gap: 8px;
+                align-items: center;
+            }
+        }
+
+        #metadata-desc {
+            display: flex;
+            flex-direction: column;
         }
     }
 
@@ -761,22 +764,6 @@ $padding: 12px;
                     display: flex;
                     flex-direction: column;
                     gap: 20px;
-
-                    .form-section {
-                        display: flex;
-                        flex-direction: column;
-                        gap: 20px;
-
-                        h3.section-title {
-                            margin: 0;
-                        }
-
-                        .section-fields {
-                            display: grid;
-                            grid-template-columns: repeat(2, 1fr);
-                            gap: 20px;
-                        }
-                    }
                 }
             }
 
