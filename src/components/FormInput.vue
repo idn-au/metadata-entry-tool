@@ -192,12 +192,7 @@ const labelIsFloating = computed(() => {
 </template>
     
 <style lang="scss" scoped>
-$borderRadius: 6px;
-$pendMinWidth: 36px;
-$borderColor: grey;
-$invalidColor: red;
-$disabledColor: #dfdfdf;
-$placeholderColor: #5c5c5c;
+@import "@/assets/_variables.scss";
 
 .form-input {
     display: flex;
@@ -305,11 +300,11 @@ $placeholderColor: #5c5c5c;
         align-items: stretch;
         border: 1px solid $borderColor;
         border-radius: $borderRadius;
-        background-color: white;
+        background-color: $inputBg;
         transition: box-shadow 0.2s ease-in-out;
 
         &.focus {
-            box-shadow: 0px 0px 6px 2px rgba($color: #3780ee, $alpha: 0.4);
+            box-shadow: 0px 0px 6px 2px rgba($color: $focus, $alpha: 0.4);
         }
 
         &.invalid {
@@ -346,16 +341,17 @@ $placeholderColor: #5c5c5c;
                 transform-origin: top left;
                 transform: translate(0, 11px) scale(1);
                 transition: all .1s ease-in-out;
+                color: $labelColor;
 
                 &.float {
-                    color: $placeholderColor;
+                    color: $labelFloatColor;
                     transform: translate(0, 2px) scale(.75);
                 }
             }
 
             .input {
                 padding: 18px 18px 8px 8px;
-                background-color: white;
+                background-color: $inputBg;
             }
         }
 
@@ -409,12 +405,13 @@ $placeholderColor: #5c5c5c;
                 display: flex;
                 flex-direction: column;
                 gap: 6px;
+            }
 
-                .checkbox-item {
-                    display: flex;
-                    flex-direction: row;
-                    gap: 6px;
-                }
+            .checkbox-item {
+                display: flex;
+                flex-direction: row;
+                gap: 6px;
+                align-items: center;
             }
         }
     }

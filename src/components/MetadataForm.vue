@@ -3,8 +3,10 @@ import { ref, computed, watch } from "vue";
 import FormSection from "@/components/FormSection.vue";
 import FormField from "@/components/FormField.vue";
 import FormInput from "@/components/FormInput.vue";
-import FairScore from "@/components/FairScore.vue";
-import CareScore from "@/components/CareScore.vue";
+// import FairScore from "@/components/FairScore.vue";
+// import CareScore from "@/components/CareScore.vue";
+import NewFairScore from "@/components/NewFairScore.vue";
+import NewCareScore from "@/components/NewCareScore.vue";
 import RDFPreview from "@/components/RDFPreview.vue";
 
 const urlProtocolOptions = [
@@ -133,8 +135,6 @@ const data = ref({
     contactEmail: "",
     contactPhone: ""
 });
-
-const btnRef = ref(null);
 
 watch(
     () => data.value.accessUrl,
@@ -298,14 +298,6 @@ function validateStatus200(key, loadingKey, message) {
         loading.value[loadingKey] = false;
     }
 }
-
-function toggleRDF() {
-    showRDF.value = !showRDF.value;
-
-    // for Font Awesome SVG icons (can't dynamically change icons on class)
-    const svg = btnRef.value.lastElementChild;
-    svg.setAttribute("data-icon", showRDF.value ? "chevron-right" : "chevron-left");
-}
 </script>
 
 <template>
@@ -313,14 +305,15 @@ function toggleRDF() {
         <div id="metadata-header">
             <div id="metadata-title">
                 <h2>Metadata Submission Form</h2>
-                <button id="toggle-rdf-btn" class="btn outline" ref="btnRef" @click="toggleRDF">
+                <button id="toggle-rdf-btn" class="btn outline" @click="showRDF = !showRDF">
                     <span><template v-if="showRDF">Hide</template><template v-else>Show</template> RDF</span>
                     <i :class="`fa-regular fa-chevron-${showRDF ? 'right' : 'left'}`"></i>
                 </button>
             </div>
             <div id="metadata-desc">
                 <p>
-                    Fill out the form below to submit to the IDN. FAIR and CARE scores will be updated live as the fields are filled out. The generated RDF can optionally be viewed on the right.
+                    Fill out the form below to submit to the IDN. FAIR and CARE scores will be updated live as the fields are filled out. The generated RDF can optionally be viewed on the right.<br/>
+                    Lorem ipsum dolor sit amet consectetur adipisicing elit. Ducimus numquam facere eveniet sapiente neque consequatur at reprehenderit error, enim saepe aspernatur inventore vel deserunt quo repellendus necessitatibus quam illum assumenda!
                 </p>
             </div>
         </div>
@@ -330,7 +323,7 @@ function toggleRDF() {
                     <h3>Form</h3>
                 </div>
                 <div class="col-body" id="form-items">
-                    <FormSection :defaultOpen="true">
+                    <FormSection :defaultOpen="true" title="General">
                         <FormField>
                             <FormInput
                                 label="IRI"
@@ -627,8 +620,10 @@ function toggleRDF() {
                     <h3>Scores</h3>
                 </div>
                 <div class="col-body">
-                    <FairScore :score="fairScore" />
-                    <CareScore :score="careScore" />
+                    <!-- <FairScore :score="fairScore" />
+                    <CareScore :score="careScore" /> -->
+                    <NewFairScore />
+                    <NewCareScore />
                 </div>
             </div>
             <div class="metadata-col" id="metadata-rdf">
@@ -641,15 +636,23 @@ function toggleRDF() {
             </div>
         </div>
         <div id="metadata-footer">
-            <div>
-                declaration
+            <p>
+                declaration. 
+                Lorem ipsum dolor sit amet consectetur adipisicing elit. Ullam, temporibus eligendi. Delectus beatae similique doloribus vero reiciendis in quo quas nesciunt rem assumenda laboriosam ab et sapiente, odio non sit?
+                Lorem ipsum dolor sit amet consectetur adipisicing elit. Minima iste illo doloribus voluptatibus cumque reprehenderit eaque dolore, quisquam, eum, non vero corrupti numquam beatae accusamus eius rem soluta omnis aliquam!
+                Lorem ipsum dolor sit amet consectetur adipisicing elit. Ullam sit deserunt harum aliquam est adipisci iste enim aperiam quasi, nesciunt saepe debitis fugiat doloribus vitae delectus incidunt repellendus veritatis accusantium?
+                
+            </p>
+            <div id="form-buttons">
+                <button class="btn success lg submit-btn">Submit</button>
             </div>
-            <button class="btn primary">Submit</button>
         </div>
     </div>
 </template>
 
 <style lang="scss" scoped>
+@import "@/assets/_variables.scss";
+
 $gap: 16px;
 $padding: 12px;
 
@@ -657,8 +660,9 @@ $padding: 12px;
     display: flex;
     flex-direction: column;
     gap: $gap;
-    background-color: #e7e7e7;
-    border-radius: 6px;
+    background-color: $formBg;
+    border-radius: $borderRadius;
+    // border: 1px solid #b7b7b7;
 
     #metadata-header {
         display: flex;
@@ -783,9 +787,18 @@ $padding: 12px;
 
     #metadata-footer {
         display: flex;
-        flex-direction: row;
-        justify-content: space-between;
+        flex-direction: column;
+        gap: 12px;
         padding: $padding;
+
+        #form-buttons {
+            display: flex;
+            flex-direction: row;
+            gap: 12px;
+            button.submit-btn {
+                margin-left: auto;
+            }
+        }
     }
 }
 </style>

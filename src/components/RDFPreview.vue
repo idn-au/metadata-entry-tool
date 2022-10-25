@@ -20,6 +20,7 @@ function copyRDF() {
         type="textarea"
         v-model="props.data"
         :disabled="true"
+        id="rdf"
     />
     <div>
         <button class="btn outline" @click="copyRDF">Copy <i class="fa-regular fa-copy"></i></button>
@@ -27,6 +28,8 @@ function copyRDF() {
 </template>
 
 <style lang="scss" scoped>
+@import "@/assets/_variables.scss";
+
 .form-input, :deep(.form-input-row), :deep(.form-input-content), :deep(.input-item), :deep(.input) {
     flex-grow: 1;
 }
@@ -40,5 +43,6 @@ function copyRDF() {
     font-family: consolas, monospace !important;
     font-size: 13px;
     padding: 10px !important;
+    background-color: white !important;
 }
 </style>
