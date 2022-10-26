@@ -191,6 +191,32 @@ PREFIX xsd: <http://www.w3.org/2001/XMLSchema#>`;
         node += `\n\tdcterms:issued "${data.value.issued}"^^xsd:date ;`;
     }
 
+    if (data.value.license !== "") {
+        node += `\n\tdcterms:license "${data.value.license}" ;`;
+    }
+
+    if (data.value.rights !== "") {
+        node += `\n\tdcterms:rights "${data.value.rights}" ;`;
+    }
+
+    if (data.value.accessRights !== "") {
+        node += `\n\tdcterms:accessRights <${data.value.accessRights}> ;`;
+    }
+
+    if (data.value.accessUrl !== "") {
+        node += `\n\tdcat:accessUrl "${data.value.accessUrl}"^xsd:anyURI ;`;
+    }
+
+    if (data.value.useSpatialIri) {
+        if (data.value.spatialIri !== "") {
+            node += `\n\tdcterms:spatial <${data.value.spatialIri}> ;`;
+        }
+    } else {
+        if (data.value.spatialGeom !== "") {
+            node += `\n\tdcterms:spatial [${data.value.spatialGeom}] ;`;
+        }
+    }
+
     if (node !== "") {
         node += `\n.`;
     }
@@ -202,23 +228,29 @@ PREFIX xsd: <http://www.w3.org/2001/XMLSchema#>`;
 
 const fairScore = computed(() => {
     let score = {
-        f: 0,
-        a: 0,
-        i: 0,
-        r: 0
+        f1: 0,
+        f2: 0,
+        f3: 0,
+        f4: 0,
+        a1: 0,
+        a2: 0,
+        i1: 0,
+        i2: 0,
+        i3: 0,
+        r1: 0
     }
 
     if (data.value.iri !== "") {
-        score.f = 2;
-        score.i = 1;
+        score.f1 = 2;
+        score.i1 = 1;
     }
 
     if (data.value.title !== "") {
-        score.a = 3;
+        score.a1 = 3;
     }
 
     if (data.value.description !== "") {
-        score.r = 2;
+        score.r1 = 2;
     }
 
     return score;
@@ -226,24 +258,32 @@ const fairScore = computed(() => {
 
 const careScore = computed(() => {
     let score = {
-        c: 0,
-        a: 0,
-        r: 0,
-        e: 0
+        c1: 0,
+        c2: 0,
+        c3: 0,
+        a1: 0,
+        a2: 0,
+        a3: 0,
+        r1: 0,
+        r2: 0,
+        r3: 0,
+        e1: 0,
+        e2: 0,
+        e3: 0
     }
 
     if (data.value.created !== "") {
-        score.c = 3;
+        score.c1 = 3;
         
     }
 
     if (data.value.modified !== "") {
-        score.a = 2;
+        score.a1 = 2;
     }
 
     if (data.value.issued !== "") {
-        score.r = 4;
-        score.e = 1;
+        score.r1 = 4;
+        score.e1 = 1;
     }
 
     return score;
@@ -622,8 +662,8 @@ function validateStatus200(key, loadingKey, message) {
                 <div class="col-body">
                     <!-- <FairScore :score="fairScore" />
                     <CareScore :score="careScore" /> -->
-                    <NewFairScore />
-                    <NewCareScore />
+                    <NewFairScore :subscores="fairScore" />
+                    <NewCareScore :subscores="careScore" />
                 </div>
             </div>
             <div class="metadata-col" id="metadata-rdf">

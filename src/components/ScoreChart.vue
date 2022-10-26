@@ -20,6 +20,14 @@ const props = defineProps({
 // have expandable details for each score section
 const collapse = ref(props.scores.reduce((obj, score) => ({ ...obj, [score.abbreviation]: true}), {top: true}));
 
+// const subScores = computed(() => {
+//     let s = {};
+//     props.scores.forEach(score => {
+//         score.subscores.forEach(subscore => s[subscore.abbreviation] = subscore.score);
+//     });
+//     return s;
+// });
+
 const scores = computed(() => {
     let s = {};
     props.scores.forEach(score => {
@@ -157,13 +165,13 @@ function progressGradient(percentage) {
                     <div class="subscores">
                         <div class="score" v-for="subscore in score.subscores">
                             <div class="score-header">
-                                <span class="header-left">{{ subscore.abbreviation }} - {{ subscore.title }}</span>
+                                <span class="header-left">{{ subscore.abbreviation }}</span>
                                 <span class="header-right">
                                     <span class="score-value">{{ subscore.score }}/{{ subscore.maxScore }}</span>
                                 </span>
                             </div>
                             <div class="progress-container">
-                                <div :class="`progress ${progressGradient(scores[score.abbreviation]/maxScores[score.abbreviation] * 100)}`" :style="{width: (scores[score.abbreviation]/maxScores[score.abbreviation] * 100) + '%'}"></div>
+                                <div :class="`progress ${progressGradient(subscore.score/subscore.maxScore * 100)}`" :style="{width: (subscore.score/subscore.maxScore * 100) + '%'}"></div>
                             </div>
                             <div class="score-desc">
                                 <p>{{ subscore.description }}</p>

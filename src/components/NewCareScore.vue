@@ -1,72 +1,135 @@
 <script setup>
+import { ref, watchEffect } from "vue";
 import ScoreChart from "@/components/ScoreChart.vue";
+
+const props = defineProps({
+    subscores: {
+        type: Object,
+        required: true
+    }
+});
 
 const title = "CARE";
 const rgb = [255, 99, 132];
 const definition = "Some def";
-const scores = [
+const scores = ref([
     {
         title: "Collective benefit",
-        description: "C desc",
+        description: "",
         abbreviation: "C",
         subscores: [
             {
-                title: "C1",
-                description: "C1 desc",
+                description: "For inclusive development and innovation",
                 abbreviation: "C1",
-                score: 4,
-                maxScore: 4
+                score: props.subscores.c1,
+                maxScore: 3
+            },
+            {
+                description: "For improved governance and citizen engagement",
+                abbreviation: "C2",
+                score: props.subscores.c2,
+                maxScore: 3
+            },
+            {
+                description: "For equitable outcomes",
+                abbreviation: "C3",
+                score: props.subscores.c3,
+                maxScore: 3
             }
         ]
     },
     {
         title: "Authority to control",
-        description: "A desc",
+        description: "",
         abbreviation: "A",
         subscores: [
             {
-                title: "A1",
-                description: "A1 desc",
+                description: "Recognising rights and interests",
                 abbreviation: "A1",
-                score: 4,
-                maxScore: 4
+                score: props.subscores.a1,
+                maxScore: 3
+            },
+            {
+                description: "Data for governance",
+                abbreviation: "A2",
+                score: props.subscores.a2,
+                maxScore: 3
+            },
+            {
+                description: "Governance of data",
+                abbreviation: "A3",
+                score: props.subscores.a3,
+                maxScore: 3
             }
         ]
     },
     {
         title: "Responsibility",
-        description: "R desc",
+        description: "",
         abbreviation: "R",
         subscores: [
             {
-                title: "R1",
-                description: "R1 desc",
+                description: "For positive relationships",
                 abbreviation: "R1",
-                score: 4,
-                maxScore: 4
+                score: props.subscores.r1,
+                maxScore: 3
+            },
+            {
+                description: "For expanding capability and capacity",
+                abbreviation: "R2",
+                score: props.subscores.r2,
+                maxScore: 3
+            },
+            {
+                description: "For Indigenous languages and worldviews",
+                abbreviation: "R3",
+                score: props.subscores.r3,
+                maxScore: 3
             }
         ]
     },
     {
         title: "Ethics",
-        description: "E desc",
+        description: "",
         abbreviation: "E",
         subscores: [
             {
-                title: "E1",
-                description: "E1 desc",
+                description: "For minimising harm and maximising benefit",
                 abbreviation: "E1",
-                score: 4,
-                maxScore: 4
+                score: props.subscores.e1,
+                maxScore: 3
+            },
+            {
+                description: "For justice",
+                abbreviation: "E2",
+                score: props.subscores.e2,
+                maxScore: 3
+            },
+            {
+                description: "For future use",
+                abbreviation: "E3",
+                score: props.subscores.e3,
+                maxScore: 3
             }
         ]
     }
-];
-const maxScore = 4;
+]);
+
+watchEffect(() => {
+    Object.keys(props.subscores).forEach(scoreProp => {
+        scores.value.forEach(score => {
+            score.subscores.forEach(sub => {
+                if (sub.abbreviation.toLowerCase() === scoreProp) {
+                    sub.score = props.subscores[scoreProp];
+                }
+            });
+        });
+    });
+});
 </script>
 
 <template>
-    <ScoreChart :title="title" :rgb="rgb" :definition="definition" :scores="scores" :maxScore="maxScore" />
+    <ScoreChart :title="title" :rgb="rgb" :definition="definition" :scores="scores" />
 </template>
 
 <style lang="scss" scoped>
