@@ -13,4 +13,7 @@ export default defineConfig({
         }
     },
     base: process.env.NODE_ENV === "production" ? "/idn-metadata-creator/" : "/",
+    define: {
+        global: {},
+    }
 });

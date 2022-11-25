@@ -1,5 +1,5 @@
 <script setup>
-import FormInput from "@/components/FormInput.vue";
+import { FormInput } from "@idn-au/idn-lib";
 
 const props = defineProps({
     data: {

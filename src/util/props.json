@@ -1,0 +1,82 @@
+{
+    "title": {
+        "qname": "dcterms:title",
+        "uri": "http://purl.org/dc/terms/title",
+        "description": "A title is..."
+    },
+    "description": {
+        "qname": "dcterms:description",
+        "uri": "http://purl.org/dc/terms/description",
+        "description": ""
+    },
+    "agent": {
+        "qname": "prov:agent",
+        "uri": "http://www.w3.org/ns/prov#agent",
+        "description": ""
+    },
+    "role": {
+        "qname": "dcat:hadRole",
+        "uri": "http://www.w3.org/ns/dcat#hadRole",
+        "description": ""
+    },
+    "created": {
+        "qname": "dcterms:created",
+        "uri": "http://purl.org/dc/terms/created",
+        "description": ""
+    },
+    "modified": {
+        "qname": "dcterms:modified",
+        "uri": "http://purl.org/dc/terms/modified",
+        "description": ""
+    },
+    "issued": {
+        "qname": "dcterms:issued",
+        "uri": "http://purl.org/dc/terms/issued",
+        "description": ""
+    },
+    "license": {
+        "qname": "dcterms:license",
+        "uri": "http://purl.org/dc/terms/license",
+        "description": ""
+    },
+    "rights": {
+        "qname": "dcterms:rights",
+        "uri": "http://purl.org/dc/terms/rigts",
+        "description": ""
+    },
+    "accessRights": {
+        "qname": "dcat:accessRights",
+        "uri": "http://www.w3.org/ns/dcat#accessRights",
+        "description": ""
+    },
+    "spatialGeometry": {
+        "qname": "dcterms:spatial",
+        "uri": "http://purl.org/dc/terms/spatial",
+        "description": ""
+    },
+    "spatialIri": {
+        "qname": "dcterms:spatial",
+        "uri": "http://purl.org/dc/terms/spatial",
+        "description": ""
+    },
+    "startDate": {
+        "qname": "dcterms:temporal",
+        "uri": "http://purl.org/dc/terms/temporal",
+        "description": ""
+    },
+    "endDate": {
+        "qname": "dcterms:temporal",
+        "uri": "http://purl.org/dc/terms/temporal",
+        "description": ""
+    },
+    "accessUrl": {
+        "qname": "dcat:accessURL",
+        "uri": "http://www.w3.org/ns/dcat#accessUrl",
+        "description": ""
+    },
+    "theme": {
+        "qname": "dcat:theme",
+        "uri": "http://www.w3.org/ns/dcat#theme",
+        "description": ""
+    }
+}

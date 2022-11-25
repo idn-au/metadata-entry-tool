@@ -186,11 +186,12 @@ function progressGradient(percentage) {
     
 <style lang="scss" scoped>
 @import "@/assets/_variables.scss";
+@import "@/assets/_mixins.scss";
 
 %collapsible {
     overflow-y: hidden;
     height: 100%;
-    transition: height 0.2s ease-in-out;
+    @include transition(height);
 
     &.collapse {
         height: 0px;

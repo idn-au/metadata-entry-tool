@@ -6,7 +6,8 @@ const props = defineProps({
     defaultOpen: {
         type: Boolean,
         default: false
-    }
+    },
+    description: String
 });
 
 const collapse = ref(!props.defaultOpen);
@@ -23,6 +24,9 @@ const collapse = ref(!props.defaultOpen);
             </button>
         </div>
         <div class="section-body-container">
+            <div class="section-desc" v-if="props.description">
+                <p>{{ props.description }}</p>
+            </div>
            <div class="section-body">
                 <slot></slot>
            </div>
@@ -32,6 +36,7 @@ const collapse = ref(!props.defaultOpen);
 
 <style lang="scss" scoped>
 @import "@/assets/_variables.scss";
+@import "@/assets/_mixins.scss";
 
 .form-section {
     display: flex;
@@ -67,9 +72,18 @@ const collapse = ref(!props.defaultOpen);
     }
 
     .section-body-container {
-        overflow-y: hidden;
         height: 100%;
-        transition: height 0.2s ease-in-out;
+        display: flex;
+        flex-direction: column;
+        @include transition(height);
+
+        .section-desc {
+            padding: 12px;
+
+            p {
+                margin: 0;
+            }
+        }
 
         .section-body {
             display: grid;
@@ -87,6 +101,7 @@ const collapse = ref(!props.defaultOpen);
 
         .section-body-container {
             height: 0px;
+            overflow: hidden;
         }
     }
 }

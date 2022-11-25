@@ -1,117 +1,35 @@
 <script setup>
-import { ref, computed, watch } from "vue";
+import { ref, computed, watch, onMounted } from "vue";
+import { DataFactory } from "n3";
+import { FormField, BaseModal } from "@idn-au/idn-lib";
+import PropFormInput from "@/components/PropFormInput.vue";
 import FormSection from "@/components/FormSection.vue";
-import FormField from "@/components/FormField.vue";
-import FormInput from "@/components/FormInput.vue";
-// import FairScore from "@/components/FairScore.vue";
-// import CareScore from "@/components/CareScore.vue";
-import NewFairScore from "@/components/NewFairScore.vue";
-import NewCareScore from "@/components/NewCareScore.vue";
+import FairScore from "@/components/FairScore.vue";
+import CareScore from "@/components/CareScore.vue";
 import RDFPreview from "@/components/RDFPreview.vue";
+import { useRdfStore } from "@/composables/rdfStore";
+import propDetails from "@/util/props.json";
+import { urlProtocolOptions, agentOptions, roleOptions, themeOptions, licenseOptions, accessRightsOptions } from "@/util/formOptions";
 
-const urlProtocolOptions = [
-    {
-        value: "http",
-        label: "http"
-    },
-    {
-        value: "https",
-        label: "https"
-    },
-    {
-        value: "ftp",
-        label: "ftp"
-    },
-    {
-        value: "sftp",
-        label: "sftp"
-    },
-    {
-        value: "ftps",
-        label: "ftps"
-    },
-    {
-        value: "ssh",
-        label: "ssh"
-    },
-];
+const { namedNode, literal, blankNode } = DataFactory;
 
-const agentOptions = [
-    {
-        value: "1",
-        label: "1"
-    },
-    {
-        value: "2",
-        label: "2"
-    },
-    {
-        value: "3",
-        label: "3"
-    },
-    {
-        value: "new",
-        label: "+ Enter a new agent"
-    },
-];
+const defaultIri = "https://example.com/someIRI";
 
-const roleOptions = [
-    {
-        value: "1",
-        label: "1"
-    },
-    {
-        value: "2",
-        label: "2"
-    },
-    {
-        value: "3",
-        label: "3"
-    },
-];
+const { store, qname, serialize } = useRdfStore();
 
-const themeOptions = [
-    {
-        value: "1",
-        label: "1"
-    },
-    {
-        value: "2",
-        label: "2"
-    },
-    {
-        value: "3",
-        label: "3"
-    },
-];
+const spatialBnode = store.value.createBlankNode();
+const temporalBnode = store.value.createBlankNode();
+const distributionBnode = store.value.createBlankNode();
+const qualifiedBnode = store.value.createBlankNode();
 
-const licenseOptions = [
-    {
-        value: "creativeCommons",
-        label: "Creative Commons"
-    },
-    {
-        value: "new",
-        label: "+ Enter a new license"
-    },
-];
-
-const accessRightsOptions = [
-    {
-        value: "metadataOnly",
-        label: "Metadata only"
-    },
-];
-
-const showRDF = ref(false);
+const showRDF = ref(true);
 const loading = ref({
     accessUrl: false
 });
 const urlProtocol = ref("");
-
 const data = ref({
     iri: "",
-    assignIri: false,
+    assignIri: true,
     title: "",
     description: "",
     created: "",
@@ -135,18 +53,25 @@ const data = ref({
     contactEmail: "",
     contactPhone: ""
 });
+const validationMessages = ref({
+    iri: [],
+    title: [],
+    created: [],
+    modified: [],
+    spatialGeom: [],
+    spatialIri: [],
+    accessUrl: []
+});
+const serializedData = ref("");
+const modal = ref(null);
 
-watch(
-    () => data.value.accessUrl,
-    (newValue, oldValue) => {
-        let protocol = newValue.split("://")[0];
-        if (!newValue.match(/\w+?:\/\//) && urlProtocol.value === "") {
-            urlProtocol.value = "http";
-        } else if (urlProtocolOptions.map(option => option.value).includes(newValue.split("://")[0])) {
-            urlProtocol.value = protocol;
-        }
-    }
-);
+const calcIri = computed(() => {
+    return data.value.assignIri ? defaultIri : data.value.iri;
+});
+
+const calcGeometry = computed(() => {
+    return data.value.useSpatialIri ? data.value.spatialIri : data.value.spatialGeom;
+});
 
 const empty = computed(() => {
     return Object.values(data.value).find(item => item !== "" && item !== [] && item !== false) === undefined;
@@ -169,6 +94,7 @@ PREFIX xsd: <http://www.w3.org/2001/XMLSchema#>`;
 
     if (!empty.value) {
         node += genIri.value;
+        node += `\n\tdcterms:identifier "resourceId"^^xsd:token ;`;
     }
 
     if (data.value.title !== "") {
@@ -192,7 +118,7 @@ PREFIX xsd: <http://www.w3.org/2001/XMLSchema#>`;
     }
 
     if (data.value.license !== "") {
-        node += `\n\tdcterms:license "${data.value.license}" ;`;
+        node += `\n\tdcterms:license <${data.value.license}> ;`;
     }
 
     if (data.value.rights !== "") {
@@ -289,19 +215,202 @@ const careScore = computed(() => {
     return score;
 });
 
-const validationMessages = ref({
-    iri: [],
-    title: [],
-    created: [],
-    modified: [],
-    spatialGeom: [],
-    spatialIri: [],
-    accessUrl: []
-});
-
 const isValid = computed(() => {
     return Object.values(validationMessages.value).find(item => item.length === 0) === undefined;
 });
+
+// watch(data.value, (value) => {
+//     serializedData.value = serialize();
+//     console.log(serializedData.value)
+// });
+
+watch(() => calcIri.value, (newValue, oldValue) => {
+    const quads = store.value.getQuads(namedNode(oldValue), null, null);
+    store.value.removeQuads(quads);
+    quads.forEach(q => {
+        store.value.addQuad(namedNode(newValue), q.predicate, q.object);
+    });
+    serializedData.value = serialize();
+});
+
+watch(() => data.value.title, (newValue, oldValue) => {
+    updateTriple(newValue, "dcterms:title", literal(newValue, namedNode(qname("xsd:string"))));
+});
+
+watch(() => data.value.description, (newValue, oldValue) => {
+    updateTriple(newValue, "dcterms:description", literal(newValue, namedNode(qname("xsd:string"))));
+});
+
+watch(() => data.value.created, (newValue, oldValue) => {
+    updateTriple(newValue, "dcterms:created", literal(newValue, namedNode(qname("xsd:date"))));
+});
+
+watch(() => data.value.modified, (newValue, oldValue) => {
+    updateTriple(newValue, "dcterms:modified", literal(newValue, namedNode(qname("xsd:date"))));
+});
+
+watch(() => data.value.issued, (newValue, oldValue) => {
+    updateTriple(newValue, "dcterms:issued", literal(newValue, namedNode(qname("xsd:date"))));
+});
+
+watch(() => data.value.license, (newValue, oldValue) => {
+    updateTriple(newValue, "dcterms:license", namedNode(newValue));
+});
+
+watch(() => data.value.rights, (newValue, oldValue) => {
+    updateTriple(newValue, "dcterms:rights", literal(newValue, namedNode(qname("xsd:string"))));
+});
+
+watch(() => data.value.accessRights, (newValue, oldValue) => {
+    updateTriple(newValue, "dcat:accessRights", namedNode(newValue));
+});
+
+watch(() => calcGeometry.value, (newValue, oldValue) => {
+    const dataset = store.value.getSubjects(namedNode(qname("a")), namedNode(qname("dcat:Dataset")))[0];
+    const spatialQuads = store.value.getQuads(dataset, namedNode(qname("dcterms:spatial")), null);
+    if (spatialQuads.length > 0 && spatialQuads[0].object.termType === "BlankNode") {
+        const bnodeQuads = store.value.getQuads(spatialQuads[0].object, null, null);
+        store.value.removeQuads(bnodeQuads);
+    }
+    store.value.removeQuads(spatialQuads);
+
+    if (data.value.useSpatialIri) {
+        updateTriple(newValue, "dcterms:spatial", namedNode(newValue));
+    } else {
+        if (newValue !== "") {
+            store.value.addQuad(dataset, namedNode(qname("dcterms:spatial")), spatialBnode);
+            store.value.addQuad(spatialBnode, namedNode(qname("a")), namedNode(qname("geo:Geometry")));
+            store.value.addQuad(spatialBnode, namedNode(qname("geo:asWKT")), literal(newValue, namedNode(qname("geo:wktLiteral"))));
+        }
+
+        serializedData.value = serialize();
+    }
+});
+
+watch(() => data.value.temporalStart, (newValue, oldValue) => {
+    const dataset = store.value.getSubjects(namedNode(qname("a")), namedNode(qname("dcat:Dataset")))[0];
+    const temporalQuads = store.value.getQuads(dataset, namedNode(qname("dcterms:temporal")), null);
+    if (temporalQuads.length > 0 && temporalQuads[0].object.termType === "BlankNode") {
+        const bnodeQuads1 = store.value.getQuads(temporalQuads[0].object, namedNode(qname("prov:startedAtTime")), null);
+        store.value.removeQuads(bnodeQuads1);
+        const bnodeQuads2 = store.value.getQuads(temporalQuads[0].object, null, null);
+        if (bnodeQuads2.length === 0) {
+            store.value.removeQuads(temporalQuads);
+        }
+    }
+
+    if (newValue !== "") {
+        store.value.addQuad(dataset, namedNode(qname("dcterms:temporal")), temporalBnode);
+        store.value.addQuad(temporalBnode, namedNode(qname("prov:startedAtTime")), literal(newValue, namedNode(qname("xsd:date"))));
+    }
+    serializedData.value = serialize();
+});
+
+watch(() => data.value.temporalEnd, (newValue, oldValue) => {
+    const dataset = store.value.getSubjects(namedNode(qname("a")), namedNode(qname("dcat:Dataset")))[0];
+    const temporalQuads = store.value.getQuads(dataset, namedNode(qname("dcterms:temporal")), null);
+    if (temporalQuads.length > 0 && temporalQuads[0].object.termType === "BlankNode") {
+        const bnodeQuads = store.value.getQuads(temporalQuads[0].object, namedNode(qname("prov:endedAtTime")), null);
+        store.value.removeQuads(bnodeQuads);
+        const bnodeQuads2 = store.value.getQuads(temporalQuads[0].object, null, null);
+        if (bnodeQuads2.length === 0) {
+            store.value.removeQuads(temporalQuads);
+        }
+    }
+
+    if (newValue !== "") {
+        store.value.addQuad(dataset, namedNode(qname("dcterms:temporal")), temporalBnode);
+        store.value.addQuad(temporalBnode, namedNode(qname("prov:endedAtTime")), literal(newValue, namedNode(qname("xsd:date"))));
+    }
+    serializedData.value = serialize();
+});
+
+watch(() => data.value.accessUrl, (newValue, oldValue) => {
+    const dataset = store.value.getSubjects(namedNode(qname("a")), namedNode(qname("dcat:Dataset")))[0];
+    const distQuads = store.value.getQuads(dataset, namedNode(qname("dcat:distribution")), null);
+    if (distQuads.length > 0 && distQuads[0].object.termType === "BlankNode") {
+        const bnodeQuads = store.value.getQuads(distQuads[0].object, null, null);
+        store.value.removeQuads(bnodeQuads);
+    }
+    store.value.removeQuads(distQuads);
+
+    if (newValue !== "") {
+        store.value.addQuad(dataset, namedNode(qname("dcat:distribution")), distributionBnode);
+        store.value.addQuad(distributionBnode, namedNode(qname("dcat:accessURL")), literal(newValue, namedNode(qname("xsd:anyURI"))));
+    }
+
+    serializedData.value = serialize();
+});
+
+watch(() => data.value.themes, (newValue, oldValue) => {
+    const dataset = store.value.getSubjects(namedNode(qname("a")), namedNode(qname("dcat:Dataset")))[0];
+    const themeQuads = store.value.getQuads(dataset, namedNode(qname("dcat:theme")), null);
+    store.value.removeQuads(themeQuads);
+    if (newValue.length > 0) {
+        newValue.forEach(theme => store.value.addQuad(dataset, namedNode(qname("dcat:theme")), namedNode(theme)));
+    }
+    serializedData.value = serialize();
+});
+
+watch(() => data.value.agent, (newValue, oldValue) => {
+    const dataset = store.value.getSubjects(namedNode(qname("a")), namedNode(qname("dcat:Dataset")))[0];
+    const qualifiedQuads = store.value.getQuads(dataset, namedNode(qname("prov:qualifiedAttribution")), null);
+    if (qualifiedQuads.length > 0 && qualifiedQuads[0].object.termType === "BlankNode") {
+        const bnodeQuads1 = store.value.getQuads(qualifiedQuads[0].object, namedNode(qname("prov:agent")), null);
+        store.value.removeQuads(bnodeQuads1);
+        const bnodeQuads2 = store.value.getQuads(qualifiedQuads[0].object, null, null);
+        if (bnodeQuads2.length === 0) {
+            store.value.removeQuads(qualifiedQuads);
+        }
+    }
+
+    if (newValue !== "") {
+        store.value.addQuad(dataset, namedNode(qname("prov:qualifiedAttribution")), qualifiedBnode);
+        store.value.addQuad(qualifiedBnode, namedNode(qname("prov:agent")), namedNode(newValue));
+    }
+    serializedData.value = serialize();
+});
+
+watch(() => data.value.role, (newValue, oldValue) => {
+    const dataset = store.value.getSubjects(namedNode(qname("a")), namedNode(qname("dcat:Dataset")))[0];
+    const qualifiedQuads = store.value.getQuads(dataset, namedNode(qname("prov:qualifiedAttribution")), null);
+    if (qualifiedQuads.length > 0 && qualifiedQuads[0].object.termType === "BlankNode") {
+        const bnodeQuads = store.value.getQuads(qualifiedQuads[0].object, namedNode(qname("dcat:hadRole")), null);
+        store.value.removeQuads(bnodeQuads);
+        const bnodeQuads2 = store.value.getQuads(qualifiedQuads[0].object, null, null);
+        if (bnodeQuads2.length === 0) {
+            store.value.removeQuads(qualifiedQuads);
+        }
+    }
+
+    if (newValue !== "") {
+        store.value.addQuad(dataset, namedNode(qname("prov:qualifiedAttribution")), qualifiedBnode);
+        store.value.addQuad(qualifiedBnode, namedNode(qname("dcat:hadRole")), namedNode(newValue));
+    }
+    serializedData.value = serialize();
+});
+
+watch(
+    () => data.value.accessUrl,
+    (newValue, oldValue) => {
+        let protocol = newValue.split("://")[0];
+        if (!newValue.match(/\w+?:\/\//) && urlProtocol.value === "") {
+            urlProtocol.value = "http";
+        } else if (urlProtocolOptions.map(option => option.value).includes(newValue.split("://")[0])) {
+            urlProtocol.value = protocol;
+        }
+    }
+);
+
+function updateTriple(value, predQname, object) {
+    const dataset = store.value.getSubjects(namedNode(qname("a")), namedNode(qname("dcat:Dataset")))[0];
+    const quads = store.value.getQuads(dataset, namedNode(qname(predQname)), null);
+    store.value.removeQuads(quads);
+    if (value !== "") {
+        store.value.addQuad(dataset, namedNode(qname(predQname)), object);
+    }
+    serializedData.value = serialize();
+}
 
 function clearValidate(key) {
     validationMessages.value[key] = [];
@@ -338,6 +447,11 @@ function validateStatus200(key, loadingKey, message) {
         loading.value[loadingKey] = false;
     }
 }
+
+onMounted(() => {
+    store.value.addQuad(namedNode(defaultIri), namedNode(qname("a")), namedNode(qname("dcat:Dataset")));
+    serializedData.value = serialize();
+});
 </script>
 
 <template>
@@ -365,7 +479,7 @@ function validateStatus200(key, loadingKey, message) {
                 <div class="col-body" id="form-items">
                     <FormSection :defaultOpen="true" title="General">
                         <FormField>
-                            <FormInput
+                            <PropFormInput
                                 label="IRI"
                                 type="url"
                                 id="iri"
@@ -380,7 +494,7 @@ function validateStatus200(key, loadingKey, message) {
                                 :disabled="data.assignIri"
                             />
                             <template #bottom>
-                                <FormInput
+                                <PropFormInput
                                     label="Assign IRI"
                                     type="checkbox"
                                     id="assignIRI"
@@ -390,116 +504,181 @@ function validateStatus200(key, loadingKey, message) {
                             </template>
                         </FormField>
                         <FormField>
-                            <FormInput
+                            <PropFormInput
                                 label="Title"
                                 type="text"
                                 id="title"
+                                :propTooltip="propDetails.title"
                                 :required="true"
                                 @onBlur="clearValidate('title'); validateIsEmpty('title', 'Title must not be empty')"
                                 v-model="data.title"
                                 :invalidMessage="validationMessages.title"
                                 :clearButton="true"
                             >
-                            </FormInput>
+                            </PropFormInput>
                         </FormField>
                         <FormField :span="2">
-                            <FormInput
+                            <PropFormInput
                                 label="Description"
                                 type="textarea"
                                 id="description"
+                                :propTooltip="propDetails.description"
                                 v-model="data.description"
+                                description="Supports new lines and basic formatting"
                             >
-                            </FormInput>
+                            </PropFormInput>
+                        </FormField>
+                    </FormSection>
+                    <FormSection title="Agent Info" description="This is a desc">
+                        <FormField>
+                            <PropFormInput
+                                label="Agent"
+                                type="select"
+                                id="agent"
+                                :propTooltip="propDetails.agent"
+                                v-model="data.agent"
+                                :clearButton="true"
+                                :options="agentOptions"
+                            >
+                            </PropFormInput>
+                            <template #bottom v-if="data.agent === 'new'">
+                                <PropFormInput
+                                    label="Enter a new agent"
+                                    type="text"
+                                    v-model="data.customAgent"
+                                    :clearButton="true"
+                                />
+                            </template>
+                        </FormField>
+                        <FormField>
+                            <PropFormInput
+                                label="Role"
+                                type="select"
+                                id="role"
+                                :propTooltip="propDetails.role"
+                                v-model="data.role"
+                                :clearButton="true"
+                                :options="roleOptions"
+                            >
+                                <template #append>
+                                    <button class="modal-btn" @click="modal = 'agentRole'" title="Role info">
+                                        <i class="fa-regular fa-circle-info"></i>
+                                    </button>
+                                    <BaseModal v-if="modal === 'agentRole'" @modalClosed="modal = null">
+                                        <template #headerMiddle>
+                                            <h3>Agent Roles</h3>
+                                        </template>
+                                        <p>Role info</p>
+                                    </BaseModal>
+                                </template>
+                            </PropFormInput>
                         </FormField>
                     </FormSection>
                     <FormSection title="Dates">
                         <FormField>
-                            <FormInput
+                            <PropFormInput
                                 label="Created"
                                 type="date"
                                 id="created"
                                 :required="true"
+                                :propTooltip="propDetails.created"
                                 @onBlur="clearValidate('created'); validateIsEmpty('created', 'Created date must not be empty')"
                                 v-model="data.created"
                                 :invalidMessage="validationMessages.created"
                                 :clearButton="true"
                             >
-                            </FormInput>
+                            </PropFormInput>
                         </FormField>
                         <FormField>
-                            <FormInput
+                            <PropFormInput
                                 label="Modified"
                                 type="date"
                                 id="modified"
                                 :required="true"
+                                :propTooltip="propDetails.modified"
                                 @onBlur="clearValidate('modified'); validateIsEmpty('modified', 'Modified date must not be empty')"
                                 v-model="data.modified"
                                 :invalidMessage="validationMessages.modified"
                                 :clearButton="true"
                             >
-                            </FormInput>
+                            </PropFormInput>
                         </FormField>
                         <FormField>
-                            <FormInput
+                            <PropFormInput
                                 label="Issued"
                                 type="date"
                                 id="issued"
+                                :propTooltip="propDetails.issued"
                                 v-model="data.issued"
                                 :clearButton="true"
                             >
-                            </FormInput>
+                            </PropFormInput>
                         </FormField>
                     </FormSection>
                     <FormSection title="Rights">
                         <FormField>
-                            <FormInput
+                            <PropFormInput
                                 label="License"
                                 type="select"
                                 id="license"
+                                :propTooltip="propDetails.license"
                                 v-model="data.license"
                                 :clearButton="true"
                                 :options="licenseOptions"
                             >
-                            </FormInput>
-                            <template #bottom>
-                                <FormInput
+                                <template #append>
+                                    <button class="modal-btn" @click="modal = 'license'" title="License info">
+                                        <i class="fa-regular fa-circle-info"></i>
+                                    </button>
+                                    <BaseModal v-if="modal === 'license'" @modalClosed="modal = null">
+                                        <template #headerMiddle>
+                                            <h3>Licenses</h3>
+                                        </template>
+                                        <p>License info</p>
+                                    </BaseModal>
+                                </template>
+                            </PropFormInput>
+                            <!-- <template #bottom>
+                                <PropFormInput
                                     v-if="data.license === 'new'"
                                     label="Enter a new license"
                                     type="text"
                                     v-model="data.customLicense"
                                     :clearButton="true"
                                 />
-                            </template>
+                            </template> -->
                         </FormField>
                         <FormField>
-                            <FormInput
+                            <PropFormInput
                                 label="Rights"
                                 type="text"
                                 id="rights"
+                                :propTooltip="propDetails.rights"
                                 v-model="data.rights"
                                 :clearButton="true"
                             >
-                            </FormInput>
+                            </PropFormInput>
                         </FormField>
                         <FormField>
-                            <FormInput
+                            <PropFormInput
                                 label="Access Rights"
                                 type="select"
                                 id="accessRights"
                                 v-model="data.accessRights"
+                                :propTooltip="propDetails.accessRights"
                                 :clearButton="true"
                                 :options="accessRightsOptions"
-                                placeholder="placeholder"
                             >
-                            </FormInput>
+                            </PropFormInput>
                         </FormField>
                     </FormSection>
                     <FormSection title="Spatio/Temporal">
                         <FormField label="Spatial geometry">
-                            <FormInput
+                            <PropFormInput
                                 label="Geometry"
                                 type="text"
                                 v-model="data.spatialGeom"
+                                :propTooltip="propDetails.spatialGeometry"
                                 :clearButton="true"
                                 placeholder="e.g. POLYGON ((1234 1234, 1235 1245))"
                                 :disabled="data.useSpatialIri"
@@ -507,18 +686,20 @@ function validateStatus200(key, loadingKey, message) {
                                 @onBlur="clearValidate('spatialGeom'); validateMatchRegex('spatialGeom', /^\w+\s?\(.+\)$/, 'Invalid WKT')"
                                 :invalidMessage="validationMessages.spatialGeom"
                             >
-                            </FormInput>
+                            </PropFormInput>
                             <template #bottom>
-                                <FormInput
+                                <PropFormInput
                                     label="Use spatial IRI"
                                     type="checkbox"
+                                    id="use-spatial-iri"
                                     v-model="data.useSpatialIri"
                                 >
-                                </FormInput>
-                                <FormInput
+                                </PropFormInput>
+                                <PropFormInput
                                     label="Spatial IRI"
                                     type="url"
                                     v-model="data.spatialIri"
+                                    :propTooltip="propDetails.spatialIri"
                                     :clearButton="true"
                                     placeholder="e.g. http://example.com/1234"
                                     :disabled="!data.useSpatialIri"
@@ -526,34 +707,37 @@ function validateStatus200(key, loadingKey, message) {
                                     @onBlur="clearValidate('spatialIri'); validateMatchRegex('spatialIri', /https?:\/\/.+/, 'Invalid IRI')"
                                     :invalidMessage="validationMessages.spatialIri"
                                 >
-                                </FormInput>
+                                </PropFormInput>
                             </template>
                         </FormField>
                         <FormField label="Temporal">
-                            <FormInput
+                            <PropFormInput
                                 label="Start"
                                 type="date"
                                 v-model="data.temporalStart"
+                                :propTooltip="propDetails.startDate"
                                 :clearButton="true"
                             >
-                            </FormInput>
+                            </PropFormInput>
                             <template #bottom>
-                                <FormInput
+                                <PropFormInput
                                     label="End"
                                     type="date"
                                     v-model="data.temporalEnd"
+                                    :propTooltip="propDetails.endDate"
                                     :clearButton="true"
                                 >
-                                </FormInput>
+                                </PropFormInput>
                             </template>
                         </FormField>
                     </FormSection>
-                    <FormSection title="Distribution Info">
+                    <FormSection title="Distribution Info" description="Providing an access URL is optional, but it must be a publicly resolvable URL if provided.">
                         <FormField>
-                            <FormInput
+                            <PropFormInput
                                 label="Access URL"
                                 type="url"
                                 id="accessUrl"
+                                :propTooltip="propDetails.accessUrl"
                                 description="Must be a reachable URL"
                                 placeholder="e.g. http://example.com/1234"
                                 @onBlur="clearValidate('accessUrl'); validateStatus200('accessUrl', 'accessUrl', 'Access URL is unreachable')"
@@ -562,7 +746,7 @@ function validateStatus200(key, loadingKey, message) {
                                 :clearButton="true"
                             >
                                 <template #prepend>
-                                    <FormInput
+                                    <PropFormInput
                                         type="select"
                                         id="protocol"
                                         v-model="urlProtocol"
@@ -572,85 +756,54 @@ function validateStatus200(key, loadingKey, message) {
                                 <template #append v-if="loading.accessUrl">
                                     <span><i class="fa-regular fa-spinner-third"></i></span>
                                 </template>
-                            </FormInput>
-                        </FormField>
-                    </FormSection>
-                    <FormSection title="Agent Info">
-                        <FormField>
-                            <FormInput
-                                label="Agent"
-                                type="select"
-                                id="agent"
-                                v-model="data.agent"
-                                :clearButton="true"
-                                :options="agentOptions"
-                            >
-                            </FormInput>
-                            <template #bottom v-if="data.agent === 'new'">
-                                <FormInput
-                                    label="Enter a new agent"
-                                    type="text"
-                                    v-model="data.customAgent"
-                                    :clearButton="true"
-                                />
-                            </template>
-                        </FormField>
-                        <FormField>
-                            <FormInput
-                                label="Role"
-                                type="select"
-                                id="role"
-                                v-model="data.role"
-                                :clearButton="true"
-                                :options="roleOptions"
-                            >
-                            </FormInput>
+                            </PropFormInput>
                         </FormField>
                     </FormSection>
                     <FormSection title="Theme">
                         <FormField>
-                            <FormInput
+                            <PropFormInput
                                 label="Theme"
                                 type="select"
                                 id="theme"
                                 v-model="data.themes"
+                                :propTooltip="propDetails.theme"
                                 :clearButton="true"
                                 :options="themeOptions"
                                 :multiple="true"
                             >
-                            </FormInput>
+                            </PropFormInput>
                         </FormField>
                     </FormSection>
-                    <FormSection title="Contact Details">
+                    <FormSection title="Contact Details" description="The contact person provided here will be the point of contact for this dataset.">
                         <FormField>
-                            <FormInput
+                            <PropFormInput
                                 label="Name"
                                 type="text"
                                 id="contactName"
                                 v-model="data.contactName"
                                 :clearButton="true"
                             >
-                            </FormInput>
+                            </PropFormInput>
                         </FormField>
                         <FormField>
-                            <FormInput
+                            <PropFormInput
                                 label="Email"
                                 type="email"
                                 id="contactEmail"
                                 v-model="data.contactEmail"
                                 :clearButton="true"
                             >
-                            </FormInput>
+                            </PropFormInput>
                         </FormField>
                         <FormField>
-                            <FormInput
+                            <PropFormInput
                                 label="Phone"
                                 type="tel"
                                 id="contactPhone"
                                 v-model="data.contactPhone"
                                 :clearButton="true"
                             >
-                            </FormInput>
+                            </PropFormInput>
                         </FormField>
                     </FormSection>
                 </div>
@@ -662,8 +815,8 @@ function validateStatus200(key, loadingKey, message) {
                 <div class="col-body">
                     <!-- <FairScore :score="fairScore" />
                     <CareScore :score="careScore" /> -->
-                    <NewFairScore :subscores="fairScore" />
-                    <NewCareScore :subscores="careScore" />
+                    <FairScore :subscores="fairScore" />
+                    <CareScore :subscores="careScore" />
                 </div>
             </div>
             <div class="metadata-col" id="metadata-rdf">
@@ -671,7 +824,7 @@ function validateStatus200(key, loadingKey, message) {
                     <h3>RDF</h3>
                 </div>
                 <div class="col-body">
-                    <RDFPreview :data="rdfData" />
+                    <RDFPreview :data="serializedData" />
                 </div>
             </div>
         </div>
@@ -692,6 +845,7 @@ function validateStatus200(key, loadingKey, message) {
 
 <style lang="scss" scoped>
 @import "@/assets/_variables.scss";
+@import "@/assets/_mixins.scss";
 
 $gap: 16px;
 $padding: 12px;
@@ -779,7 +933,7 @@ $padding: 12px;
             grid-template-columns: 100%;
             gap: $padding;
             padding: $padding;
-            transition: width 0.2s ease-in-out, margin 0.2s ease-in-out, padding 0.2s ease-in-out;
+            @include transition(width, margin, padding);
 
             & > * {
                 max-width: 100%;
@@ -840,5 +994,9 @@ $padding: 12px;
             }
         }
     }
+}
+
+button.modal-btn {
+    cursor: pointer;
 }
 </style>
