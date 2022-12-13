@@ -85,73 +85,6 @@ const genIri = computed(() => {
     }
 });
 
-const rdfData = computed(() => {
-    let g = `PREFIX dcat: <http://www.w3.org/ns/dcat#>
-PREFIX dcterms: <http://purl.org/dc/terms/>
-PREFIX xsd: <http://www.w3.org/2001/XMLSchema#>`;
-
-    let node = "";
-
-    if (!empty.value) {
-        node += genIri.value;
-        node += `\n\tdcterms:identifier "resourceId"^^xsd:token ;`;
-    }
-
-    if (data.value.title !== "") {
-        node += `\n\tdcterms:title "${data.value.title}" ;`;
-    }
-
-    if (data.value.description !== "") {
-        node += `\n\tdcterms:description """${data.value.description}""" ;`;
-    }
-
-    if (data.value.created !== "") {
-        node += `\n\tdcterms:created "${data.value.created}"^^xsd:date ;`;
-    }
-
-    if (data.value.modified !== "") {
-        node += `\n\tdcterms:modified "${data.value.modified}"^^xsd:date ;`;
-    }
-
-    if (data.value.issued !== "") {
-        node += `\n\tdcterms:issued "${data.value.issued}"^^xsd:date ;`;
-    }
-
-    if (data.value.license !== "") {
-        node += `\n\tdcterms:license <${data.value.license}> ;`;
-    }
-
-    if (data.value.rights !== "") {
-        node += `\n\tdcterms:rights "${data.value.rights}" ;`;
-    }
-
-    if (data.value.accessRights !== "") {
-        node += `\n\tdcterms:accessRights <${data.value.accessRights}> ;`;
-    }
-
-    if (data.value.accessUrl !== "") {
-        node += `\n\tdcat:accessUrl "${data.value.accessUrl}"^xsd:anyURI ;`;
-    }
-
-    if (data.value.useSpatialIri) {
-        if (data.value.spatialIri !== "") {
-            node += `\n\tdcterms:spatial <${data.value.spatialIri}> ;`;
-        }
-    } else {
-        if (data.value.spatialGeom !== "") {
-            node += `\n\tdcterms:spatial [${data.value.spatialGeom}] ;`;
-        }
-    }
-
-    if (node !== "") {
-        node += `\n.`;
-    }
-    
-    g += node;
-    
-    return g;
-});
-
 const fairScore = computed(() => {
     let score = {
         f1: 0,
@@ -218,11 +151,6 @@ const careScore = computed(() => {
 const isValid = computed(() => {
     return Object.values(validationMessages.value).find(item => item.length === 0) === undefined;
 });
-
-// watch(data.value, (value) => {
-//     serializedData.value = serialize();
-//     console.log(serializedData.value)
-// });
 
 watch(() => calcIri.value, (newValue, oldValue) => {
     const quads = store.value.getQuads(namedNode(oldValue), null, null);
@@ -448,6 +376,93 @@ function validateStatus200(key, loadingKey, message) {
     }
 }
 
+function loadRDF(e) {
+    const { format, value } = e;
+    const { store: loadedStore, qname: loadedQname, parseIntoStore: loadedParseIntoStore, serialize: loadedSerialize } = useRdfStore();
+    clearData();
+    loadedParseIntoStore(value, format);
+    const subject = loadedStore.value.getSubjects(namedNode(qname("a")), namedNode(loadedQname("dcat:Dataset")))[0];
+    data.value.iri = subject.id;
+    data.value.assignIri = false;
+    loadedStore.value.forEach(q => { // get preds & objs
+        if (q.predicate.value === loadedQname("dcterms:title")) {
+            data.value.title = q.object.value;
+        } else if (q.predicate.value === loadedQname("dcterms:description")) {
+            data.value.description = q.object.value;
+        } else if (q.predicate.value === loadedQname("dcterms:created")) {
+            data.value.created = q.object.value;
+        } else if (q.predicate.value === loadedQname("dcterms:modified")) {
+            data.value.modified = q.object.value;
+        } else if (q.predicate.value === loadedQname("dcterms:issued")) {
+            data.value.issued = q.object.value;
+        } else if (q.predicate.value === loadedQname("dcterms:license")) {
+            data.value.license = q.object.value;
+        } else if (q.predicate.value === loadedQname("dcterms:rights")) {
+            data.value.rights = q.object.value;
+        } else if (q.predicate.value === loadedQname("dcat:accessRights")) {
+            data.value.accessRights = q.object.value;
+        } else if (q.predicate.value === loadedQname("dcterms:spatial")) {
+            if (q.object.termType === "NamedNode") {
+                data.value.spatialIri = q.object.value;
+            } else {
+                const bnodes = loadedStore.value.getQuads(q.object, namedNode(loadedQname("geo:asWKT")), null);
+                data.value.spatialGeom = bnodes[0].object.value;
+            }
+        } else if (q.predicate.value === loadedQname("dcterms:temporal")) {
+            loadedStore.value.forEach(q1 => {
+                if (q1.predicate.value === loadedQname("prov:startedAtTime")) {
+                    data.value.temporalStart = q1.object.value;
+                } else if (q1.predicate.value === loadedQname("prov:endedAtTime")) {
+                    data.value.temporalEnd = q1.object.value;
+                }
+            }, q.object, null, null);
+        } else if (q.predicate.value === loadedQname("dcat:distribution")) {
+            const bnodes = loadedStore.value.getQuads(q.object, namedNode(loadedQname("dcat:accessURL")), null);
+            data.value.accessUrl = bnodes[0].object.value;
+        } else if (q.predicate.value === loadedQname("dcat:theme")) {
+            data.value.themes.push(q.object.value);
+        }
+    }, subject, null, null);
+}
+
+function clearData() {
+    data.value = {
+        iri: "",
+        assignIri: true,
+        title: "",
+        description: "",
+        created: "",
+        modified: "",
+        issued: "",
+        license: "",
+        customLicense: "",
+        rights: "",
+        accessRights: "",
+        spatialGeom: "",
+        useSpatialIri: false,
+        spatialIri: "",
+        temporalStart: "",
+        temporalEnd: "",
+        accessUrl: "",
+        agent: "",
+        customAgent: "",
+        role: "",
+        themes: [],
+        contactName: "",
+        contactEmail: "",
+        contactPhone: ""
+    };
+    validationMessages.value = {
+        iri: [],
+        title: [],
+        created: [],
+        modified: [],
+        spatialGeom: [],
+        spatialIri: [],
+        accessUrl: []
+    };
+}
+
 onMounted(() => {
     store.value.addQuad(namedNode(defaultIri), namedNode(qname("a")), namedNode(qname("dcat:Dataset")));
     serializedData.value = serialize();
@@ -458,7 +473,7 @@ onMounted(() => {
     <div id="metadata-container">
         <div id="metadata-header">
             <div id="metadata-title">
-                <h2>Metadata Submission Form</h2>
+                <h2>Metadata Entry Form</h2>
                 <button id="toggle-rdf-btn" class="btn outline" @click="showRDF = !showRDF">
                     <span><template v-if="showRDF">Hide</template><template v-else>Show</template> RDF</span>
                     <i :class="`fa-regular fa-chevron-${showRDF ? 'right' : 'left'}`"></i>
@@ -466,7 +481,7 @@ onMounted(() => {
             </div>
             <div id="metadata-desc">
                 <p>
-                    Fill out the form below to submit to the IDN. FAIR and CARE scores will be updated live as the fields are filled out. The generated RDF can optionally be viewed on the right.<br/>
+                    Fill out the form below to generate metadata for your dataset. FAIR and CARE scores will be updated live as the fields are filled out. The generated RDF can optionally be viewed on the right.<br/>
                     Lorem ipsum dolor sit amet consectetur adipisicing elit. Ducimus numquam facere eveniet sapiente neque consequatur at reprehenderit error, enim saepe aspernatur inventore vel deserunt quo repellendus necessitatibus quam illum assumenda!
                 </p>
             </div>
@@ -813,8 +828,6 @@ onMounted(() => {
                     <h3>Scores</h3>
                 </div>
                 <div class="col-body">
-                    <!-- <FairScore :score="fairScore" />
-                    <CareScore :score="careScore" /> -->
                     <FairScore :subscores="fairScore" />
                     <CareScore :subscores="careScore" />
                 </div>
@@ -824,7 +837,7 @@ onMounted(() => {
                     <h3>RDF</h3>
                 </div>
                 <div class="col-body">
-                    <RDFPreview :data="serializedData" />
+                    <RDFPreview :data="serializedData" @load="loadRDF" />
                 </div>
             </div>
         </div>
@@ -837,7 +850,8 @@ onMounted(() => {
                 
             </p>
             <div id="form-buttons">
-                <button class="btn success lg submit-btn">Submit</button>
+                <a class="btn lg outline save-btn" :href="`data:text/turtle;charset=utf-8,${encodeURIComponent(serializedData)}`" download="metadata.ttl">Save <i class="fa-regular fa-floppy-disk"></i></a>
+                <button class="btn success lg submit-btn" disabled>Submit for review</button>
             </div>
         </div>
     </div>
@@ -856,7 +870,6 @@ $padding: 12px;
     gap: $gap;
     background-color: $formBg;
     border-radius: $borderRadius;
-    // border: 1px solid #b7b7b7;
 
     #metadata-header {
         display: flex;
@@ -989,6 +1002,7 @@ $padding: 12px;
             display: flex;
             flex-direction: row;
             gap: 12px;
+            
             button.submit-btn {
                 margin-left: auto;
             }
@@ -998,5 +1012,10 @@ $padding: 12px;
 
 button.modal-btn {
     cursor: pointer;
+}
+
+a.save-btn {
+    text-decoration: none;
+    font-weight: normal;
 }
 </style>

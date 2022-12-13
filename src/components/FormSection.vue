@@ -59,6 +59,7 @@ const collapse = ref(!props.defaultOpen);
 
             h3 {
                 margin: 0;
+                font-size: 1.3em;
             }
         }
 

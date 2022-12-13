@@ -1,18 +1,20 @@
 <script setup>
 import { RouterView } from "vue-router";
 import { HeaderComponent, MainComponent, FooterComponent } from "@idn-au/idn-lib";
+import MetadataNav from "@/components/MetadataNav.vue";
 
 const banners = [
     {
         "type": "dev",
         "message": "This website is currently under development"
     }
-]
+];
 </script>
 
 <template>
     <HeaderComponent title="IDN Metadata Form" :banners="banners" />
     <MainComponent>
+        <MetadataNav />
         <RouterView />
     </MainComponent>
     <FooterComponent />
@@ -33,7 +35,7 @@ const banners = [
         background-color: $primary;
         color: white;
 
-        &:hover {
+        &:not(:disabled):hover {
             background-color: darken($color: $primary, $amount: 10);
         }
     }
@@ -43,7 +45,7 @@ const banners = [
         border-color: $primary;
         color: $primary;
 
-        &:hover {
+        &:not(:disabled):hover {
             background-color: $primary;
             color: white;
         }
@@ -53,7 +55,7 @@ const banners = [
         background-color: $success;
         color: white;
 
-        &:hover {
+        &:not(:disabled):hover {
             background-color: darken($color: $success, $amount: 7);
         }
     }
@@ -61,6 +63,11 @@ const banners = [
     &.lg {
         font-size: 1.1rem;
         padding: 8px 10px;
+    }
+
+    &:disabled {
+        opacity: 0.7;
+        cursor: default;
     }
 }
 </style>
