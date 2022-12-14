@@ -5,7 +5,7 @@ import { RouterLink } from "vue-router";
 <template>
     <nav id="metadata-nav">
         <RouterLink class="nav-link" to="/">Form</RouterLink>
-        <RouterLink class="nav-link" to="/help">Help</RouterLink>
+        <RouterLink class="nav-link ml-auto" to="/help">Help</RouterLink>
         <RouterLink class="nav-link" to="/contact">Contact</RouterLink>
     </nav>
 </template>
@@ -38,6 +38,10 @@ nav#metadata-nav {
         &.router-link-exact-active {
             color: white;
             background-color: $primary;
+        }
+
+        &.ml-auto {
+            margin-left: auto;
         }
     }
 }

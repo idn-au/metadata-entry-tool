@@ -10,8 +10,9 @@ import RDFPreview from "@/components/RDFPreview.vue";
 import { useRdfStore } from "@/composables/rdfStore";
 import propDetails from "@/util/props.json";
 import { urlProtocolOptions, agentOptions, roleOptions, themeOptions, licenseOptions, accessRightsOptions } from "@/util/formOptions";
+import exampleData from "@/util/exampleData.json";
 
-const { namedNode, literal, blankNode } = DataFactory;
+const { namedNode, literal } = DataFactory;
 
 const defaultIri = "https://example.com/someIRI";
 
@@ -22,7 +23,7 @@ const temporalBnode = store.value.createBlankNode();
 const distributionBnode = store.value.createBlankNode();
 const qualifiedBnode = store.value.createBlankNode();
 
-const showRDF = ref(true);
+const showRDF = ref(false);
 const loading = ref({
     accessUrl: false
 });
@@ -64,6 +65,7 @@ const validationMessages = ref({
 });
 const serializedData = ref("");
 const modal = ref(null);
+const hasSavedDraft = ref(false);
 
 const calcIri = computed(() => {
     return data.value.assignIri ? defaultIri : data.value.iri;
@@ -74,15 +76,7 @@ const calcGeometry = computed(() => {
 });
 
 const empty = computed(() => {
-    return Object.values(data.value).find(item => item !== "" && item !== [] && item !== false) === undefined;
-});
-
-const genIri = computed(() => {
-    if (data.value.iri === "") {
-        return "\n\n<http://example.com/exampleiri> a dcat:Resource ;";
-    } else {
-        return `\n\n<${data.value.iri}> a dcat:Resource ;`;
-    }
+    return Object.values(data.value).filter(item => typeof(item) !== "boolean" && item.length > 0).length === 0;
 });
 
 const fairScore = computed(() => {
@@ -463,9 +457,29 @@ function clearData() {
     };
 }
 
+function saveDraft() {
+    localStorage.setItem("data", JSON.stringify(data.value));
+    hasSavedDraft.value = true;
+}
+
+function deleteDraft() {
+    localStorage.removeItem("data");
+    hasSavedDraft.value = false;
+}
+
+function loadExample(key) {
+    data.value = exampleData[key];
+}
+
 onMounted(() => {
-    store.value.addQuad(namedNode(defaultIri), namedNode(qname("a")), namedNode(qname("dcat:Dataset")));
-    serializedData.value = serialize();
+    const savedData = localStorage.getItem("data");
+    if (savedData) {
+        data.value = JSON.parse(savedData);
+        hasSavedDraft.value = true;
+    } else {
+        store.value.addQuad(namedNode(defaultIri), namedNode(qname("a")), namedNode(qname("dcat:Dataset")));
+        serializedData.value = serialize();
+    }
 });
 </script>
 
@@ -473,24 +487,21 @@ onMounted(() => {
     <div id="metadata-container">
         <div id="metadata-header">
             <div id="metadata-title">
-                <h2>Metadata Entry Form</h2>
+                <button class="btn primary outline tutorial-btn" title="Coming soon" disabled>Start Tutorial</button>
+                <div class="examples-container">
+                    <span>Load examples: </span>
+                    <div class="examples">
+                        <button class="btn example sm" v-for="example in Object.keys(exampleData)" @click="loadExample(example)">{{ example }}</button>
+                    </div>
+                </div>
                 <button id="toggle-rdf-btn" class="btn outline" @click="showRDF = !showRDF">
                     <span><template v-if="showRDF">Hide</template><template v-else>Show</template> RDF</span>
                     <i :class="`fa-regular fa-chevron-${showRDF ? 'right' : 'left'}`"></i>
                 </button>
             </div>
-            <div id="metadata-desc">
-                <p>
-                    Fill out the form below to generate metadata for your dataset. FAIR and CARE scores will be updated live as the fields are filled out. The generated RDF can optionally be viewed on the right.<br/>
-                    Lorem ipsum dolor sit amet consectetur adipisicing elit. Ducimus numquam facere eveniet sapiente neque consequatur at reprehenderit error, enim saepe aspernatur inventore vel deserunt quo repellendus necessitatibus quam illum assumenda!
-                </p>
-            </div>
         </div>
         <div id="metadata-body" :class="`${showRDF ? 'show-rdf' : ''}`">
             <div class="metadata-col" id="metadata-form">
-                <div class="col-header">
-                    <h3>Form</h3>
-                </div>
                 <div class="col-body" id="form-items">
                     <FormSection :defaultOpen="true" title="General">
                         <FormField>
@@ -824,34 +835,36 @@ onMounted(() => {
                 </div>
             </div>
             <div class="metadata-col" id="metadata-scores">
-                <div class="col-header">
-                    <h3>Scores</h3>
-                </div>
                 <div class="col-body">
                     <FairScore :subscores="fairScore" />
                     <CareScore :subscores="careScore" />
                 </div>
             </div>
             <div class="metadata-col" id="metadata-rdf">
-                <div class="col-header">
-                    <h3>RDF</h3>
-                </div>
                 <div class="col-body">
-                    <RDFPreview :data="serializedData" @load="loadRDF" />
+                    <RDFPreview :data="serializedData" @import="loadRDF" />
                 </div>
             </div>
         </div>
         <div id="metadata-footer">
             <p>
-                declaration. 
-                Lorem ipsum dolor sit amet consectetur adipisicing elit. Ullam, temporibus eligendi. Delectus beatae similique doloribus vero reiciendis in quo quas nesciunt rem assumenda laboriosam ab et sapiente, odio non sit?
-                Lorem ipsum dolor sit amet consectetur adipisicing elit. Minima iste illo doloribus voluptatibus cumque reprehenderit eaque dolore, quisquam, eum, non vero corrupti numquam beatae accusamus eius rem soluta omnis aliquam!
-                Lorem ipsum dolor sit amet consectetur adipisicing elit. Ullam sit deserunt harum aliquam est adipisci iste enim aperiam quasi, nesciunt saepe debitis fugiat doloribus vitae delectus incidunt repellendus veritatis accusantium?
-                
+                Form declaration.
             </p>
             <div id="form-buttons">
-                <a class="btn lg outline save-btn" :href="`data:text/turtle;charset=utf-8,${encodeURIComponent(serializedData)}`" download="metadata.ttl">Save <i class="fa-regular fa-floppy-disk"></i></a>
-                <button class="btn success lg submit-btn" disabled>Submit for review</button>
+                <div class="left-buttons">
+                    <button class="btn outline" @click="saveDraft" :disabled="empty">Save Draft <i class="fa-regular fa-floppy-disk"></i></button>
+                    <button class="btn outline danger" @click="deleteDraft" :disabled="!hasSavedDraft">Delete Draft <i class="fa-regular fa-trash"></i></button>
+                    <button class="btn danger" @click="clearData" :disabled="empty">Clear Data <i class="fa-regular fa-delete-left"></i></button>
+                    <a
+                        class="btn outline export-btn"
+                        :href="!empty ? `data:text/turtle;charset=utf-8,${encodeURIComponent(serializedData)}` : null"
+                        :download="!empty ? `${data.title || 'metadata'}.ttl` : null"
+                        :disabled="empty"
+                    >
+                        Export <i class="fa-regular fa-file-export"></i>
+                    </a>
+                </div>
+                <button class="btn success lg submit-btn" title="Coming soon" :disabled="true || empty">Submit for review</button>
             </div>
         </div>
     </div>
@@ -867,9 +880,10 @@ $padding: 12px;
 #metadata-container {
     display: flex;
     flex-direction: column;
-    gap: $gap;
+    // gap: $gap;
     background-color: $formBg;
     border-radius: $borderRadius;
+    margin-top: 12px;
 
     #metadata-header {
         display: flex;
@@ -881,6 +895,7 @@ $padding: 12px;
             flex-direction: row;
             justify-content: space-between;
             align-items: center;
+            gap: 12px;
 
             h2 {
                 text-align: center;
@@ -942,7 +957,7 @@ $padding: 12px;
 
         .metadata-col {
             display: grid;
-            grid-template-rows: 40px 1fr;
+            grid-template-rows: 1fr;
             grid-template-columns: 100%;
             gap: $padding;
             padding: $padding;
@@ -995,7 +1010,7 @@ $padding: 12px;
     #metadata-footer {
         display: flex;
         flex-direction: column;
-        gap: 12px;
+        gap: 10px;
         padding: $padding;
 
         #form-buttons {
@@ -1010,12 +1025,46 @@ $padding: 12px;
     }
 }
 
-button.modal-btn {
-    cursor: pointer;
+.examples-container {
+    display: flex;
+    flex-direction: row;
+    gap: 8px;
+    align-items: center;
+    margin-right: auto;
+
+    span {
+        font-size: 0.9em;
+    }
+
+    .examples {
+        display: flex;
+        flex-direction: row;
+        gap: 6px;
+        align-items: center;
+
+        .example {
+
+        }
+    }
 }
 
-a.save-btn {
-    text-decoration: none;
-    font-weight: normal;
+
+
+.left-buttons {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    gap: 10px;
+    margin-top: auto;
+    
+    a.export-btn {
+        text-decoration: none;
+        font-weight: normal;
+        font-size: 0.833em;
+    }
+}
+
+button.modal-btn {
+    cursor: pointer;
 }
 </style>

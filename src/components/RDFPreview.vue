@@ -21,7 +21,7 @@ function copyRDF() {
 
 // turtle syntax highlighting
 
-const emit = defineEmits(["load"]);
+const emit = defineEmits(["import"]);
 
 function setFile(e) {
     const file = e.target.files[0];
@@ -31,8 +31,8 @@ function setFile(e) {
     var reader = new FileReader();
     reader.onload = function(e) {
         const extension = file.name.split(".")[1];
-        // emit("load", e.target.result);
-        emit("load", { format: rdfFormats[extension], value: e.target.result });
+        // emit("import", e.target.result);
+        emit("import", { format: rdfFormats[extension], value: e.target.result });
     };
     reader.readAsText(file);
 }
@@ -48,7 +48,7 @@ function setFile(e) {
     <div class="buttons">
         <button class="btn outline copy-btn" @click="copyRDF">Copy <i class="fa-regular fa-copy"></i></button>
         <input type="file" name="rdfFile" id="rdfFile" accept=".ttl,.trig,.nt,.n3" @change="setFile" hidden>
-        <label for="rdfFile" class="btn outline load-btn">Load <i class="fa-regular fa-folder-open"></i></label>
+        <label for="rdfFile" class="btn outline import-btn">Import <i class="fa-regular fa-file-import"></i></label>
     </div>
 </template>
 
@@ -69,7 +69,7 @@ function setFile(e) {
 
     }
 
-    label.load-btn {
+    label.import-btn {
         font-size: 0.833em;
         font-weight: normal;
         margin-left: auto;

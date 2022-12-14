@@ -24,6 +24,14 @@ const banners = [
 @import "@/assets/_variables.scss";
 @import "@/assets/_mixins.scss";
 
+#main-content {
+    gap: unset !important;
+}
+
+h2 {
+    margin: 0.8em 0 0.5em 0;
+}
+
 .btn {
     padding: 6px 8px;
     border: 1px solid transparent;
@@ -35,17 +43,17 @@ const banners = [
         background-color: $primary;
         color: white;
 
-        &:not(:disabled):hover {
+        &:not(:disabled):not([disabled="true"]):hover {
             background-color: darken($color: $primary, $amount: 10);
         }
     }
 
     &.outline {
-        background-color: white;
+        background-color: transparent;
         border-color: $primary;
         color: $primary;
 
-        &:not(:disabled):hover {
+        &:not(:disabled):not([disabled="true"]):hover {
             background-color: $primary;
             color: white;
         }
@@ -55,8 +63,39 @@ const banners = [
         background-color: $success;
         color: white;
 
-        &:not(:disabled):hover {
+        &:not(:disabled):not([disabled="true"]):hover {
             background-color: darken($color: $success, $amount: 7);
+        }
+
+        &.outline {
+            background-color: transparent;
+            border-color: $success;
+            color: $success;
+
+            &:not(:disabled):not([disabled="true"]):hover {
+                background-color: $success;
+                color: white;
+            }
+        }
+    }
+
+    &.danger {
+        background-color: $danger;
+        color: white;
+
+        &:not(:disabled):not([disabled="true"]):hover {
+            background-color: darken($color: $danger, $amount: 7);
+        }
+
+        &.outline {
+            background-color: transparent;
+            border-color: $danger;
+            color: $danger;
+
+            &:not(:disabled):not([disabled="true"]):hover {
+                background-color: $danger;
+                color: white;
+            }
         }
     }
 
@@ -65,7 +104,12 @@ const banners = [
         padding: 8px 10px;
     }
 
-    &:disabled {
+    &.sm {
+        font-size: 0.75em;
+        padding: 4px 6px;
+    }
+
+    &:disabled, &[disabled="true"] {
         opacity: 0.7;
         cursor: default;
     }
