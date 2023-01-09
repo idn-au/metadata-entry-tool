@@ -1,8 +1,8 @@
 <script setup>
 import { ref, computed, watch, onMounted } from "vue";
 import { DataFactory } from "n3";
-import { FormField, BaseModal } from "@idn-au/idn-lib";
-import PropFormInput from "@/components/PropFormInput.vue";
+import { FormInput, FormField, BaseModal } from "@idn-au/idn-lib";
+import PropTooltip from "@/components/PropTooltip.vue";
 import FormSection from "@/components/FormSection.vue";
 import FairScore from "@/components/FairScore.vue";
 import CareScore from "@/components/CareScore.vue";
@@ -23,7 +23,7 @@ const temporalBnode = store.value.createBlankNode();
 const distributionBnode = store.value.createBlankNode();
 const qualifiedBnode = store.value.createBlankNode();
 
-const showRDF = ref(false);
+const showRDF = ref(true);
 const loading = ref({
     accessUrl: false
 });
@@ -222,8 +222,19 @@ watch(() => data.value.temporalStart, (newValue, oldValue) => {
     }
 
     if (newValue !== "") {
+        // date datatype
+        let datatype = "";
+        const valueSplit = newValue.split("-")
+        if (valueSplit.length === 1) {
+            datatype = "xsd:gYear";
+        } else if (valueSplit.length === 2) {
+            datatype = "xsd:monthYear";
+        } else {
+            datatype = "xsd:date";
+        }
+
         store.value.addQuad(dataset, namedNode(qname("dcterms:temporal")), temporalBnode);
-        store.value.addQuad(temporalBnode, namedNode(qname("prov:startedAtTime")), literal(newValue, namedNode(qname("xsd:date"))));
+        store.value.addQuad(temporalBnode, namedNode(qname("prov:startedAtTime")), literal(newValue, namedNode(qname(datatype))));
     }
     serializedData.value = serialize();
 });
@@ -241,8 +252,19 @@ watch(() => data.value.temporalEnd, (newValue, oldValue) => {
     }
 
     if (newValue !== "") {
+        // date datatype
+        let datatype = "";
+        const valueSplit = newValue.split("-")
+        if (valueSplit.length === 1) {
+            datatype = "xsd:gYear";
+        } else if (valueSplit.length === 2) {
+            datatype = "xsd:monthYear";
+        } else {
+            datatype = "xsd:date";
+        }
+
         store.value.addQuad(dataset, namedNode(qname("dcterms:temporal")), temporalBnode);
-        store.value.addQuad(temporalBnode, namedNode(qname("prov:endedAtTime")), literal(newValue, namedNode(qname("xsd:date"))));
+        store.value.addQuad(temporalBnode, namedNode(qname("prov:endedAtTime")), literal(newValue, namedNode(qname(datatype))));
     }
     serializedData.value = serialize();
 });
@@ -503,88 +525,93 @@ onMounted(() => {
         <div id="metadata-body" :class="`${showRDF ? 'show-rdf' : ''}`">
             <div class="metadata-col" id="metadata-form">
                 <div class="col-body" id="form-items">
-                    <FormSection :defaultOpen="true" title="General">
-                        <FormField>
-                            <PropFormInput
+                    <FormSection defaultOpen title="General">
+                        <FormField description="Provide an IRI or choose to have an IRI automatically assigned">
+                            <FormInput
                                 label="IRI"
                                 type="url"
                                 id="iri"
                                 tooltip="An IRI is like an identifier for this resource"
-                                description="Provide an IRI or choose to have an IRI automatically assigned"
                                 placeholder="e.g. http://example.com/1234"
-                                :required="true"
+                                required
                                 @onBlur="clearValidate('iri'); validateIsEmpty('iri', 'IRI must not be empty'); validateMatchRegex('iri', /https?:\/\/.+/, 'Invalid IRI')"
                                 v-model="data.iri"
                                 :invalidMessage="validationMessages.iri"
-                                :clearButton="true"
+                                clearButton
                                 :disabled="data.assignIri"
                             />
-                            <template #bottom>
-                                <PropFormInput
-                                    label="Assign IRI"
-                                    type="checkbox"
-                                    id="assignIRI"
-                                    v-model="data.assignIri"
-                                    @onBlur="clearValidate('iri')"
-                                />
-                            </template>
+                            <FormInput
+                                label="Assign IRI"
+                                type="checkbox"
+                                id="assignIRI"
+                                v-model="data.assignIri"
+                                @onBlur="clearValidate('iri')"
+                                switch
+                            />
                         </FormField>
                         <FormField>
-                            <PropFormInput
+                            <FormInput
                                 label="Title"
                                 type="text"
                                 id="title"
-                                :propTooltip="propDetails.title"
-                                :required="true"
+                                required
                                 @onBlur="clearValidate('title'); validateIsEmpty('title', 'Title must not be empty')"
                                 v-model="data.title"
                                 :invalidMessage="validationMessages.title"
-                                :clearButton="true"
+                                clearButton
                             >
-                            </PropFormInput>
+                                <template #tooltip>
+                                    <PropTooltip v-bind="propDetails.title" />
+                                </template>
+                            </FormInput>
                         </FormField>
                         <FormField :span="2">
-                            <PropFormInput
+                            <FormInput
                                 label="Description"
                                 type="textarea"
                                 id="description"
-                                :propTooltip="propDetails.description"
                                 v-model="data.description"
                                 description="Supports new lines and basic formatting"
                             >
-                            </PropFormInput>
+                                <template #tooltip>
+                                    <PropTooltip v-bind="propDetails.description" />
+                                </template>
+                            </FormInput>
                         </FormField>
                     </FormSection>
                     <FormSection title="Agent Info" description="This is a desc">
                         <FormField>
-                            <PropFormInput
+                            <FormInput
                                 label="Agent"
                                 type="select"
                                 id="agent"
-                                :propTooltip="propDetails.agent"
                                 v-model="data.agent"
-                                :clearButton="true"
+                                clearButton
                                 :options="agentOptions"
+                                searchable
                             >
-                            </PropFormInput>
-                            <template #bottom v-if="data.agent === 'new'">
-                                <PropFormInput
+                                <template #tooltip>
+                                    <PropTooltip v-bind="propDetails.agent" />
+                                </template>
+                            </FormInput>
+                            <!-- <template #bottom v-if="data.agent === 'new'">
+                                <FormInput
                                     label="Enter a new agent"
                                     type="text"
                                     v-model="data.customAgent"
                                     :clearButton="true"
                                 />
-                            </template>
+                            </template> -->
                         </FormField>
                         <FormField>
-                            <PropFormInput
+                            <FormInput
                                 label="Role"
                                 type="select"
                                 id="role"
-                                :propTooltip="propDetails.role"
                                 v-model="data.role"
-                                :clearButton="true"
+                                clearButton
                                 :options="roleOptions"
+                                searchable
                             >
                                 <template #append>
                                     <button class="modal-btn" @click="modal = 'agentRole'" title="Role info">
@@ -597,60 +624,69 @@ onMounted(() => {
                                         <p>Role info</p>
                                     </BaseModal>
                                 </template>
-                            </PropFormInput>
+                                <template #tooltip>
+                                    <PropTooltip v-bind="propDetails.role" />
+                                </template>
+                            </FormInput>
                         </FormField>
                     </FormSection>
                     <FormSection title="Dates">
                         <FormField>
-                            <PropFormInput
+                            <FormInput
                                 label="Created"
                                 type="date"
                                 id="created"
-                                :required="true"
-                                :propTooltip="propDetails.created"
+                                required
                                 @onBlur="clearValidate('created'); validateIsEmpty('created', 'Created date must not be empty')"
                                 v-model="data.created"
                                 :invalidMessage="validationMessages.created"
-                                :clearButton="true"
+                                clearButton
                             >
-                            </PropFormInput>
+                                <template #tooltip>
+                                    <PropTooltip v-bind="propDetails.created" />
+                                </template>
+                            </FormInput>
                         </FormField>
                         <FormField>
-                            <PropFormInput
+                            <FormInput
                                 label="Modified"
                                 type="date"
                                 id="modified"
-                                :required="true"
-                                :propTooltip="propDetails.modified"
+                                required
                                 @onBlur="clearValidate('modified'); validateIsEmpty('modified', 'Modified date must not be empty')"
                                 v-model="data.modified"
                                 :invalidMessage="validationMessages.modified"
-                                :clearButton="true"
+                                clearButton
                             >
-                            </PropFormInput>
+                                <template #tooltip>
+                                    <PropTooltip v-bind="propDetails.modified" />
+                                </template>
+                            </FormInput>
                         </FormField>
                         <FormField>
-                            <PropFormInput
+                            <FormInput
                                 label="Issued"
                                 type="date"
                                 id="issued"
-                                :propTooltip="propDetails.issued"
                                 v-model="data.issued"
-                                :clearButton="true"
+                                clearButton
                             >
-                            </PropFormInput>
+                                <template #tooltip>
+                                    <PropTooltip v-bind="propDetails.issued" />
+                                </template>
+                            </FormInput>
                         </FormField>
                     </FormSection>
                     <FormSection title="Rights">
                         <FormField>
-                            <PropFormInput
+                            <FormInput
                                 label="License"
                                 type="select"
                                 id="license"
-                                :propTooltip="propDetails.license"
                                 v-model="data.license"
-                                :clearButton="true"
+                                clearButton
                                 :options="licenseOptions"
+                                searchable
                             >
                                 <template #append>
                                     <button class="modal-btn" @click="modal = 'license'" title="License info">
@@ -663,9 +699,12 @@ onMounted(() => {
                                         <p>License info</p>
                                     </BaseModal>
                                 </template>
-                            </PropFormInput>
+                                <template #tooltip>
+                                    <PropTooltip v-bind="propDetails.license" />
+                                </template>
+                            </FormInput>
                             <!-- <template #bottom>
-                                <PropFormInput
+                                <FormInput
                                     v-if="data.license === 'new'"
                                     label="Enter a new license"
                                     type="text"
@@ -675,161 +714,174 @@ onMounted(() => {
                             </template> -->
                         </FormField>
                         <FormField>
-                            <PropFormInput
+                            <FormInput
                                 label="Rights"
                                 type="text"
                                 id="rights"
-                                :propTooltip="propDetails.rights"
                                 v-model="data.rights"
-                                :clearButton="true"
+                                clearButton
                             >
-                            </PropFormInput>
+                                <template #tooltip>
+                                    <PropTooltip v-bind="propDetails.rights" />
+                                </template>
+                            </FormInput>
                         </FormField>
                         <FormField>
-                            <PropFormInput
+                            <FormInput
                                 label="Access Rights"
                                 type="select"
                                 id="accessRights"
                                 v-model="data.accessRights"
-                                :propTooltip="propDetails.accessRights"
-                                :clearButton="true"
+                                clearButton
                                 :options="accessRightsOptions"
+                                searchable
                             >
-                            </PropFormInput>
+                                <template #tooltip>
+                                    <PropTooltip v-bind="propDetails.accessRights" />
+                                </template>
+                            </FormInput>
                         </FormField>
                     </FormSection>
                     <FormSection title="Spatio/Temporal">
                         <FormField label="Spatial geometry">
-                            <PropFormInput
+                            <FormInput
+                                v-show="!data.useSpatialIri"
                                 label="Geometry"
                                 type="text"
                                 v-model="data.spatialGeom"
-                                :propTooltip="propDetails.spatialGeometry"
-                                :clearButton="true"
+                                clearButton
                                 placeholder="e.g. POLYGON ((1234 1234, 1235 1245))"
                                 :disabled="data.useSpatialIri"
                                 description="Must be WKT format"
                                 @onBlur="clearValidate('spatialGeom'); validateMatchRegex('spatialGeom', /^\w+\s?\(.+\)$/, 'Invalid WKT')"
                                 :invalidMessage="validationMessages.spatialGeom"
                             >
-                            </PropFormInput>
-                            <template #bottom>
-                                <PropFormInput
-                                    label="Use spatial IRI"
-                                    type="checkbox"
-                                    id="use-spatial-iri"
-                                    v-model="data.useSpatialIri"
-                                >
-                                </PropFormInput>
-                                <PropFormInput
-                                    label="Spatial IRI"
-                                    type="url"
-                                    v-model="data.spatialIri"
-                                    :propTooltip="propDetails.spatialIri"
-                                    :clearButton="true"
-                                    placeholder="e.g. http://example.com/1234"
-                                    :disabled="!data.useSpatialIri"
-                                    description="Must be a valid IRI"
-                                    @onBlur="clearValidate('spatialIri'); validateMatchRegex('spatialIri', /https?:\/\/.+/, 'Invalid IRI')"
-                                    :invalidMessage="validationMessages.spatialIri"
-                                >
-                                </PropFormInput>
-                            </template>
-                        </FormField>
-                        <FormField label="Temporal">
-                            <PropFormInput
-                                label="Start"
-                                type="date"
-                                v-model="data.temporalStart"
-                                :propTooltip="propDetails.startDate"
-                                :clearButton="true"
+                                <template #tooltip>
+                                    <PropTooltip v-bind="propDetails.spatialGeometry" />
+                                </template>
+                            </FormInput>
+                            <FormInput
+                                v-show="data.useSpatialIri"
+                                label="Spatial IRI"
+                                type="url"
+                                v-model="data.spatialIri"
+                                clearButton
+                                placeholder="e.g. http://example.com/1234"
+                                :disabled="!data.useSpatialIri"
+                                description="Must be a valid IRI"
+                                @onBlur="clearValidate('spatialIri'); validateMatchRegex('spatialIri', /https?:\/\/.+/, 'Invalid IRI')"
+                                :invalidMessage="validationMessages.spatialIri"
                             >
-                            </PropFormInput>
-                            <template #bottom>
-                                <PropFormInput
-                                    label="End"
-                                    type="date"
-                                    v-model="data.temporalEnd"
-                                    :propTooltip="propDetails.endDate"
-                                    :clearButton="true"
-                                >
-                                </PropFormInput>
+                                <template #tooltip>
+                                    <PropTooltip v-bind="propDetails.spatialIri" />
+                                </template>
+                            </FormInput>
+                            <FormInput
+                                leftLabel="WKT String"
+                                rightLabel="Spatial IRI"
+                                type="checkbox"
+                                id="use-spatial-iri"
+                                v-model="data.useSpatialIri"
+                                switch
+                            />
+                        </FormField>
+                        <FormField label="Temporal" description="Start & end date">
+                            <FormInput
+                                label="Start"
+                                type="date-optional"
+                                v-model="data.temporalStart"
+                                clearButton
+                            >
+                            </FormInput>
+                            <FormInput
+                                label="End"
+                                type="date-optional"
+                                v-model="data.temporalEnd"
+                                clearButton
+                            >
+                            </FormInput>
+                            <template #tooltip>
+                                <PropTooltip v-bind="propDetails.startDate" />
                             </template>
                         </FormField>
                     </FormSection>
                     <FormSection title="Distribution Info" description="Providing an access URL is optional, but it must be a publicly resolvable URL if provided.">
-                        <FormField>
-                            <PropFormInput
+                        <FormField :span="2">
+                            <FormInput
                                 label="Access URL"
                                 type="url"
                                 id="accessUrl"
-                                :propTooltip="propDetails.accessUrl"
                                 description="Must be a reachable URL"
                                 placeholder="e.g. http://example.com/1234"
                                 @onBlur="clearValidate('accessUrl'); validateStatus200('accessUrl', 'accessUrl', 'Access URL is unreachable')"
                                 v-model="data.accessUrl"
                                 :invalidMessage="validationMessages.accessUrl"
-                                :clearButton="true"
+                                clearButton
                             >
-                                <template #prepend>
-                                    <PropFormInput
+                                <!-- <template #prepend>
+                                    <FormInput
                                         type="select"
                                         id="protocol"
                                         v-model="urlProtocol"
                                         :options="urlProtocolOptions"
                                     />
-                                </template>
+                                </template> -->
                                 <template #append v-if="loading.accessUrl">
                                     <span><i class="fa-regular fa-spinner-third"></i></span>
                                 </template>
-                            </PropFormInput>
+                                <template #tooltip>
+                                    <PropTooltip v-bind="propDetails.accessUrl" />
+                                </template>
+                            </FormInput>
                         </FormField>
                     </FormSection>
                     <FormSection title="Theme">
-                        <FormField>
-                            <PropFormInput
+                        <FormField :span="2">
+                            <FormInput
                                 label="Theme"
                                 type="select"
                                 id="theme"
                                 v-model="data.themes"
-                                :propTooltip="propDetails.theme"
-                                :clearButton="true"
+                                clearButton
                                 :options="themeOptions"
-                                :multiple="true"
+                                multiple
+                                searchable
+                                allowAdd
+                                description="You can add additional themes from the search field"
                             >
-                            </PropFormInput>
+                                <template #tooltip>
+                                    <PropTooltip v-bind="propDetails.theme" />
+                                </template>
+                            </FormInput>
                         </FormField>
                     </FormSection>
                     <FormSection title="Contact Details" description="The contact person provided here will be the point of contact for this dataset.">
                         <FormField>
-                            <PropFormInput
+                            <FormInput
                                 label="Name"
                                 type="text"
                                 id="contactName"
                                 v-model="data.contactName"
-                                :clearButton="true"
-                            >
-                            </PropFormInput>
+                                clearButton
+                            />
                         </FormField>
                         <FormField>
-                            <PropFormInput
+                            <FormInput
                                 label="Email"
                                 type="email"
                                 id="contactEmail"
                                 v-model="data.contactEmail"
-                                :clearButton="true"
-                            >
-                            </PropFormInput>
+                                clearButton
+                            />
                         </FormField>
                         <FormField>
-                            <PropFormInput
+                            <FormInput
                                 label="Phone"
                                 type="tel"
                                 id="contactPhone"
                                 v-model="data.contactPhone"
-                                :clearButton="true"
-                            >
-                            </PropFormInput>
+                                clearButton
+                            />
                         </FormField>
                     </FormSection>
                 </div>

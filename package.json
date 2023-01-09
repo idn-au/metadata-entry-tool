@@ -7,7 +7,7 @@
         "preview": "vite preview --port 4173"
     },
     "dependencies": {
-        "@idn-au/idn-lib": "^0.0.7",
+        "@idn-au/idn-lib": "^0.0.8",
         "chart.js": "^3.9.1",
         "n3": "^1.16.2",
         "vue": "^3.2.38",

@@ -1,6 +1,4 @@
 <script setup>
-import { ToolTip } from "@idn-au/idn-lib";
-
 const props = defineProps({
     qname: String,
     uri: String,
@@ -9,20 +7,15 @@ const props = defineProps({
 </script>
 
 <template>
-    <ToolTip>
-        <i class="fa-regular fa-circle-question"></i>
-        <template #text>
-            <a :href="uri" target="_blank" v-if="!!props.qname || !!props.uri">
-                <template v-if="!!props.qname">
-                    {{ props.qname }}
-                </template>
-                <template>
-                    {{ props.uri }}
-                </template>
-            </a>
-            <p v-if="!!props.description">{{ props.description }}</p>
+    <a :href="uri" target="_blank" v-if="!!props.qname || !!props.uri">
+        <template v-if="!!props.qname">
+            {{ props.qname }}
         </template>
-    </ToolTip>
+        <template>
+            {{ props.uri }}
+        </template>
+    </a>
+    <p v-if="!!props.description">{{ props.description }}</p>
 </template>
 
 <style lang="scss" scoped>

@@ -42,7 +42,7 @@ function setFile(e) {
     <FormInput
         type="textarea"
         v-model="props.data"
-        :disabled="true"
+        disabled
         id="rdf"
     />
     <div class="buttons">
@@ -55,7 +55,7 @@ function setFile(e) {
 <style lang="scss" scoped>
 @import "@/assets/_variables.scss";
 
-.form-input, :deep(.form-input-row), :deep(.form-input-content), :deep(.input-item), :deep(.input) {
+.form-input, :deep(.input-row), :deep(.form-input-content), :deep(.input-item), :deep(.input-component) {
     flex-grow: 1;
 }
 
@@ -76,11 +76,11 @@ function setFile(e) {
     }
 }
 
-:deep(.form-input-row) {
+:deep(.input-row) {
     flex-direction: column !important;
 }
 
-:deep(.input) {
+:deep(.input-component) {
     resize: none !important;
     font-family: consolas, monospace !important;
     font-size: 13px;
