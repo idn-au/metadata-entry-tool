@@ -1,0 +1,112 @@
+[
+    {
+        "value": "http://def.isotc211.org/iso19115/-1/2018/CitationAndResponsiblePartyInformation/code/CI_RoleCode/author",
+        "label": "Author",
+        "desc": "party who authored the resource"
+    },
+    {
+        "value": "http://def.isotc211.org/iso19115/-1/2018/CitationAndResponsiblePartyInformation/code/CI_RoleCode/coAuthor",
+        "label": "Co Author",
+        "desc": "party who jointly authors the resource"
+    },
+    {
+        "value": "http://def.isotc211.org/iso19115/-1/2018/CitationAndResponsiblePartyInformation/code/CI_RoleCode/collaborator",
+        "label": "Collaborator",
+        "desc": "party who assists with the generation of the resource other than the principal investigator"
+    },
+    {
+        "value": "http://def.isotc211.org/iso19115/-1/2018/CitationAndResponsiblePartyInformation/code/CI_RoleCode/contributor",
+        "label": "Contributor",
+        "desc": "party contributing to the resource"
+    },
+    {
+        "value": "http://def.isotc211.org/iso19115/-1/2018/CitationAndResponsiblePartyInformation/code/CI_RoleCode/custodian",
+        "label": "Custodian",
+        "desc": "party that accepts accountability and responsibility for the resource and ensures appropriate care and maintenance of the resource"
+    },
+    {
+        "value": "http://def.isotc211.org/iso19115/-1/2018/CitationAndResponsiblePartyInformation/code/CI_RoleCode/distributor",
+        "label": "Distributor",
+        "desc": "party who distributes the resource"
+    },
+    {
+        "value": "http://def.isotc211.org/iso19115/-1/2018/CitationAndResponsiblePartyInformation/code/CI_RoleCode/editor",
+        "label": "Editor",
+        "desc": "party who reviewed or modified the resource to improve the content"
+    },
+    {
+        "value": "http://def.isotc211.org/iso19115/-1/2018/CitationAndResponsiblePartyInformation/code/CI_RoleCode/funder",
+        "label": "Funder",
+        "desc": "party providing monetary support for the resource"
+    },
+    {
+        "value": "http://def.isotc211.org/iso19115/-1/2018/CitationAndResponsiblePartyInformation/code/CI_RoleCode/mediator",
+        "label": "Mediator",
+        "desc": "a class of entity that mediates access to the resource and for whom the resource is intended or useful"
+    },
+    {
+        "value": "http://def.isotc211.org/iso19115/-1/2018/CitationAndResponsiblePartyInformation/code/CI_RoleCode/originator",
+        "label": "Originator",
+        "desc": "party who created the resource"
+    },
+    {
+        "value": "http://def.isotc211.org/iso19115/-1/2018/CitationAndResponsiblePartyInformation/code/CI_RoleCode/owner",
+        "label": "Owner",
+        "desc": "party that owns the resource"
+    },
+    {
+        "value": "http://def.isotc211.org/iso19115/-1/2018/CitationAndResponsiblePartyInformation/code/CI_RoleCode/pointOfContact",
+        "label": "Point Of Contact",
+        "desc": "party who can be contacted for acquiring knowledge about or acquisition of the resource"
+    },
+    {
+        "value": "http://def.isotc211.org/iso19115/-1/2018/CitationAndResponsiblePartyInformation/code/CI_RoleCode/principalInvestigator",
+        "label": "Principal Investigator",
+        "desc": "key party responsible for gathering information and conducting research"
+    },
+    {
+        "value": "http://def.isotc211.org/iso19115/-1/2018/CitationAndResponsiblePartyInformation/code/CI_RoleCode/processor",
+        "label": "Processor",
+        "desc": "party who has processed the data in a manner such that the resource has been modified"
+    },
+    {
+        "value": "http://def.isotc211.org/iso19115/-1/2018/CitationAndResponsiblePartyInformation/code/CI_RoleCode/publisher",
+        "label": "Publisher",
+        "desc": "party who published the resource"
+    },
+    {
+        "value": "http://def.isotc211.org/iso19115/-1/2018/CitationAndResponsiblePartyInformation/code/CI_RoleCode/resourceProvider",
+        "label": "Resource Provider",
+        "desc": "party that supplies the resource"
+    },
+    {
+        "value": "http://def.isotc211.org/iso19115/-1/2018/CitationAndResponsiblePartyInformation/code/CI_RoleCode/rightsHolder",
+        "label": "Rights Holder",
+        "desc": "party owning or managing rights over the resource"
+    },
+    {
+        "value": "http://def.isotc211.org/iso19115/-1/2018/CitationAndResponsiblePartyInformation/code/CI_RoleCode/sponsor",
+        "label": "Sponsor",
+        "desc": "party who speaks for the resource"
+    },
+    {
+        "value": "http://def.isotc211.org/iso19115/-1/2018/CitationAndResponsiblePartyInformation/code/CI_RoleCode/stakeholder",
+        "label": "Stakeholder",
+        "desc": "party who has an interest in the resource or the use of the resource"
+    },
+    {
+        "value": "https://w3id.org/idn/vocab/idn-role-codes/subjectAgent",
+        "label": "Subject Agent",
+        "desc": "party that the resources contains information about"
+    },
+    {
+        "value": "https://w3id.org/idn/vocab/idn-role-codes/subjectAgentRepresentative",
+        "label": "Subject Agent Representative",
+        "desc": "party who can be contacted who best represents the interests of the subject agent"
+    },
+    {
+        "value": "http://def.isotc211.org/iso19115/-1/2018/CitationAndResponsiblePartyInformation/code/CI_RoleCode/user",
+        "label": "User",
+        "desc": "party who uses the resource"
+    }
+]

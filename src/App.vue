@@ -39,6 +39,23 @@ h2 {
     @include transition(color, background-color);
     border-radius: 6px;
 
+    background-color: $defaultBtnBg;
+
+    &:not(:disabled):not([disabled="true"]):hover {
+        background-color: darken($color: $defaultBtnBg, $amount: 10);
+    }
+
+    &.outline {
+        background-color: transparent;
+        border-color: $defaultBtnBg;
+        color: $defaultBtnBg;
+
+        &:not(:disabled):not([disabled="true"]):hover {
+            background-color: $defaultBtnBg;
+            color: white;
+        }
+    }
+
     &.primary {
         background-color: $primary;
         color: white;
@@ -46,16 +63,36 @@ h2 {
         &:not(:disabled):not([disabled="true"]):hover {
             background-color: darken($color: $primary, $amount: 10);
         }
+
+        &.outline {
+            background-color: transparent;
+            border-color: $primary;
+            color: $primary;
+
+            &:not(:disabled):not([disabled="true"]):hover {
+                background-color: $primary;
+                color: white;
+            }
+        }
     }
 
-    &.outline {
-        background-color: transparent;
-        border-color: $primary;
-        color: $primary;
+    &.secondary {
+        background-color: $secondary;
+        color: white;
 
         &:not(:disabled):not([disabled="true"]):hover {
-            background-color: $primary;
-            color: white;
+            background-color: darken($color: $secondary, $amount: 10);
+        }
+
+        &.outline {
+            background-color: transparent;
+            border-color: $secondary;
+            color: $secondary;
+
+            &:not(:disabled):not([disabled="true"]):hover {
+                background-color: $secondary;
+                color: white;
+            }
         }
     }
 

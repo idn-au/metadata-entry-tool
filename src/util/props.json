@@ -2,16 +2,16 @@
     "title": {
         "qname": "dcterms:title",
         "uri": "http://purl.org/dc/terms/title",
-        "description": "A title is..."
+        "description": "A name given to the resource."
     },
     "description": {
         "qname": "dcterms:description",
         "uri": "http://purl.org/dc/terms/description",
-        "description": ""
+        "description": "An account of the resource."
     },
     "agent": {
         "qname": "prov:agent",
-        "uri": "http://www.w3.org/ns/prov#agent",
+        "uri": "https://www.w3.org/TR/prov-o/#p_agent",
         "description": ""
     },
     "role": {
@@ -22,27 +22,27 @@
     "created": {
         "qname": "dcterms:created",
         "uri": "http://purl.org/dc/terms/created",
-        "description": ""
+        "description": "Date of creation of the resource."
     },
     "modified": {
         "qname": "dcterms:modified",
         "uri": "http://purl.org/dc/terms/modified",
-        "description": ""
+        "description": "Date on which the resource was changed."
     },
     "issued": {
         "qname": "dcterms:issued",
         "uri": "http://purl.org/dc/terms/issued",
-        "description": ""
+        "description": "Date of formal issuance of the resource."
     },
     "license": {
         "qname": "dcterms:license",
         "uri": "http://purl.org/dc/terms/license",
-        "description": ""
+        "description": "A legal document giving official permission to do something with the resource."
     },
     "rights": {
         "qname": "dcterms:rights",
-        "uri": "http://purl.org/dc/terms/rigts",
-        "description": ""
+        "uri": "http://purl.org/dc/terms/rights",
+        "description": "Information about rights held in and over the resource."
     },
     "accessRights": {
         "qname": "dcat:accessRights",
@@ -52,22 +52,22 @@
     "spatialGeometry": {
         "qname": "dcterms:spatial",
         "uri": "http://purl.org/dc/terms/spatial",
-        "description": ""
+        "description": "Spatial characteristics of the resource."
     },
     "spatialIri": {
         "qname": "dcterms:spatial",
         "uri": "http://purl.org/dc/terms/spatial",
-        "description": ""
+        "description": "Spatial characteristics of the resource."
     },
     "startDate": {
         "qname": "dcterms:temporal",
         "uri": "http://purl.org/dc/terms/temporal",
-        "description": ""
+        "description": "Temporal characteristics of the resource."
     },
     "endDate": {
         "qname": "dcterms:temporal",
         "uri": "http://purl.org/dc/terms/temporal",
-        "description": ""
+        "description": "Temporal characteristics of the resource."
     },
     "accessUrl": {
         "qname": "dcat:accessURL",

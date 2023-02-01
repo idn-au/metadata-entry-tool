@@ -1,0 +1,48 @@
+PREFIX dcat: <http://www.w3.org/ns/dcat#>
+PREFIX dcterms: <http://purl.org/dc/terms/>
+PREFIX ex: <https://example.com/>
+PREFIX iso: <http://def.isotc211.org/iso19115/-1/2018/CitationAndResponsiblePartyInformation/code/CI_RoleCode/>
+PREFIX prov: <http://www.w3.org/ns/prov#>
+PREFIX xsd: <http://www.w3.org/2001/XMLSchema#>
+
+<https://w3id.org/idn/dataset/democat>
+    dcterms:hasPart <https://w3id.org/idn/resource/ATNS> ;
+.
+
+<https://w3id.org/idn/resource/ATNS>
+    a dcat:Resource ;
+    dcterms:description """Needs to be made fully maintainable, sustainable interoperable and web-accessible
+
+ATNS provides an online portal for people seeking information on agreements with Indigenous peoples. We aim to promote knowledge and transparency by capturing the range and variety of agreement making occurring in Australia and other parts of the world.
+
+We gather and review information from publicly available academic sources, online materials and documents provided by the organisations and agencies involved in agreement-making processes. No confidential material is published. """ ;
+    dcterms:identifier "ATNS"^^xsd:token ;
+    dcterms:issued "1905-07-11"^^xsd:date ;
+    dcterms:license "CC-BY-NC-ND" ;
+    dcterms:rights "Copyright ATNS 2020.  ATNS is maintained by the Indigenous Studies Unit at The University of Melbourne. " ;
+    dcterms:spatial <https://linked.data.gov.au/dataset/asgsed3/AUS/AUS> ;
+    dcterms:temporal "1976-2020" ;
+    dcterms:title "The Agreements, Treaties and Negotiated Settlements Database" ;
+    dcterms:type "collection" ;
+    # dcterms:accessRights <https://linked.data.gov.au/def/data-access-rights> ;  # TODO: no Concept from the vocab selected
+    dcat:accessURL "https://www.atns.net.au/"^^xsd:anyURI ;
+    dcat:theme
+        <https://w3id.org/idn/vocab/idn-th/subject> ,
+        <https://w3id.org/idn/vocab/indigeneity/about-indigenous-people> ;
+    prov:qualifiedAttribution
+        [
+            dcat:hadRole iso:originator ;
+            prov:agent <https://w3id.org/idn/agent/atns>
+        ] ,
+        [
+            dcat:hadRole iso:rightsHolder ;
+            prov:agent <https://w3id.org/idn/agent/atns>
+        ] ,
+        [
+            dcat:hadRole iso:custodian ;
+            prov:agent <https://w3id.org/idn/agent/isu>
+        ] ;
+    # ex:home "https://www.atns.net.au/" ;  # online at the accessURL endpoint but this address is a single resource, not a catalogue
+    ex:notes "ATNS was launched in 2002 and developed under a series of Australian Research Council (ARC) Linkage Projects focusing on treaties and agreement making with Indigenous Australians. The projects were led by a team of multidisciplinary researchers and partner organisations, including Indigenous organisations and industry partners. " ;
+.
+

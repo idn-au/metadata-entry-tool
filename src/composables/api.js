@@ -37,5 +37,62 @@ export function useGetRequest() {
         });
     }
 
-    return { data, loading, error, doRequest };
+    /**
+     * Executes a SPARQL query, with success & error callbacks
+     * @param {string} url 
+     * @param {string} query 
+     * @param {*} callback 
+     * @param {*} errorCallback 
+     */
+    function doSparqlPostQuery(url, query, callback = () => {}, errorCallback = () => {}) {
+        loading.value = true;
+
+        fetch(url, {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/sparql-query"
+            },
+            body: query
+        })
+        .then(r => {
+            if (!r.ok) {
+                throw new Error("Response was not OK");
+            }
+            return r.json();
+        })
+        .then(results => {
+            data.value = results.results.bindings;
+            callback();
+            loading.value = false;
+        })
+        .catch(e => {
+            error.value = e;
+            errorCallback();
+            loading.value = false;
+        });
+    }
+
+    function doSparqlGetQuery(url, query, callback = () => {}, errorCallback = () => {}) {
+        loading.value = true;
+
+        fetch(`${url}?query=${encodeURIComponent(query)}`)
+        .then(r => {
+            if (!r.ok) {
+                throw new Error("Response was not OK");
+            }
+            return r.json();
+        })
+        .then(results => {
+            data.value = results.results.bindings;
+            callback();
+            loading.value = false;
+        })
+        .catch(e => {
+            error.value = e;
+            errorCallback();
+            loading.value = false;
+        });
+    }
+
+    return { data, loading, error, doRequest, doSparqlPostQuery, doSparqlGetQuery };
 };

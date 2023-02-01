@@ -1,0 +1,78 @@
+[
+    {
+        "value": "https://w3id.org/idn/agent/atns",
+        "label": "Agreements Treaties and Negotiated Settlements"
+    },
+    {
+        "value": "https://linked.data.gov.au/org/abs",
+        "label": "Australian Bureau of Statistics"
+    },
+    {
+        "value": "https://w3id.org/idn/agent/abs-coatsis",
+        "label": "Australian Bureau of Statistics Centre of Aboriginal and Torres Strait Islander Statistics"
+    },
+    {
+        "value": "https://linked.data.gov.au/org/au",
+        "label": "Australian Government"
+    },
+    {
+        "value": "https://w3id.org/idn/agent/agilwg",
+        "label": "Australian Government Indigenous Locations Working Group"
+    },
+    {
+        "value": "https://w3id.org/idn/agent/agilwg",
+        "label": "Australian Government Indigenous Locations Working Group 2007-2012"
+    },
+    {
+        "value": "https://linked.data.gov.au/org/dhs",
+        "label": "Department of Human Services"
+    },
+    {
+        "value": "https://linked.data.gov.au/org/idn",
+        "label": "Indigenous Data Network"
+    },
+    {
+        "value": "https://w3id.org/idn/agent/isu",
+        "label": "Indigenous Studies Unit of the University of Melbourne"
+    },
+    {
+        "value": "https://kurrawong.net",
+        "label": "KurrawongAI"
+    },
+    {
+        "value": "https://w3id.org/idn/agent/lc",
+        "label": "Local Contexts"
+    },
+    {
+        "value": "http://linked.data.gov.au/org/nla",
+        "label": "National Library of Australia"
+    },
+    {
+        "value": "https://w3id.org/idn/agent/nntt",
+        "label": "National Native Title Tribunal"
+    },
+    {
+        "value": "https://orcid.org/0000-0002-8742-7730",
+        "label": "Nicholas J. Car"
+    },
+    {
+        "value": "https://w3id.org/idn/agent/nby",
+        "label": "Nyamba Buru Yawuru Ltd"
+    },
+    {
+        "value": "https://orcid.org/0000-0003-1983-6687",
+        "label": "Sandra Silcot"
+    },
+    {
+        "value": "https://linked.data.gov.au/org/sa",
+        "label": "Services Australia"
+    },
+    {
+        "value": "https://w3id.org/idn/agent/uom",
+        "label": "The University of Melbourne"
+    },
+    {
+        "value": "https://linked.data.gov.au/org/uts",
+        "label": "University of Technology Sydney"
+    }
+]

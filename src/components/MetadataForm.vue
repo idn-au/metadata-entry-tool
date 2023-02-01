@@ -1,6 +1,7 @@
 <script setup>
-import { ref, computed, watch, onMounted } from "vue";
+import { ref, computed, watch, onMounted, nextTick } from "vue";
 import { DataFactory } from "n3";
+import { v4 as uuid4 } from "uuid";
 import { FormInput, FormField, BaseModal } from "@idn-au/idn-lib";
 import PropTooltip from "@/components/PropTooltip.vue";
 import FormSection from "@/components/FormSection.vue";
@@ -8,26 +9,51 @@ import FairScore from "@/components/FairScore.vue";
 import CareScore from "@/components/CareScore.vue";
 import RDFPreview from "@/components/RDFPreview.vue";
 import { useRdfStore } from "@/composables/rdfStore";
+import { useGetRequest } from "@/composables/api";
+import { useBtnTimeout } from "@/composables/btnTimeout";
 import propDetails from "@/util/props.json";
-import { urlProtocolOptions, agentOptions, roleOptions, themeOptions, licenseOptions, accessRightsOptions } from "@/util/formOptions";
-import exampleData from "@/util/exampleData.json";
+import exampleData from "@/util/exampleData";
+import formOptions from "@/util/formOptions";
+import config from "@/config";
 
 const { namedNode, literal } = DataFactory;
 
-const defaultIri = "https://example.com/someIRI";
+const defaultIri = `https://pid.idnau.org/resource/${uuid4()}`;
+
+const rdfFormats = {
+    "ttl": "text/turtle",
+    "trig": "application/trig",
+    "nt": "application/n-triples",
+    "n3": "text/n3",
+};
 
 const { store, qname, serialize } = useRdfStore();
 
-const spatialBnode = store.value.createBlankNode();
-const temporalBnode = store.value.createBlankNode();
-const distributionBnode = store.value.createBlankNode();
-const qualifiedBnode = store.value.createBlankNode();
+const { data: agentData, loading: agentLoading, error: agentError, doSparqlGetQuery: agentDoSparqlGetQuery, doSparqlPostQuery: agentDoSparqlPostQuery } = useGetRequest();
+const { data: roleData, loading: roleLoading, error: roleError, doSparqlGetQuery: roleDoSparqlGetQuery, doSparqlPostQuery: roleDoSparqlPostQuery } = useGetRequest();
+const { data: licenseData, loading: licenseLoading, error: licenseError, doSparqlGetQuery: licenseDoSparqlGetQuery, doSparqlPostQuery: licenseDoSparqlPostQuery } = useGetRequest();
+const { data: accessRightsData, loading: accessRightsLoading, error: accessRightsError, doSparqlGetQuery: accessRightsDoSparqlGetQuery, doSparqlPostQuery: accessRightsDoSparqlPostQuery } = useGetRequest();
+const { data: themeData, loading: themeLoading, error: themeError, doSparqlGetQuery: themeDoSparqlGetQuery, doSparqlPostQuery: themeDoSparqlPostQuery } = useGetRequest();
 
-const showRDF = ref(true);
+const agentOptionsRequested = ref([]);
+const roleOptionsRequested = ref([]);
+const licenseOptionsRequested = ref([]);
+const accessRightsOptionsRequested = ref([]);
+const themeOptionsRequested = ref([]);
+
+const { clicked: savedDraft, startTimeout: startSavedDraftTimeout } = useBtnTimeout();
+const { clicked: deletedDraft, startTimeout: startDeletedDraftTimeout } = useBtnTimeout();
+const { clicked: clearedData, startTimeout: startClearedDataTimeout } = useBtnTimeout();
+
+const spatialBnode = store.value.createBlankNode(); // _:b0
+const temporalBnode = store.value.createBlankNode(); // _:b1
+const distributionBnode = store.value.createBlankNode(); // _:b2
+
+const showRDF = ref(false);
 const loading = ref({
     accessUrl: false
 });
-const urlProtocol = ref("");
+// const urlProtocol = ref("");
 const data = ref({
     iri: "",
     assignIri: true,
@@ -37,6 +63,7 @@ const data = ref({
     modified: "",
     issued: "",
     license: "",
+    useCustomLicense: false,
     customLicense: "",
     rights: "",
     accessRights: "",
@@ -46,23 +73,58 @@ const data = ref({
     temporalStart: "",
     temporalEnd: "",
     accessUrl: "",
-    agent: "",
-    customAgent: "",
-    role: "",
+    agentRoles: [
+        {
+            agent: "",
+            role: []
+        }
+    ],
     themes: [],
     contactName: "",
     contactEmail: "",
     contactPhone: ""
 });
-const validationMessages = ref({
-    iri: [],
-    title: [],
-    created: [],
-    modified: [],
-    spatialGeom: [],
-    spatialIri: [],
-    accessUrl: []
+
+const declarationTicked = ref(false);
+
+const activeExample = ref("");
+
+const sectionRefs = ref({
+    general: null,
+    agent: null,
+    dates: null,
+    rights: null,
+    spatial: null,
+    distribution: null,
+    theme: null,
+    contact: null
 });
+
+const sectionCollapsed = ref({
+    general: false,
+    agent: true,
+    dates: true,
+    rights: true,
+    spatial: true,
+    distribution: true,
+    theme: true,
+    contact: true
+});
+
+const validation = ref({}); // { key: isValid, ... }
+
+const isValid = computed(() => {
+    return Object.values(validation.value).every(Boolean);
+});
+
+const allOpen = computed(() => {
+    return Object.values(sectionCollapsed.value).every(val => val !== true);
+});
+
+function handleValidate(key, isValid) {
+    validation.value[key] = isValid;
+}
+
 const serializedData = ref("");
 const modal = ref(null);
 const hasSavedDraft = ref(false);
@@ -73,6 +135,10 @@ const calcIri = computed(() => {
 
 const calcGeometry = computed(() => {
     return data.value.useSpatialIri ? data.value.spatialIri : data.value.spatialGeom;
+});
+
+const calcLicense = computed(() => {
+    return data.value.useCustomLicense ? data.value.customLicense : data.value.license;
 });
 
 const empty = computed(() => {
@@ -142,11 +208,17 @@ const careScore = computed(() => {
     return score;
 });
 
-const isValid = computed(() => {
-    return Object.values(validationMessages.value).find(item => item.length === 0) === undefined;
+watch(serializedData, (newValue, oldValue) => {
+    if (activeExample.value) {
+        if (newValue !== oldValue) {
+            if (newValue !== exampleData[activeExample.value]) {
+                activeExample.value = "";
+            }
+        }
+    }
 });
 
-watch(() => calcIri.value, (newValue, oldValue) => {
+watch(calcIri, (newValue, oldValue) => {
     const quads = store.value.getQuads(namedNode(oldValue), null, null);
     store.value.removeQuads(quads);
     quads.forEach(q => {
@@ -175,7 +247,7 @@ watch(() => data.value.issued, (newValue, oldValue) => {
     updateTriple(newValue, "dcterms:issued", literal(newValue, namedNode(qname("xsd:date"))));
 });
 
-watch(() => data.value.license, (newValue, oldValue) => {
+watch(calcLicense, (newValue, oldValue) => {
     updateTriple(newValue, "dcterms:license", namedNode(newValue));
 });
 
@@ -187,9 +259,8 @@ watch(() => data.value.accessRights, (newValue, oldValue) => {
     updateTriple(newValue, "dcat:accessRights", namedNode(newValue));
 });
 
-watch(() => calcGeometry.value, (newValue, oldValue) => {
-    const dataset = store.value.getSubjects(namedNode(qname("a")), namedNode(qname("dcat:Dataset")))[0];
-    const spatialQuads = store.value.getQuads(dataset, namedNode(qname("dcterms:spatial")), null);
+watch(calcGeometry, (newValue, oldValue) => {
+    const spatialQuads = store.value.getQuads(namedNode(calcIri.value), namedNode(qname("dcterms:spatial")), null);
     if (spatialQuads.length > 0 && spatialQuads[0].object.termType === "BlankNode") {
         const bnodeQuads = store.value.getQuads(spatialQuads[0].object, null, null);
         store.value.removeQuads(bnodeQuads);
@@ -200,7 +271,7 @@ watch(() => calcGeometry.value, (newValue, oldValue) => {
         updateTriple(newValue, "dcterms:spatial", namedNode(newValue));
     } else {
         if (newValue !== "") {
-            store.value.addQuad(dataset, namedNode(qname("dcterms:spatial")), spatialBnode);
+            store.value.addQuad(namedNode(calcIri.value), namedNode(qname("dcterms:spatial")), spatialBnode);
             store.value.addQuad(spatialBnode, namedNode(qname("a")), namedNode(qname("geo:Geometry")));
             store.value.addQuad(spatialBnode, namedNode(qname("geo:asWKT")), literal(newValue, namedNode(qname("geo:wktLiteral"))));
         }
@@ -210,8 +281,7 @@ watch(() => calcGeometry.value, (newValue, oldValue) => {
 });
 
 watch(() => data.value.temporalStart, (newValue, oldValue) => {
-    const dataset = store.value.getSubjects(namedNode(qname("a")), namedNode(qname("dcat:Dataset")))[0];
-    const temporalQuads = store.value.getQuads(dataset, namedNode(qname("dcterms:temporal")), null);
+    const temporalQuads = store.value.getQuads(namedNode(calcIri.value), namedNode(qname("dcterms:temporal")), null);
     if (temporalQuads.length > 0 && temporalQuads[0].object.termType === "BlankNode") {
         const bnodeQuads1 = store.value.getQuads(temporalQuads[0].object, namedNode(qname("prov:startedAtTime")), null);
         store.value.removeQuads(bnodeQuads1);
@@ -233,15 +303,14 @@ watch(() => data.value.temporalStart, (newValue, oldValue) => {
             datatype = "xsd:date";
         }
 
-        store.value.addQuad(dataset, namedNode(qname("dcterms:temporal")), temporalBnode);
+        store.value.addQuad(namedNode(calcIri.value), namedNode(qname("dcterms:temporal")), temporalBnode);
         store.value.addQuad(temporalBnode, namedNode(qname("prov:startedAtTime")), literal(newValue, namedNode(qname(datatype))));
     }
     serializedData.value = serialize();
 });
 
 watch(() => data.value.temporalEnd, (newValue, oldValue) => {
-    const dataset = store.value.getSubjects(namedNode(qname("a")), namedNode(qname("dcat:Dataset")))[0];
-    const temporalQuads = store.value.getQuads(dataset, namedNode(qname("dcterms:temporal")), null);
+    const temporalQuads = store.value.getQuads(namedNode(calcIri.value), namedNode(qname("dcterms:temporal")), null);
     if (temporalQuads.length > 0 && temporalQuads[0].object.termType === "BlankNode") {
         const bnodeQuads = store.value.getQuads(temporalQuads[0].object, namedNode(qname("prov:endedAtTime")), null);
         store.value.removeQuads(bnodeQuads);
@@ -263,15 +332,14 @@ watch(() => data.value.temporalEnd, (newValue, oldValue) => {
             datatype = "xsd:date";
         }
 
-        store.value.addQuad(dataset, namedNode(qname("dcterms:temporal")), temporalBnode);
+        store.value.addQuad(namedNode(calcIri.value), namedNode(qname("dcterms:temporal")), temporalBnode);
         store.value.addQuad(temporalBnode, namedNode(qname("prov:endedAtTime")), literal(newValue, namedNode(qname(datatype))));
     }
     serializedData.value = serialize();
 });
 
 watch(() => data.value.accessUrl, (newValue, oldValue) => {
-    const dataset = store.value.getSubjects(namedNode(qname("a")), namedNode(qname("dcat:Dataset")))[0];
-    const distQuads = store.value.getQuads(dataset, namedNode(qname("dcat:distribution")), null);
+    const distQuads = store.value.getQuads(namedNode(calcIri.value), namedNode(qname("dcat:distribution")), null);
     if (distQuads.length > 0 && distQuads[0].object.termType === "BlankNode") {
         const bnodeQuads = store.value.getQuads(distQuads[0].object, null, null);
         store.value.removeQuads(bnodeQuads);
@@ -279,7 +347,7 @@ watch(() => data.value.accessUrl, (newValue, oldValue) => {
     store.value.removeQuads(distQuads);
 
     if (newValue !== "") {
-        store.value.addQuad(dataset, namedNode(qname("dcat:distribution")), distributionBnode);
+        store.value.addQuad(namedNode(calcIri.value), namedNode(qname("dcat:distribution")), distributionBnode);
         store.value.addQuad(distributionBnode, namedNode(qname("dcat:accessURL")), literal(newValue, namedNode(qname("xsd:anyURI"))));
     }
 
@@ -287,109 +355,109 @@ watch(() => data.value.accessUrl, (newValue, oldValue) => {
 });
 
 watch(() => data.value.themes, (newValue, oldValue) => {
-    const dataset = store.value.getSubjects(namedNode(qname("a")), namedNode(qname("dcat:Dataset")))[0];
-    const themeQuads = store.value.getQuads(dataset, namedNode(qname("dcat:theme")), null);
+    const themeQuads = store.value.getQuads(namedNode(calcIri.value), namedNode(qname("dcat:theme")), null);
     store.value.removeQuads(themeQuads);
     if (newValue.length > 0) {
-        newValue.forEach(theme => store.value.addQuad(dataset, namedNode(qname("dcat:theme")), namedNode(theme)));
+        newValue.forEach(theme => store.value.addQuad(namedNode(calcIri.value), namedNode(qname("dcat:theme")), namedNode(theme)));
     }
     serializedData.value = serialize();
 });
 
-watch(() => data.value.agent, (newValue, oldValue) => {
-    const dataset = store.value.getSubjects(namedNode(qname("a")), namedNode(qname("dcat:Dataset")))[0];
-    const qualifiedQuads = store.value.getQuads(dataset, namedNode(qname("prov:qualifiedAttribution")), null);
-    if (qualifiedQuads.length > 0 && qualifiedQuads[0].object.termType === "BlankNode") {
-        const bnodeQuads1 = store.value.getQuads(qualifiedQuads[0].object, namedNode(qname("prov:agent")), null);
-        store.value.removeQuads(bnodeQuads1);
-        const bnodeQuads2 = store.value.getQuads(qualifiedQuads[0].object, null, null);
-        if (bnodeQuads2.length === 0) {
-            store.value.removeQuads(qualifiedQuads);
-        }
+watch(() => data.value.agentRoles, (newValue, oldValue) => {
+    const qualifiedQuads = store.value.getQuads(namedNode(calcIri.value), namedNode(qname("prov:qualifiedAttribution")), null);
+    if (qualifiedQuads.length > 0) {
+        qualifiedQuads.forEach(q => {
+            if (q.object.termType === "BlankNode") {
+                const bnodeQuads2 = store.value.getQuads(q.object, null, null);
+                store.value.removeQuads(bnodeQuads2);
+            }
+        });
+        store.value.removeQuads(qualifiedQuads);
     }
 
-    if (newValue !== "") {
-        store.value.addQuad(dataset, namedNode(qname("prov:qualifiedAttribution")), qualifiedBnode);
-        store.value.addQuad(qualifiedBnode, namedNode(qname("prov:agent")), namedNode(newValue));
+    if (newValue && newValue.length > 0) {
+        newValue.forEach((agentRole) => {
+            if (agentRole.agent !== "" || agentRole.role.length > 0) {
+                const newBnode = store.value.createBlankNode();
+                store.value.addQuad(namedNode(calcIri.value), namedNode(qname("prov:qualifiedAttribution")), newBnode);
+                if (agentRole.agent !== "") {
+                    store.value.addQuad(newBnode, namedNode(qname("prov:agent")), namedNode(agentRole.agent));
+                }
+                if (agentRole.role.length > 0) {
+                    agentRole.role.forEach(role => {
+                        store.value.addQuad(newBnode, namedNode(qname("dcat:hadRole")), namedNode(role));
+                    });
+                }
+            }
+        });
     }
     serializedData.value = serialize();
-});
+}, { deep: true });
 
-watch(() => data.value.role, (newValue, oldValue) => {
-    const dataset = store.value.getSubjects(namedNode(qname("a")), namedNode(qname("dcat:Dataset")))[0];
-    const qualifiedQuads = store.value.getQuads(dataset, namedNode(qname("prov:qualifiedAttribution")), null);
-    if (qualifiedQuads.length > 0 && qualifiedQuads[0].object.termType === "BlankNode") {
-        const bnodeQuads = store.value.getQuads(qualifiedQuads[0].object, namedNode(qname("dcat:hadRole")), null);
-        store.value.removeQuads(bnodeQuads);
-        const bnodeQuads2 = store.value.getQuads(qualifiedQuads[0].object, null, null);
-        if (bnodeQuads2.length === 0) {
-            store.value.removeQuads(qualifiedQuads);
-        }
-    }
-
-    if (newValue !== "") {
-        store.value.addQuad(dataset, namedNode(qname("prov:qualifiedAttribution")), qualifiedBnode);
-        store.value.addQuad(qualifiedBnode, namedNode(qname("dcat:hadRole")), namedNode(newValue));
-    }
-    serializedData.value = serialize();
-});
-
-watch(
-    () => data.value.accessUrl,
-    (newValue, oldValue) => {
-        let protocol = newValue.split("://")[0];
-        if (!newValue.match(/\w+?:\/\//) && urlProtocol.value === "") {
-            urlProtocol.value = "http";
-        } else if (urlProtocolOptions.map(option => option.value).includes(newValue.split("://")[0])) {
-            urlProtocol.value = protocol;
-        }
-    }
-);
+// watch(
+//     () => data.value.accessUrl,
+//     (newValue, oldValue) => {
+//         let protocol = newValue.split("://")[0];
+//         if (!newValue.match(/\w+?:\/\//) && urlProtocol.value === "") {
+//             urlProtocol.value = "http";
+//         } else if (urlProtocolOptions.map(option => option.value).includes(newValue.split("://")[0])) {
+//             urlProtocol.value = protocol;
+//         }
+//     }
+// );
 
 function updateTriple(value, predQname, object) {
-    const dataset = store.value.getSubjects(namedNode(qname("a")), namedNode(qname("dcat:Dataset")))[0];
-    const quads = store.value.getQuads(dataset, namedNode(qname(predQname)), null);
+    const quads = store.value.getQuads(namedNode(calcIri.value), namedNode(qname(predQname)), null);
     store.value.removeQuads(quads);
     if (value !== "") {
-        store.value.addQuad(dataset, namedNode(qname(predQname)), object);
+        store.value.addQuad(namedNode(calcIri.value), namedNode(qname(predQname)), object);
     }
     serializedData.value = serialize();
 }
 
-function clearValidate(key) {
-    validationMessages.value[key] = [];
-}
-
-function validateIsEmpty(key, message) {
-    if (data.value[key] === "" || data.value[key] === [] || data.value[key] === false) {
-        validationMessages.value[key].push(message);
-    }
-};
-
-function validateMatchRegex(key, exp, message) {
-    if (!data.value[key].match(exp)) {
-        validationMessages.value[key].push(message);
+function validateMatchRegex(s, exp, invalidMessage) {
+    if (s.match(exp)) {
+        return [true, ""];
+    } else {
+        return [false, invalidMessage];
     }
 }
 
-function validateStatus200(key, loadingKey, message) {
-    if (data.value[key] !== "") {
-        loading.value[loadingKey] = true;
+function validateIri(s) {
+    return validateMatchRegex(s, /^https?:\/\/.+/, "Invalid IRI");
+}
 
-        // if (!data.value[key].match(/\w+?:\/\//)){
-        //     data.value[key] = "http://" + data.value[key];
-        // }
+function validateWktString(s) {
+    return validateMatchRegex(s, /^\w+\s?\(.+\)$/, "Invalid WKT geometry");
+}
 
-        fetch(data.value[key], {
+function validateReachableUrl(s) {
+    if (s !== "") {
+        loading.value.accessUrl = true;
+
+        fetch(s, {
             method: "HEAD",
             mode: "no-cors"
         })
         .catch(e => {
-            validationMessages.value[key].push(message);
+            return [false, "URL is unreachable"]
         });
 
-        loading.value[loadingKey] = false;
+        loading.value.accessUrl = false;
     }
+}
+
+function setFile(e) {
+    const file = e.target.files[0];
+    if (!file) {
+        return;
+    }
+    var reader = new FileReader();
+    reader.onload = function(e) {
+        const extension = file.name.split(".")[1];
+        loadRDF({ format: rdfFormats[extension], value: e.target.result })
+    };
+    reader.readAsText(file);
 }
 
 function loadRDF(e) {
@@ -397,7 +465,7 @@ function loadRDF(e) {
     const { store: loadedStore, qname: loadedQname, parseIntoStore: loadedParseIntoStore, serialize: loadedSerialize } = useRdfStore();
     clearData();
     loadedParseIntoStore(value, format);
-    const subject = loadedStore.value.getSubjects(namedNode(qname("a")), namedNode(loadedQname("dcat:Dataset")))[0];
+    const subject = loadedStore.value.getSubjects(namedNode(qname("a")), namedNode(loadedQname("dcat:Resource")))[0];
     data.value.iri = subject.id;
     data.value.assignIri = false;
     loadedStore.value.forEach(q => { // get preds & objs
@@ -420,28 +488,51 @@ function loadRDF(e) {
         } else if (q.predicate.value === loadedQname("dcterms:spatial")) {
             if (q.object.termType === "NamedNode") {
                 data.value.spatialIri = q.object.value;
-            } else {
+            } else if (q.object.termType === "BlankNode") {
                 const bnodes = loadedStore.value.getQuads(q.object, namedNode(loadedQname("geo:asWKT")), null);
                 data.value.spatialGeom = bnodes[0].object.value;
             }
         } else if (q.predicate.value === loadedQname("dcterms:temporal")) {
-            loadedStore.value.forEach(q1 => {
-                if (q1.predicate.value === loadedQname("prov:startedAtTime")) {
-                    data.value.temporalStart = q1.object.value;
-                } else if (q1.predicate.value === loadedQname("prov:endedAtTime")) {
-                    data.value.temporalEnd = q1.object.value;
-                }
-            }, q.object, null, null);
+            if (q.object.termType === "BlankNode") {
+                loadedStore.value.forEach(q1 => {
+                    if (q1.predicate.value === loadedQname("prov:startedAtTime")) {
+                        data.value.temporalStart = q1.object.value;
+                    } else if (q1.predicate.value === loadedQname("prov:endedAtTime")) {
+                        data.value.temporalEnd = q1.object.value;
+                    }
+                }, q.object, null, null);
+            }
         } else if (q.predicate.value === loadedQname("dcat:distribution")) {
-            const bnodes = loadedStore.value.getQuads(q.object, namedNode(loadedQname("dcat:accessURL")), null);
-            data.value.accessUrl = bnodes[0].object.value;
+            if (q.object.termType === "BlankNode") {
+                const bnodes = loadedStore.value.getQuads(q.object, namedNode(loadedQname("dcat:accessURL")), null);
+                data.value.accessUrl = bnodes[0].object.value;
+            }
         } else if (q.predicate.value === loadedQname("dcat:theme")) {
             data.value.themes.push(q.object.value);
+        } else if (q.predicate.value === loadedQname("prov:qualifiedAttribution")) {
+            if (q.object.termType === "BlankNode") {
+                let agentRole = {
+                    agent: "",
+                    role: []
+                };
+                loadedStore.value.forEach(q1 => {
+                    if (q1.predicate.value === loadedQname("prov:agent")) {
+                        agentRole.agent = q1.object.value;
+                    } else if (q1.predicate.value === loadedQname("dcat:hadRole")) {
+                        agentRole.role.push(q1.object.value);
+                    }
+                }, q.object, null, null);
+                if (data.value.agentRoles[0].agent === "") { // first blank agent-role pair, replace
+                    data.value.agentRoles[0] = agentRole;
+                } else {
+                    data.value.agentRoles.push(agentRole);
+                }
+            }
         }
     }, subject, null, null);
 }
 
-function clearData() {
+function clearData(clicked = false) {
     data.value = {
         iri: "",
         assignIri: true,
@@ -451,6 +542,7 @@ function clearData() {
         modified: "",
         issued: "",
         license: "",
+        useCustomLicense: false,
         customLicense: "",
         rights: "",
         accessRights: "",
@@ -460,37 +552,71 @@ function clearData() {
         temporalStart: "",
         temporalEnd: "",
         accessUrl: "",
-        agent: "",
-        customAgent: "",
-        role: "",
+        agentRoles: [
+            {
+                agent: "",
+                role: []
+            }
+        ],
         themes: [],
         contactName: "",
         contactEmail: "",
         contactPhone: ""
     };
-    validationMessages.value = {
-        iri: [],
-        title: [],
-        created: [],
-        modified: [],
-        spatialGeom: [],
-        spatialIri: [],
-        accessUrl: []
-    };
+    validation.value = {};
+    if (clicked) {
+        startClearedDataTimeout();
+    }
 }
 
 function saveDraft() {
     localStorage.setItem("data", JSON.stringify(data.value));
     hasSavedDraft.value = true;
+    startSavedDraftTimeout();
 }
 
 function deleteDraft() {
     localStorage.removeItem("data");
     hasSavedDraft.value = false;
+    startDeletedDraftTimeout();
 }
 
 function loadExample(key) {
-    data.value = exampleData[key];
+    loadRDF({ format: "turtle", value: exampleData[key] });
+    nextTick(() => {
+        activeExample.value = key;
+    })
+}
+
+function titleCase(s) {
+    return s.replace(
+        /\w\S*/g,
+        function(txt) {
+            return txt.charAt(0).toUpperCase() + txt.substr(1).toLowerCase();
+        }
+    );
+}
+
+function filteredAgentOptions(agentRole, index) {
+    const selectedAgents = data.value.agentRoles.map(agentRole => agentRole.agent);
+    if (agentRole.agent !== "") { // currently selected agent should still show in it's own dropdown
+        selectedAgents.splice(index, 1);
+    }
+    return agentOptionsRequested.value.filter(agent => !selectedAgents.includes(agent.value));
+}
+
+function collapseAllSections() {
+    if (allOpen.value) {
+        // collapse all
+        Object.values(sectionRefs.value).forEach(section => {
+            section.collapse();
+        });
+    } else {
+        // expand all
+        Object.values(sectionRefs.value).forEach(section => {
+            section.expand();
+        });
+    }
 }
 
 onMounted(() => {
@@ -499,8 +625,110 @@ onMounted(() => {
         data.value = JSON.parse(savedData);
         hasSavedDraft.value = true;
     } else {
-        store.value.addQuad(namedNode(defaultIri), namedNode(qname("a")), namedNode(qname("dcat:Dataset")));
+        store.value.addQuad(namedNode(defaultIri), namedNode(qname("a")), namedNode(qname("dcat:Resource")));
         serializedData.value = serialize();
+    }
+
+    if (config.useRemoteOptions) {
+        // query triplestore for form options
+        agentDoSparqlPostQuery(config.agentTriplestoreUrl, `PREFIX sdo: <https://schema.org/>
+            SELECT DISTINCT ?agent ?name
+            WHERE {
+                GRAPH <${config.agentNamedGraph}> {
+                    VALUES ?agentType { sdo:Person sdo:Organization sdo:Organisation }
+                    ?agent a ?agentType ;
+                        sdo:name ?name .
+                }
+            }`,() => {
+            agentData.value.forEach(result => {
+                agentOptionsRequested.value.push({
+                    value: result.agent.value,
+                    label: result.name.value
+                });
+            });
+            agentOptionsRequested.value.sort((a, b) => a.label.localeCompare(b.label));
+        });
+
+        roleDoSparqlPostQuery(config.vocabTriplestoreUrl, `PREFIX skos: <http://www.w3.org/2004/02/skos/core#>
+            SELECT DISTINCT ?role ?name ?desc
+            WHERE {
+                BIND(<https://w3id.org/idn/vocab/idn-role-codes> AS ?cs)
+                ?cs a skos:ConceptScheme .
+                ?role a skos:Concept ;
+                    skos:inScheme ?cs ;
+                    skos:prefLabel ?name ;
+                    skos:definition ?desc .
+            }`,() => {
+            roleData.value.forEach(result => {
+                roleOptionsRequested.value.push({
+                    value: result.role.value,
+                    label: titleCase(result.name.value),
+                    desc: result.desc.value,
+                });
+            });
+            roleOptionsRequested.value.sort((a, b) => a.label.localeCompare(b.label));
+        });
+
+        licenseDoSparqlPostQuery(config.vocabTriplestoreUrl, `PREFIX skos: <http://www.w3.org/2004/02/skos/core#>
+            SELECT DISTINCT ?license ?name
+            WHERE {
+                BIND(<https://w3id.org/idn/vocab/idn-licenses> AS ?cs)
+                ?cs a skos:ConceptScheme .
+                ?license a skos:Concept ;
+                    skos:inScheme ?cs ;
+                    skos:prefLabel ?name .
+            }`,() => {
+            licenseData.value.forEach(result => {
+                licenseOptionsRequested.value.push({
+                    value: result.license.value,
+                    label: result.name.value
+                });
+            });
+            licenseOptionsRequested.value.sort((a, b) => a.label.localeCompare(b.label));
+        });
+        
+        accessRightsDoSparqlPostQuery(config.vocabTriplestoreUrl, `PREFIX skos: <http://www.w3.org/2004/02/skos/core#>
+            SELECT DISTINCT ?accessRight ?name
+            WHERE {
+                BIND(<https://linked.data.gov.au/def/data-access-rights> AS ?cs)
+                ?cs a skos:ConceptScheme .
+                ?accessRight a skos:Concept ;
+                    skos:inScheme ?cs ;
+                    skos:prefLabel ?name .
+            }`,() => {
+            accessRightsData.value.forEach(result => {
+                accessRightsOptionsRequested.value.push({
+                    value: result.accessRight.value,
+                    label: titleCase(result.name.value)
+                });
+            });
+            accessRightsOptionsRequested.value.sort((a, b) => a.label.localeCompare(b.label));
+        });
+
+        themeDoSparqlPostQuery(config.vocabTriplestoreUrl, `PREFIX skos: <http://www.w3.org/2004/02/skos/core#>
+            SELECT DISTINCT ?theme ?name
+            WHERE {
+                BIND(<https://w3id.org/idn/vocab/idn-th> AS ?cs)
+                ?cs a skos:ConceptScheme .
+                ?theme a skos:Concept ;
+                    skos:inScheme ?cs ;
+                    skos:prefLabel ?name .
+            }`,() => {
+            themeData.value.forEach(result => {
+                themeOptionsRequested.value.push({
+                    value: result.theme.value,
+                    label: result.name.value
+                });
+            });
+            themeOptionsRequested.value.sort((a, b) => a.label.localeCompare(b.label));
+        });
+    } else {
+        // use hard-coded options
+        agentOptionsRequested.value = formOptions.agentOptions;
+        roleOptionsRequested.value = formOptions.roleOptions;
+        licenseOptionsRequested.value = formOptions.licenseOptions;
+        accessRightsOptionsRequested.value = formOptions.accessRightsOptions;
+        themeOptionsRequested.value = formOptions.themeOptions;
     }
 });
 </script>
@@ -508,35 +736,63 @@ onMounted(() => {
 <template>
     <div id="metadata-container">
         <div id="metadata-header">
-            <div id="metadata-title">
-                <button class="btn primary outline tutorial-btn" title="Coming soon" disabled>Start Tutorial</button>
-                <div class="examples-container">
-                    <span>Load examples: </span>
-                    <div class="examples">
-                        <button class="btn example sm" v-for="example in Object.keys(exampleData)" @click="loadExample(example)">{{ example }}</button>
+            <div id="top-buttons">
+                <div class="btn-group">
+                    <button class="btn secondary outline tutorial-btn" title="Coming soon" disabled>Start Tutorial</button>
+                </div>
+                <div class="btn-group">
+                    <button class="btn primary outline" @click="collapseAllSections">
+                        <template v-if="allOpen">Collapse all <i class="fa-regular fa-chevron-up"></i></template>
+                        <template v-else>Expand all <i class="fa-regular fa-chevron-down"></i></template>
+                    </button>
+                </div>
+                <div class="btn-group">
+                    <div class="btn-with-desc">
+                        <input type="file" name="rdfFile" id="rdfFile" :accept="Object.keys(rdfFormats).map(ext => `.${ext}`).join(',')" @change="setFile" hidden>
+                        <label for="rdfFile" class="btn secondary outline import-btn" title="Import RDF file">Import <i class="fa-regular fa-file-import"></i></label>
+                        <span class="btn-desc">.ttl, .n3, .nt, .trig</span>
                     </div>
                 </div>
-                <button id="toggle-rdf-btn" class="btn outline" @click="showRDF = !showRDF">
-                    <span><template v-if="showRDF">Hide</template><template v-else>Show</template> RDF</span>
-                    <i :class="`fa-regular fa-chevron-${showRDF ? 'right' : 'left'}`"></i>
-                </button>
+                <div class="btn-group">
+                    <div class="examples-container">
+                        <span>Load examples: </span>
+                        <div class="examples">
+                            <button
+                                v-for="example in Object.keys(exampleData)"
+                                :class="`btn example sm ${activeExample === example ? 'active' : ''}`"
+                                @click="loadExample(example)"
+                            >
+                                {{ example }}
+                            </button>
+                        </div>
+                    </div>
+                </div>
+                <div class="btn-group">
+                    <button id="toggle-rdf-btn" class="btn primary outline" @click="showRDF = !showRDF">
+                        <span><template v-if="showRDF">Hide</template><template v-else>Show</template> RDF</span>
+                        <i :class="`fa-regular fa-chevron-${showRDF ? 'right' : 'left'}`"></i>
+                    </button>
+                </div>
             </div>
         </div>
         <div id="metadata-body" :class="`${showRDF ? 'show-rdf' : ''}`">
             <div class="metadata-col" id="metadata-form">
                 <div class="col-body" id="form-items">
-                    <FormSection defaultOpen title="General">
+                    <FormSection defaultOpen title="General" :ref="el => sectionRefs.general = el" @collapse="sectionCollapsed.general = $event">
+                        <template #description>
+                            Basic information about this data.
+                        </template>
                         <FormField description="Provide an IRI or choose to have an IRI automatically assigned">
                             <FormInput
                                 label="IRI"
                                 type="url"
                                 id="iri"
-                                tooltip="An IRI is like an identifier for this resource"
+                                tooltip="An IRI is an identifier in the form of a web address (URL). Good IRIs are part of a managed system."
                                 placeholder="e.g. http://example.com/1234"
                                 required
-                                @onBlur="clearValidate('iri'); validateIsEmpty('iri', 'IRI must not be empty'); validateMatchRegex('iri', /https?:\/\/.+/, 'Invalid IRI')"
+                                @validate="handleValidate('iri', $event)"
+                                :validationFns="[validateIri]"
                                 v-model="data.iri"
-                                :invalidMessage="validationMessages.iri"
                                 clearButton
                                 :disabled="data.assignIri"
                             />
@@ -545,7 +801,6 @@ onMounted(() => {
                                 type="checkbox"
                                 id="assignIRI"
                                 v-model="data.assignIri"
-                                @onBlur="clearValidate('iri')"
                                 switch
                             />
                         </FormField>
@@ -555,10 +810,9 @@ onMounted(() => {
                                 type="text"
                                 id="title"
                                 required
-                                @onBlur="clearValidate('title'); validateIsEmpty('title', 'Title must not be empty')"
                                 v-model="data.title"
-                                :invalidMessage="validationMessages.title"
                                 clearButton
+                                @validate="handleValidate('title', $event)"
                             >
                                 <template #tooltip>
                                     <PropTooltip v-bind="propDetails.title" />
@@ -579,39 +833,33 @@ onMounted(() => {
                             </FormInput>
                         </FormField>
                     </FormSection>
-                    <FormSection title="Agent Info" description="This is a desc">
-                        <FormField>
+                    <FormSection title="Agent Info" :ref="el => sectionRefs.agent = el" @collapse="sectionCollapsed.agent = $event">
+                        <template #description>
+                            Information about the roles that agents (people and organisations) play with respect to this data. These roles are critical in determining whether this data is managed properly.
+                        </template>
+                        <FormField v-for="(agentRole, index) in data.agentRoles" direction="row" :span="2">
                             <FormInput
                                 label="Agent"
                                 type="select"
                                 id="agent"
-                                v-model="data.agent"
+                                v-model="agentRole.agent"
                                 clearButton
-                                :options="agentOptions"
+                                :options="filteredAgentOptions(agentRole, index)"
                                 searchable
                             >
                                 <template #tooltip>
                                     <PropTooltip v-bind="propDetails.agent" />
                                 </template>
                             </FormInput>
-                            <!-- <template #bottom v-if="data.agent === 'new'">
-                                <FormInput
-                                    label="Enter a new agent"
-                                    type="text"
-                                    v-model="data.customAgent"
-                                    :clearButton="true"
-                                />
-                            </template> -->
-                        </FormField>
-                        <FormField>
                             <FormInput
                                 label="Role"
                                 type="select"
                                 id="role"
-                                v-model="data.role"
+                                v-model="agentRole.role"
                                 clearButton
-                                :options="roleOptions"
+                                :options="roleOptionsRequested"
                                 searchable
+                                multiple
                             >
                                 <template #append>
                                     <button class="modal-btn" @click="modal = 'agentRole'" title="Role info">
@@ -621,25 +869,36 @@ onMounted(() => {
                                         <template #headerMiddle>
                                             <h3>Agent Roles</h3>
                                         </template>
-                                        <p>Role info</p>
+                                        <p>Below is a list for reference of roles and their brief definitions.</p>
+                                        <div class="modal-items">
+                                            <div v-for="role in roleOptionsRequested" class="modal-item">
+                                                <a :href="role.value" target="_blank" rel="noopener noreferrer">{{ role.label }}</a>
+                                                <p>{{ role.desc }}</p>
+                                            </div>
+                                        </div>
+                                        
                                     </BaseModal>
                                 </template>
                                 <template #tooltip>
                                     <PropTooltip v-bind="propDetails.role" />
                                 </template>
                             </FormInput>
+                            <button v-if="index > 0" class="btn outline danger delete-agent-btn" title="Delete agent-role pair" @click="data.agentRoles.splice(index, 1);"><i class="fa-regular fa-xmark"></i></button>
                         </FormField>
+                        <button class="btn secondary outline add-agent-btn" @click="data.agentRoles.push({agent: '', role: []})"><i class="fa-regular fa-plus"></i> Add Agent</button>
                     </FormSection>
-                    <FormSection title="Dates">
+                    <FormSection title="Dates" :ref="el => sectionRefs.dates = el" @collapse="sectionCollapsed.dates = $event">
+                        <template #description>
+                            Standard dates for the establishment and update times of this dataset. A dataset about early 20th century data might only have been made last year and the created date is then some time last year. "Issued" indicates when, if ever, this dataset was published.
+                        </template>
                         <FormField>
                             <FormInput
                                 label="Created"
                                 type="date"
                                 id="created"
                                 required
-                                @onBlur="clearValidate('created'); validateIsEmpty('created', 'Created date must not be empty')"
+                                @validate="handleValidate('created', $event)"
                                 v-model="data.created"
-                                :invalidMessage="validationMessages.created"
                                 clearButton
                             >
                                 <template #tooltip>
@@ -653,9 +912,8 @@ onMounted(() => {
                                 type="date"
                                 id="modified"
                                 required
-                                @onBlur="clearValidate('modified'); validateIsEmpty('modified', 'Modified date must not be empty')"
+                                @validate="handleValidate('modified', $event)"
                                 v-model="data.modified"
-                                :invalidMessage="validationMessages.modified"
                                 clearButton
                             >
                                 <template #tooltip>
@@ -677,15 +935,19 @@ onMounted(() => {
                             </FormInput>
                         </FormField>
                     </FormSection>
-                    <FormSection title="Rights">
+                    <FormSection title="Rights" :ref="el => sectionRefs.rights = el" @collapse="sectionCollapsed.rights = $event">
+                        <template #description>
+                            Ownership and access information.
+                        </template>
                         <FormField>
                             <FormInput
+                                v-show="!data.useCustomLicense"
                                 label="License"
                                 type="select"
                                 id="license"
                                 v-model="data.license"
                                 clearButton
-                                :options="licenseOptions"
+                                :options="licenseOptionsRequested"
                                 searchable
                             >
                                 <template #append>
@@ -696,13 +958,36 @@ onMounted(() => {
                                         <template #headerMiddle>
                                             <h3>Licenses</h3>
                                         </template>
-                                        <p>License info</p>
+                                        <div v-for="license in licenseOptionsRequested">
+                                            <a :href="license.value" target="_blank" rel="noopener noreferrer">{{ license.label }}</a> - {{ license.desc }}
+                                        </div>
                                     </BaseModal>
                                 </template>
                                 <template #tooltip>
                                     <PropTooltip v-bind="propDetails.license" />
                                 </template>
                             </FormInput>
+                            <FormInput
+                                v-show="data.useCustomLicense"
+                                label="License IRI"
+                                placeholder="e.g. http://example.com/1234"
+                                type="text"
+                                v-model="data.customLicense"
+                                @validate="handleValidate('customLicense', $event)"
+                                :validationFns="[validateIri]"
+                                clearButton
+                            >
+                                <template #tooltip>
+                                    <PropTooltip v-bind="propDetails.license" />
+                                </template>
+                            </FormInput>
+                            <FormInput
+                                label="Provide License IRI"
+                                id="custom-license"
+                                type="checkbox"
+                                v-model="data.useCustomLicense"
+                                switch
+                            />
                             <!-- <template #bottom>
                                 <FormInput
                                     v-if="data.license === 'new'"
@@ -733,7 +1018,7 @@ onMounted(() => {
                                 id="accessRights"
                                 v-model="data.accessRights"
                                 clearButton
-                                :options="accessRightsOptions"
+                                :options="accessRightsOptionsRequested"
                                 searchable
                             >
                                 <template #tooltip>
@@ -742,7 +1027,10 @@ onMounted(() => {
                             </FormInput>
                         </FormField>
                     </FormSection>
-                    <FormSection title="Spatio/Temporal">
+                    <FormSection title="Spatio/Temporal" :ref="el => sectionRefs.spatial = el" @collapse="sectionCollapsed.spatial = $event">
+                        <template #description>
+                            The spatial and temporal extent <em>of the data</em>. This information is different from the dates section as this dataset may have been created recently but it's about someone or something long ago.
+                        </template>
                         <FormField label="Spatial geometry">
                             <FormInput
                                 v-show="!data.useSpatialIri"
@@ -753,8 +1041,8 @@ onMounted(() => {
                                 placeholder="e.g. POLYGON ((1234 1234, 1235 1245))"
                                 :disabled="data.useSpatialIri"
                                 description="Must be WKT format"
-                                @onBlur="clearValidate('spatialGeom'); validateMatchRegex('spatialGeom', /^\w+\s?\(.+\)$/, 'Invalid WKT')"
-                                :invalidMessage="validationMessages.spatialGeom"
+                                @validate="handleValidate('spatialGeom', $event)"
+                                :validationFns="[validateWktString]"
                             >
                                 <template #tooltip>
                                     <PropTooltip v-bind="propDetails.spatialGeometry" />
@@ -769,14 +1057,15 @@ onMounted(() => {
                                 placeholder="e.g. http://example.com/1234"
                                 :disabled="!data.useSpatialIri"
                                 description="Must be a valid IRI"
-                                @onBlur="clearValidate('spatialIri'); validateMatchRegex('spatialIri', /https?:\/\/.+/, 'Invalid IRI')"
-                                :invalidMessage="validationMessages.spatialIri"
+                                @validate="handleValidate('spatialIri', $event)"
+                                :validationFns="[validateIri]"
                             >
                                 <template #tooltip>
                                     <PropTooltip v-bind="propDetails.spatialIri" />
                                 </template>
                             </FormInput>
                             <FormInput
+                                label="Use Spatial IRI"
                                 leftLabel="WKT String"
                                 rightLabel="Spatial IRI"
                                 type="checkbox"
@@ -805,7 +1094,10 @@ onMounted(() => {
                             </template>
                         </FormField>
                     </FormSection>
-                    <FormSection title="Distribution Info" description="Providing an access URL is optional, but it must be a publicly resolvable URL if provided.">
+                    <FormSection title="Distribution Info" :ref="el => sectionRefs.distribution = el" @collapse="sectionCollapsed.distribution = $event">
+                        <template #description>
+                            Information about how to gain access to the data
+                        </template>
                         <FormField :span="2">
                             <FormInput
                                 label="Access URL"
@@ -813,9 +1105,9 @@ onMounted(() => {
                                 id="accessUrl"
                                 description="Must be a reachable URL"
                                 placeholder="e.g. http://example.com/1234"
-                                @onBlur="clearValidate('accessUrl'); validateStatus200('accessUrl', 'accessUrl', 'Access URL is unreachable')"
+                                :validationFns="[validateIri]"
+                                @validate="handleValidate('accessUrl', $event)"
                                 v-model="data.accessUrl"
-                                :invalidMessage="validationMessages.accessUrl"
                                 clearButton
                             >
                                 <!-- <template #prepend>
@@ -835,7 +1127,10 @@ onMounted(() => {
                             </FormInput>
                         </FormField>
                     </FormSection>
-                    <FormSection title="Theme">
+                    <FormSection title="Theme" :ref="el => sectionRefs.theme = el" @collapse="sectionCollapsed.theme = $event">
+                        <template #description>
+                            Classification or categorisation of this data. We are mostly concerned with indications of "indigeneity", i.e. how this data is related to indigenous people, however other classifications may also be added. Our primary indigenous classification vocabulary is online at <a href="https://w3id.org/idn/vocab/idn-th" target="_blank" rel="noopener noreferrer">https://w3id.org/idn/vocab/idn-th</a> which may be browsed for classification suggestions.
+                        </template>
                         <FormField :span="2">
                             <FormInput
                                 label="Theme"
@@ -843,7 +1138,7 @@ onMounted(() => {
                                 id="theme"
                                 v-model="data.themes"
                                 clearButton
-                                :options="themeOptions"
+                                :options="themeOptionsRequested"
                                 multiple
                                 searchable
                                 allowAdd
@@ -855,7 +1150,12 @@ onMounted(() => {
                             </FormInput>
                         </FormField>
                     </FormSection>
-                    <FormSection title="Contact Details" description="The contact person provided here will be the point of contact for this dataset.">
+                    <FormSection title="Contact Details" :ref="el => sectionRefs.contact = el" @collapse="sectionCollapsed.contact = $event">
+                        <template #description>
+                            Required if you are submitting this metadata to the IDN.
+                            <br/><br/>
+                            These details are also added as the point of contact for this data unless you've specifically indicated an Agent as the Point of Contact above.
+                        </template>
                         <FormField>
                             <FormInput
                                 label="Name"
@@ -894,29 +1194,63 @@ onMounted(() => {
             </div>
             <div class="metadata-col" id="metadata-rdf">
                 <div class="col-body">
-                    <RDFPreview :data="serializedData" @import="loadRDF" />
+                    <RDFPreview :data="serializedData" />
                 </div>
             </div>
         </div>
         <div id="metadata-footer">
             <p>
-                Form declaration.
+                Form declaration
             </p>
-            <div id="form-buttons">
-                <div class="left-buttons">
-                    <button class="btn outline" @click="saveDraft" :disabled="empty">Save Draft <i class="fa-regular fa-floppy-disk"></i></button>
-                    <button class="btn outline danger" @click="deleteDraft" :disabled="!hasSavedDraft">Delete Draft <i class="fa-regular fa-trash"></i></button>
-                    <button class="btn danger" @click="clearData" :disabled="empty">Clear Data <i class="fa-regular fa-delete-left"></i></button>
+            <FormInput
+                label="I agree"
+                type="checkbox"
+                id="declaration-check"
+                v-model="declarationTicked"
+            />
+            <div id="bottom-buttons">
+                <div class="btn-group">
+                    <button class="btn secondary outline" @click="saveDraft" :disabled="empty">
+                        <template v-if="savedDraft">
+                            Draft saved!
+                        </template>
+                        <template v-else>
+                            Save Draft <i class="fa-regular fa-floppy-disk"></i>
+                        </template>
+                    </button>
+                </div>
+                <div class="btn-group">
                     <a
-                        class="btn outline export-btn"
+                        class="btn secondary outline export-btn"
                         :href="!empty ? `data:text/turtle;charset=utf-8,${encodeURIComponent(serializedData)}` : null"
                         :download="!empty ? `${data.title || 'metadata'}.ttl` : null"
                         :disabled="empty"
+                        title="Export as RDF file (.ttl)"
                     >
                         Export <i class="fa-regular fa-file-export"></i>
                     </a>
                 </div>
-                <button class="btn success lg submit-btn" title="Coming soon" :disabled="true || empty">Submit for review</button>
+                <div class="btn-group">
+                    <button class="btn outline danger" @click="deleteDraft" :disabled="!hasSavedDraft">
+                        <template v-if="deletedDraft">
+                            Draft deleted!
+                        </template>
+                        <template v-else>
+                            Delete Draft <i class="fa-regular fa-trash"></i>
+                        </template>
+                    </button>
+                    <button class="btn danger outline" @click="clearData(true)" :disabled="empty">
+                        <template v-if="clearedData">
+                            Cleared data!
+                        </template>
+                        <template v-else>
+                            Clear Data <i class="fa-regular fa-delete-left"></i>
+                        </template>
+                    </button>
+                </div>
+                <div class="btn-group">
+                    <button class="btn success lg submit-btn" title="Coming soon" :disabled="true || (empty || !isValid)">Submit for review</button>
+                </div>
             </div>
         </div>
     </div>
@@ -956,12 +1290,7 @@ $padding: 12px;
                 transform: translateX(-50%);
             }
 
-            button#toggle-rdf-btn {
-                display: flex;
-                flex-direction: row;
-                gap: 8px;
-                align-items: center;
-            }
+            
         }
 
         #metadata-desc {
@@ -1070,9 +1399,7 @@ $padding: 12px;
             flex-direction: row;
             gap: 12px;
             
-            button.submit-btn {
-                margin-left: auto;
-            }
+            
         }
     }
 }
@@ -1095,28 +1422,101 @@ $padding: 12px;
         align-items: center;
 
         .example {
-
+            &.active {
+                background-color: #b3b3b3;
+            }
         }
     }
 }
 
+#top-buttons {
+    align-items: flex-start;
+}
 
+#bottom-buttons {
+    align-items: flex-end;
+}
 
-.left-buttons {
+#top-buttons, #bottom-buttons {
     display: flex;
     flex-direction: row;
-    align-items: center;
-    gap: 10px;
-    margin-top: auto;
+    justify-content: space-between;
+    gap: 12px;
     
-    a.export-btn {
-        text-decoration: none;
-        font-weight: normal;
-        font-size: 0.833em;
+    .btn-group {
+        display: flex;
+        flex-direction: row;
+        align-items: center;
+        gap: 10px;
+
+        .btn-with-desc {
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+
+            .btn {
+                align-self: baseline;
+            }
+
+            .btn-desc {
+                font-size: 0.7rem;
+                color: grey;
+            }
+        }
     }
+}
+
+button#toggle-rdf-btn {
+    display: flex;
+    flex-direction: row;
+    gap: 8px;
+    align-items: center;
+}
+
+button.submit-btn {
+    margin-left: auto;
+
+    &:disabled {
+        background-color: grey;
+    }
+}
+
+a.export-btn, label.import-btn {
+    text-decoration: none;
+    font-weight: normal;
+    font-size: 0.833em;
 }
 
 button.modal-btn {
     cursor: pointer;
+}
+
+button.add-agent-btn {
+    justify-self: baseline;
+}
+
+button.delete-agent-btn {
+    align-self: center;
+}
+
+:deep(.modal-items) {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+
+    .modal-item {
+        background-color: $bg1;
+        padding: 6px;
+        border-radius: $borderRadius;
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+
+        p {
+            margin: 0;
+            font-size: 0.9em;
+            font-style: italic;
+        }
+    }
 }
 </style>

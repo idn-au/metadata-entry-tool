@@ -139,7 +139,7 @@ function progressGradient(percentage) {
             <Radar :chart-options="options" :chart-data="data" :styles="styles" />
         </div>
         <div class="collapse-btns">
-            <button @click="toggleCollapseAll" class="scores-collapse-btn btn outline" :title="`${props.title} score details`">
+            <button @click="toggleCollapseAll" class="scores-collapse-btn btn primary outline" :title="`${props.title} score details`">
                 <i class="fa-regular fa-circle-info"></i>
                 <i :class="`fa-regular fa-chevron-${collapse.top ? 'down' : 'up'}`"></i>
             </button>

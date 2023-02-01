@@ -1,5 +1,5 @@
 <script setup>
-import { ref } from "vue";
+import { ref, useSlots } from "vue";
 
 const props = defineProps({
     title: String,
@@ -10,22 +10,39 @@ const props = defineProps({
     description: String
 });
 
-const collapse = ref(!props.defaultOpen);
+const emit = defineEmits(["collapse"]);
+const slots = useSlots();
+
+const isCollapsed = ref(!props.defaultOpen);
+
+function expand() {
+    isCollapsed.value = false;
+    emit("collapse", false);
+}
+
+function collapse() {
+    isCollapsed.value = true;
+    emit("collapse", true);
+}
+
+defineExpose({ expand, collapse });
 </script>
 
 <template>
-    <div :class="`form-section ${collapse ? 'collapse' : ''}`">
-        <div class="section-header" @click="collapse = !collapse">
+    <div :class="`form-section ${isCollapsed ? 'collapse' : ''}`">
+        <div class="section-header" @click="isCollapsed = !isCollapsed; emit('collapse', isCollapsed);">
             <div class="title-container">
                 <h3 v-if="props.title">{{ props.title }}</h3>
             </div>
             <button class="section-collapse">
-                <i :class="`fa-regular fa-chevron-${collapse ? 'down' : 'up'}`"></i>
+                <i :class="`fa-regular fa-chevron-${isCollapsed ? 'down' : 'up'}`"></i>
             </button>
         </div>
         <div class="section-body-container">
-            <div class="section-desc" v-if="props.description">
-                <p>{{ props.description }}</p>
+            <div class="section-desc" v-if="props.description || slots.description">
+                <p>
+                    <slot name="description">{{ props.description }}</slot>
+                </p>
             </div>
            <div class="section-body">
                 <slot></slot>
