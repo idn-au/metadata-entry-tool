@@ -50,7 +50,8 @@ export function useGetRequest() {
         fetch(url, {
             method: "POST",
             headers: {
-                "Content-Type": "application/sparql-query"
+                "Content-Type": "application/sparql-query",
+                "Authorization": "Basic YWRtaW46VEtTSEczOCZQakNDJWIhb2ckcmZ4YyYybzJ6NTNlRW1KbVZ2"
             },
             body: query
         })

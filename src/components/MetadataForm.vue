@@ -15,6 +15,7 @@ import propDetails from "@/util/props.json";
 import exampleData from "@/util/exampleData";
 import formOptions from "@/util/formOptions";
 import config from "@/config";
+import tutorialContent from "@/util/tutorialContent";
 
 const { namedNode, literal } = DataFactory;
 
@@ -87,6 +88,22 @@ const data = ref({
 
 const declarationTicked = ref(false);
 
+const tutorialEnabled = ref(false);
+const tutorialStep = ref(0); // 1-max, 0 is invalid
+const tutorialTotalSteps = 10;
+const tutorialFocus = ref({
+    1: null,
+    2: null,
+    3: null,
+    4: null,
+    5: null,
+    6: null,
+    7: null,
+    8: null,
+    9: null,
+    10: null,
+}); // HTML element ref for getting element positioning
+
 const activeExample = ref("");
 
 const sectionRefs = ref({
@@ -110,6 +127,8 @@ const sectionCollapsed = ref({
     theme: true,
     contact: true
 });
+
+const showPropTooltips = ref(false);
 
 const validation = ref({}); // { key: isValid, ... }
 
@@ -533,39 +552,41 @@ function loadRDF(e) {
 }
 
 function clearData(clicked = false) {
-    data.value = {
-        iri: "",
-        assignIri: true,
-        title: "",
-        description: "",
-        created: "",
-        modified: "",
-        issued: "",
-        license: "",
-        useCustomLicense: false,
-        customLicense: "",
-        rights: "",
-        accessRights: "",
-        spatialGeom: "",
-        useSpatialIri: false,
-        spatialIri: "",
-        temporalStart: "",
-        temporalEnd: "",
-        accessUrl: "",
-        agentRoles: [
-            {
-                agent: "",
-                role: []
-            }
-        ],
-        themes: [],
-        contactName: "",
-        contactEmail: "",
-        contactPhone: ""
-    };
-    validation.value = {};
-    if (clicked) {
-        startClearedDataTimeout();
+    if (!clicked || confirm("Warning: This will delete all data in the form. Do you wish to continue?")) {
+        data.value = {
+            iri: "",
+            assignIri: true,
+            title: "",
+            description: "",
+            created: "",
+            modified: "",
+            issued: "",
+            license: "",
+            useCustomLicense: false,
+            customLicense: "",
+            rights: "",
+            accessRights: "",
+            spatialGeom: "",
+            useSpatialIri: false,
+            spatialIri: "",
+            temporalStart: "",
+            temporalEnd: "",
+            accessUrl: "",
+            agentRoles: [
+                {
+                    agent: "",
+                    role: []
+                }
+            ],
+            themes: [],
+            contactName: "",
+            contactEmail: "",
+            contactPhone: ""
+        };
+        validation.value = {};
+        if (clicked) {
+            startClearedDataTimeout();
+        }
     }
 }
 
@@ -576,16 +597,20 @@ function saveDraft() {
 }
 
 function deleteDraft() {
-    localStorage.removeItem("data");
-    hasSavedDraft.value = false;
-    startDeletedDraftTimeout();
+    if (confirm("Warning: While your current form will stay unchanged, this will delete your progress saved to the browser. You will lose progress upon browser refresh. Do you wish to continue?")) {
+        localStorage.removeItem("data");
+        hasSavedDraft.value = false;
+        startDeletedDraftTimeout();
+    }
 }
 
 function loadExample(key) {
-    loadRDF({ format: "turtle", value: exampleData[key] });
-    nextTick(() => {
-        activeExample.value = key;
-    })
+    if (confirm("Warning: Loading this example will clear your current form. Do you wish to continue?")) {
+        loadRDF({ format: "turtle", value: exampleData[key] });
+        nextTick(() => {
+            activeExample.value = key;
+        });
+    }
 }
 
 function titleCase(s) {
@@ -617,6 +642,82 @@ function collapseAllSections() {
             section.expand();
         });
     }
+}
+
+function onTransition() {
+    nextTick(() => {
+        if (showRDF.value && tutorialStep.value === 6) {
+            positionTutorialContent(6);
+        }
+    });
+}
+
+function positionTutorialContent(stepNo) {
+    if (tutorialFocus.value[stepNo]) {
+        const tutorialBody = document.querySelector(".tutorial-body");
+        tutorialBody.removeAttribute("style"); // reset positioning
+        const offsetX = 40; // px
+        const padding = 40; // px
+        const scrollOffset = 50; // px
+        const elementRect = tutorialFocus.value[stepNo].getBoundingClientRect();
+        const scrollPosition = elementRect.top + window.scrollY - scrollOffset;
+
+        // position tutorial text Y
+        if (scrollPosition > document.body.scrollHeight - window.innerHeight) { // cannot scroll further, at bottom of page
+            tutorialBody.style.top = `${window.innerHeight - (document.body.scrollHeight - (elementRect.top + window.scrollY))}px`;
+        } else {
+            tutorialBody.style.top = `${scrollOffset}px`;
+        }
+        
+        // position tutorial text X
+        if (tutorialContent[stepNo].position === "left") {
+            const right = window.innerWidth - elementRect.left + offsetX;
+            tutorialBody.style.right = `${right}px`;
+            tutorialBody.style.maxWidth = `${Math.min(window.innerWidth - right - padding, window.innerWidth / 3)}px`;
+            tutorialBody.style.textAlign = "right";
+        } else { // right
+            const left = elementRect.right + offsetX
+            tutorialBody.style.left = `${left}px`;
+            tutorialBody.style.maxWidth = `${Math.min(window.innerWidth - left - padding, window.innerWidth / 3)}px`;
+        }
+
+        window.scrollTo({ top: scrollPosition, behavior: "smooth" });
+    }
+}
+
+function tutorialSetStep(stepNo) {
+    tutorialStep.value = stepNo;
+    if (stepNo === 6) {
+        showRDF.value = true;
+    } else {
+        showRDF.value = false;
+        nextTick(() => {
+            positionTutorialContent(stepNo);
+        })
+    }
+}
+
+function startTutorial() {
+    tutorialFocus.value[6].addEventListener("transitionend", onTransition); // position tutorial text after width transition
+    tutorialSetStep(1);
+    tutorialEnabled.value = true;
+    document.body.classList.add("no-scroll");
+}
+
+function tutorialPrevStep() {
+    tutorialSetStep(tutorialStep.value - 1);
+}
+
+function tutorialNextStep() {
+    tutorialSetStep(tutorialStep.value + 1);
+}
+
+function closeTutorial() {
+    tutorialFocus.value[6].removeEventListener("transitionend", onTransition);
+    tutorialEnabled.value = false;
+    tutorialStep.value = 0;
+    document.body.classList.remove("no-scroll");
+    window.scrollTo({ top: 0, behavior: "smooth" });
 }
 
 onMounted(() => {
@@ -735,10 +836,56 @@ onMounted(() => {
 
 <template>
     <div id="metadata-container">
+        <div v-if="tutorialEnabled" class="tutorial-overlay">
+            <div class="tutorial-content">
+                <div class="tutorial-body">
+                    {{ tutorialContent[tutorialStep].content }}
+                </div>
+                <div class="tutorial-btns">
+                    <button
+                        v-if="tutorialStep > 1"
+                        class="btn primary"
+                        @click="tutorialPrevStep"
+                    >
+                        Prev
+                    </button>
+                    <div
+                        v-else
+                        class="btn primary"
+                        :style="{ visibility: 'hidden' }"
+                    >
+                        Prev
+                    </div>
+                    <div class="tutorial-step-btns">
+                        <button
+                            v-for="stepNo in [...Array(tutorialTotalSteps).keys()].map(step => step + 1)"
+                            :class="`tutorial-step-btn ${stepNo === tutorialStep ? 'active' : ''}`"
+                            @click="tutorialSetStep(stepNo)"
+                        >
+                            <i :class="`fa-${stepNo === tutorialStep ? 'solid' : 'regular'} fa-circle`"></i>
+                        </button>
+                    </div>
+                    <button
+                        v-if="tutorialStep < tutorialTotalSteps"
+                        class="btn primary"
+                        @click="tutorialNextStep"
+                    >
+                        Next
+                    </button>
+                    <button
+                        v-else
+                        class="btn success"
+                        @click="closeTutorial"
+                    >
+                        Finish
+                    </button>
+                </div>
+            </div>
+        </div>
         <div id="metadata-header">
             <div id="top-buttons">
                 <div class="btn-group">
-                    <button class="btn secondary outline tutorial-btn" title="Coming soon" disabled>Start Tutorial</button>
+                    <button class="btn secondary outline tutorial-btn" @click="startTutorial">Start Tutorial</button>
                 </div>
                 <div class="btn-group">
                     <button class="btn primary outline" @click="collapseAllSections">
@@ -749,12 +896,12 @@ onMounted(() => {
                 <div class="btn-group">
                     <div class="btn-with-desc">
                         <input type="file" name="rdfFile" id="rdfFile" :accept="Object.keys(rdfFormats).map(ext => `.${ext}`).join(',')" @change="setFile" hidden>
-                        <label for="rdfFile" class="btn secondary outline import-btn" title="Import RDF file">Import <i class="fa-regular fa-file-import"></i></label>
+                        <label :ref="el => tutorialFocus[3] = el" for="rdfFile" :class="`btn secondary outline import-btn ${tutorialStep === 3 ? 'tutorial-focus' : ''}`" title="Import RDF file">Import <i class="fa-regular fa-file-import"></i></label>
                         <span class="btn-desc">.ttl, .n3, .nt, .trig</span>
                     </div>
                 </div>
                 <div class="btn-group">
-                    <div class="examples-container">
+                    <div :ref="el => tutorialFocus[2] = el" :class="`examples-container ${tutorialStep === 2 ? 'tutorial-focus' : ''}`">
                         <span>Load examples: </span>
                         <div class="examples">
                             <button
@@ -768,7 +915,7 @@ onMounted(() => {
                     </div>
                 </div>
                 <div class="btn-group">
-                    <button id="toggle-rdf-btn" class="btn primary outline" @click="showRDF = !showRDF">
+                    <button id="toggle-rdf-btn" :ref="el => tutorialFocus[5] = el" :class="`btn primary outline ${tutorialStep === 5 ? 'tutorial-focus' : ''}`" @click="showRDF = !showRDF">
                         <span><template v-if="showRDF">Hide</template><template v-else>Show</template> RDF</span>
                         <i :class="`fa-regular fa-chevron-${showRDF ? 'right' : 'left'}`"></i>
                     </button>
@@ -776,7 +923,7 @@ onMounted(() => {
             </div>
         </div>
         <div id="metadata-body" :class="`${showRDF ? 'show-rdf' : ''}`">
-            <div class="metadata-col" id="metadata-form">
+            <div :ref="el => tutorialFocus[1] = el" :class="`metadata-col ${tutorialStep === 1 ? 'tutorial-focus' : ''}`" id="metadata-form">
                 <div class="col-body" id="form-items">
                     <FormSection defaultOpen title="General" :ref="el => sectionRefs.general = el" @collapse="sectionCollapsed.general = $event">
                         <template #description>
@@ -787,7 +934,6 @@ onMounted(() => {
                                 label="IRI"
                                 type="url"
                                 id="iri"
-                                tooltip="An IRI is an identifier in the form of a web address (URL). Good IRIs are part of a managed system."
                                 placeholder="e.g. http://example.com/1234"
                                 required
                                 @validate="handleValidate('iri', $event)"
@@ -795,7 +941,11 @@ onMounted(() => {
                                 v-model="data.iri"
                                 clearButton
                                 :disabled="data.assignIri"
-                            />
+                            >
+                                <template #tooltip>
+                                    An IRI is a standard identifier in the form of a web address (URL). Good IRIs are part of a managed system.
+                                </template>
+                            </FormInput>
                             <FormInput
                                 label="Assign IRI"
                                 type="checkbox"
@@ -815,7 +965,10 @@ onMounted(() => {
                                 @validate="handleValidate('title', $event)"
                             >
                                 <template #tooltip>
-                                    <PropTooltip v-bind="propDetails.title" />
+                                    <PropTooltip v-if="showPropTooltips" v-bind="propDetails.title" />
+                                    <template v-else>
+                                        The name of the data that this metadata is describing.
+                                    </template>
                                 </template>
                             </FormInput>
                         </FormField>
@@ -828,14 +981,17 @@ onMounted(() => {
                                 description="Supports new lines and basic formatting"
                             >
                                 <template #tooltip>
-                                    <PropTooltip v-bind="propDetails.description" />
+                                    <PropTooltip v-if="showPropTooltips" v-bind="propDetails.description" />
+                                    <template v-else>
+                                        A free-text description of the data. This can include how it was created and its intended purpose.
+                                    </template>
                                 </template>
                             </FormInput>
                         </FormField>
                     </FormSection>
-                    <FormSection title="Agent Info" :ref="el => sectionRefs.agent = el" @collapse="sectionCollapsed.agent = $event">
+                    <FormSection title="Agent Information" :ref="el => sectionRefs.agent = el" @collapse="sectionCollapsed.agent = $event">
                         <template #description>
-                            Information about the roles that agents (people and organisations) play with respect to this data. These roles are critical in determining whether this data is managed properly.
+                            Information about the roles that agents (people and organisations) play with respect to this data. These roles are critical in determining whether this data is managed properly. Each Agent must have a matching Role.
                         </template>
                         <FormField v-for="(agentRole, index) in data.agentRoles" direction="row" :span="2">
                             <FormInput
@@ -848,7 +1004,10 @@ onMounted(() => {
                                 searchable
                             >
                                 <template #tooltip>
-                                    <PropTooltip v-bind="propDetails.agent" />
+                                    <PropTooltip v-if="showPropTooltips" v-bind="propDetails.agent" />
+                                    <template v-else>
+                                        The name of the person, community or business that is providing this data.
+                                    </template>
                                 </template>
                             </FormInput>
                             <FormInput
@@ -869,7 +1028,7 @@ onMounted(() => {
                                         <template #headerMiddle>
                                             <h3>Agent Roles</h3>
                                         </template>
-                                        <p>Below is a list for reference of roles and their brief definitions.</p>
+                                        <p>Below is a list for reference of roles and their brief definitions. The full list of agent roles can be found <a href="https://w3id.org/idn/vocab/idn-role-codes" target="_blank" rel="noopener noreferrer">here</a>.</p>
                                         <div class="modal-items">
                                             <div v-for="role in roleOptionsRequested" class="modal-item">
                                                 <a :href="role.value" target="_blank" rel="noopener noreferrer">{{ role.label }}</a>
@@ -880,7 +1039,10 @@ onMounted(() => {
                                     </BaseModal>
                                 </template>
                                 <template #tooltip>
-                                    <PropTooltip v-bind="propDetails.role" />
+                                    <PropTooltip v-if="showPropTooltips" v-bind="propDetails.role" />
+                                    <template v-else>
+                                        What role (e.g. custodian) the named person, community or business has with this data.
+                                    </template>
                                 </template>
                             </FormInput>
                             <button v-if="index > 0" class="btn outline danger delete-agent-btn" title="Delete agent-role pair" @click="data.agentRoles.splice(index, 1);"><i class="fa-regular fa-xmark"></i></button>
@@ -902,7 +1064,10 @@ onMounted(() => {
                                 clearButton
                             >
                                 <template #tooltip>
-                                    <PropTooltip v-bind="propDetails.created" />
+                                    <PropTooltip v-if="showPropTooltips" v-bind="propDetails.created" />
+                                    <template v-else>
+                                        This is the date that this dataset was created (NOT the date the data occurred).
+                                    </template>
                                 </template>
                             </FormInput>
                         </FormField>
@@ -917,7 +1082,10 @@ onMounted(() => {
                                 clearButton
                             >
                                 <template #tooltip>
-                                    <PropTooltip v-bind="propDetails.modified" />
+                                    <PropTooltip v-if="showPropTooltips" v-bind="propDetails.modified" />
+                                    <template v-else>
+                                        The most recent date on which the data was modified. It can be the same as the date it was created.
+                                    </template>
                                 </template>
                             </FormInput>
                         </FormField>
@@ -930,14 +1098,17 @@ onMounted(() => {
                                 clearButton
                             >
                                 <template #tooltip>
-                                    <PropTooltip v-bind="propDetails.issued" />
+                                    <PropTooltip v-if="showPropTooltips" v-bind="propDetails.issued" />
+                                    <template v-else>
+                                        This is the date that this dataset was published or distributed.
+                                    </template>
                                 </template>
                             </FormInput>
                         </FormField>
                     </FormSection>
                     <FormSection title="Rights" :ref="el => sectionRefs.rights = el" @collapse="sectionCollapsed.rights = $event">
                         <template #description>
-                            Ownership and access information.
+                            Ownership and access information of the data. If a license is selected then the rights holder to that license should also be included.
                         </template>
                         <FormField>
                             <FormInput
@@ -964,7 +1135,10 @@ onMounted(() => {
                                     </BaseModal>
                                 </template>
                                 <template #tooltip>
-                                    <PropTooltip v-bind="propDetails.license" />
+                                    <PropTooltip v-if="showPropTooltips" v-bind="propDetails.license" />
+                                    <template v-else>
+                                        This is the legal information under which the data is made available.
+                                    </template>
                                 </template>
                             </FormInput>
                             <FormInput
@@ -978,7 +1152,10 @@ onMounted(() => {
                                 clearButton
                             >
                                 <template #tooltip>
-                                    <PropTooltip v-bind="propDetails.license" />
+                                    <PropTooltip v-if="showPropTooltips" v-bind="propDetails.license" />
+                                    <template v-else>
+                                        This is the legal information under which the data is made available.
+                                    </template>
                                 </template>
                             </FormInput>
                             <FormInput
@@ -1007,7 +1184,10 @@ onMounted(() => {
                                 clearButton
                             >
                                 <template #tooltip>
-                                    <PropTooltip v-bind="propDetails.rights" />
+                                    <PropTooltip v-if="showPropTooltips" v-bind="propDetails.rights" />
+                                    <template v-else>
+                                        This is a statement that provides required details of who holds the license selected previously. e.g. ©University of Melbourne.
+                                    </template>
                                 </template>
                             </FormInput>
                         </FormField>
@@ -1022,14 +1202,17 @@ onMounted(() => {
                                 searchable
                             >
                                 <template #tooltip>
-                                    <PropTooltip v-bind="propDetails.accessRights" />
+                                    <PropTooltip v-if="showPropTooltips" v-bind="propDetails.accessRights" />
+                                    <template v-else>
+                                        Data access rights control how users and systems access a data resource. e.g. Metadata access only.  Definitions can be found <a href="http://idn.kurrawong.net/vocab/data-access-rights" target="_blank" rel="noopener noreferrer">here</a>.
+                                    </template>
                                 </template>
                             </FormInput>
                         </FormField>
                     </FormSection>
                     <FormSection title="Spatio/Temporal" :ref="el => sectionRefs.spatial = el" @collapse="sectionCollapsed.spatial = $event">
                         <template #description>
-                            The spatial and temporal extent <em>of the data</em>. This information is different from the dates section as this dataset may have been created recently but it's about someone or something long ago.
+                            The spatial (geographical) and temporal (time period) extent of the data. Temporal information is different from the dates section as, for example, this dataset may have been created recently but is about someone or something long ago.
                         </template>
                         <FormField label="Spatial geometry">
                             <FormInput
@@ -1045,7 +1228,10 @@ onMounted(() => {
                                 :validationFns="[validateWktString]"
                             >
                                 <template #tooltip>
-                                    <PropTooltip v-bind="propDetails.spatialGeometry" />
+                                    <PropTooltip v-if="showPropTooltips" v-bind="propDetails.spatialGeometry" />
+                                    <template v-else>
+                                        If WKT String is selected, this is the ASCII representation of a spatial object provided in <a href="https://www.vertica.com/docs/9.3.x/HTML/Content/Authoring/AnalyzingData/Geospatial/Spatial_Definitions/WellknownTextWKT.htm" target="_blank" rel="noopener noreferrer">Well Known Text (WKT)</a> format. If Spatial IRI is selected, this is the standard identifier (URL) link to the location connected to the data. e.g. Melbourne has the following spatial IRI -  https://linked.data.gov.au/dataset/asgsed3/GCCSA/2GMEL
+                                    </template>
                                 </template>
                             </FormInput>
                             <FormInput
@@ -1061,7 +1247,10 @@ onMounted(() => {
                                 :validationFns="[validateIri]"
                             >
                                 <template #tooltip>
-                                    <PropTooltip v-bind="propDetails.spatialIri" />
+                                    <PropTooltip v-if="showPropTooltips" v-bind="propDetails.spatialIri" />
+                                    <template v-else>
+                                        If WKT String is selected, this is the ASCII representation of a spatial object provided in <a href="https://www.vertica.com/docs/9.3.x/HTML/Content/Authoring/AnalyzingData/Geospatial/Spatial_Definitions/WellknownTextWKT.htm" target="_blank" rel="noopener noreferrer">Well Known Text (WKT)</a> format. If Spatial IRI is selected, this is the standard identifier (URL) link to the location connected to the data. e.g. Melbourne has the following spatial IRI -  https://linked.data.gov.au/dataset/asgsed3/GCCSA/2GMEL
+                                    </template>
                                 </template>
                             </FormInput>
                             <FormInput
@@ -1090,13 +1279,16 @@ onMounted(() => {
                             >
                             </FormInput>
                             <template #tooltip>
-                                <PropTooltip v-bind="propDetails.startDate" />
+                                <PropTooltip v-if="showPropTooltips" v-bind="propDetails.startDate" />
+                                <template v-else>
+                                    This is the interval of time which the data covers at the time of publishing. There must be a start and end date.
+                                </template>
                             </template>
                         </FormField>
                     </FormSection>
                     <FormSection title="Distribution Info" :ref="el => sectionRefs.distribution = el" @collapse="sectionCollapsed.distribution = $event">
                         <template #description>
-                            Information about how to gain access to the data
+                            This is optional information in the form of a publicly resolvable URL that gives the user access to the data.
                         </template>
                         <FormField :span="2">
                             <FormInput
@@ -1122,7 +1314,10 @@ onMounted(() => {
                                     <span><i class="fa-regular fa-spinner-third"></i></span>
                                 </template>
                                 <template #tooltip>
-                                    <PropTooltip v-bind="propDetails.accessUrl" />
+                                    <PropTooltip v-if="showPropTooltips" v-bind="propDetails.accessUrl" />
+                                    <template v-else>
+                                        A URL is normally in the format https://… e.g. https://w3id.org/idn/resource/AUSLANG . If you are NOT submitting the metadata to the Indigenous Data Network, you could insert any resolvable URL into the metadata.
+                                    </template>
                                 </template>
                             </FormInput>
                         </FormField>
@@ -1142,17 +1337,22 @@ onMounted(() => {
                                 multiple
                                 searchable
                                 allowAdd
-                                description="You can add additional themes from the search field"
                             >
+                                <template #description>
+                                    You can add more than one Theme term. Click on Theme and select the required term or type the required term in the Search field, then select “+ Add option”. Repeat for further terms - they will appear in the field separated by commas.
+                                </template>
                                 <template #tooltip>
-                                    <PropTooltip v-bind="propDetails.theme" />
+                                    <PropTooltip v-if="showPropTooltips" v-bind="propDetails.theme" />
+                                    <template v-else>
+                                        Our vocabulary for the primary classification for indigeneity of data being described can be browsed <a href="https://w3id.org/idn/vocab/idn-th" target="_blank" rel="noopener noreferrer">here</a>. This vocabulary contains historical terms which exist in legacy data but are no longer used today. We welcome suggestions and feedback on this vocabulary.
+                                    </template>
                                 </template>
                             </FormInput>
                         </FormField>
                     </FormSection>
                     <FormSection title="Contact Details" :ref="el => sectionRefs.contact = el" @collapse="sectionCollapsed.contact = $event">
                         <template #description>
-                            Required if you are submitting this metadata to the IDN.
+                            These details are required if you are submitting this metadata to the IDN.
                             <br/><br/>
                             These details are also added as the point of contact for this data unless you've specifically indicated an Agent as the Point of Contact above.
                         </template>
@@ -1186,20 +1386,20 @@ onMounted(() => {
                     </FormSection>
                 </div>
             </div>
-            <div class="metadata-col" id="metadata-scores">
+            <div :ref="el => tutorialFocus[4] = el" :class="`metadata-col ${tutorialStep === 4 ? 'tutorial-focus' : ''}`" id="metadata-scores">
                 <div class="col-body">
                     <FairScore :subscores="fairScore" />
                     <CareScore :subscores="careScore" />
                 </div>
             </div>
-            <div class="metadata-col" id="metadata-rdf">
+            <div :ref="el => tutorialFocus[6] = el" :class="`metadata-col ${tutorialStep === 6 ? 'tutorial-focus' : ''}`" id="metadata-rdf">
                 <div class="col-body">
                     <RDFPreview :data="serializedData" />
                 </div>
             </div>
         </div>
         <div id="metadata-footer">
-            <p>
+            <!-- <p>
                 Form declaration
             </p>
             <FormInput
@@ -1207,10 +1407,10 @@ onMounted(() => {
                 type="checkbox"
                 id="declaration-check"
                 v-model="declarationTicked"
-            />
+            /> -->
             <div id="bottom-buttons">
                 <div class="btn-group">
-                    <button class="btn secondary outline" @click="saveDraft" :disabled="empty">
+                    <button :ref="el => tutorialFocus[7] = el" :class="`btn success outline ${tutorialStep === 7 ? 'tutorial-focus' : ''}`" @click="saveDraft" :disabled="empty">
                         <template v-if="savedDraft">
                             Draft saved!
                         </template>
@@ -1221,7 +1421,8 @@ onMounted(() => {
                 </div>
                 <div class="btn-group">
                     <a
-                        class="btn secondary outline export-btn"
+                        :ref="el => tutorialFocus[9] = el"
+                        :class="`btn success outline export-btn ${tutorialStep === 9 ? 'tutorial-focus' : ''}`"
                         :href="!empty ? `data:text/turtle;charset=utf-8,${encodeURIComponent(serializedData)}` : null"
                         :download="!empty ? `${data.title || 'metadata'}.ttl` : null"
                         :disabled="empty"
@@ -1230,7 +1431,7 @@ onMounted(() => {
                         Export <i class="fa-regular fa-file-export"></i>
                     </a>
                 </div>
-                <div class="btn-group">
+                <div :ref="el => tutorialFocus[8] = el" :class="`btn-group ${tutorialStep === 8 ? 'tutorial-focus' : ''}`">
                     <button class="btn outline danger" @click="deleteDraft" :disabled="!hasSavedDraft">
                         <template v-if="deletedDraft">
                             Draft deleted!
@@ -1239,7 +1440,7 @@ onMounted(() => {
                             Delete Draft <i class="fa-regular fa-trash"></i>
                         </template>
                     </button>
-                    <button class="btn danger outline" @click="clearData(true)" :disabled="empty">
+                    <button class="btn danger" @click="clearData(true)" :disabled="empty">
                         <template v-if="clearedData">
                             Cleared data!
                         </template>
@@ -1249,8 +1450,29 @@ onMounted(() => {
                     </button>
                 </div>
                 <div class="btn-group">
-                    <button class="btn success lg submit-btn" title="Coming soon" :disabled="true || (empty || !isValid)">Submit for review</button>
+                    <button
+                        :ref="el => tutorialFocus[10] = el"
+                        :class="`btn success lg submit-btn ${tutorialStep === 10 ? 'tutorial-focus' : ''}`"
+                        title="Coming soon"
+                        :disabled="empty || !isValid"
+                        @click="modal = 'submit'"
+                    >
+                        Submit for review
+                    </button>
                 </div>
+                <BaseModal v-if="modal === 'submit'" @modalClosed="modal = null">
+                    <template #headerMiddle>
+                        <h3>Submit Metadata to the IDN</h3>
+                    </template>
+                    <p>By clicking "I agree" below, you agree that the metadata to be submitted is Indigenous metadata and you consent to the review by the IDN.</p>
+                    <FormInput
+                        label="I agree"
+                        type="checkbox"
+                        id="declaration-check"
+                        v-model="declarationTicked"
+                    />
+                    <button class="btn success lg submit-btn" :style="{ margin: '0 auto' }" :disabled="!declarationTicked" title="Currently disabled">Submit</button>
+                </BaseModal>
             </div>
         </div>
     </div>
@@ -1518,5 +1740,63 @@ button.delete-agent-btn {
             font-style: italic;
         }
     }
+}
+
+.tutorial-overlay {
+    z-index: 1001;
+    height: 100%;
+    width: 100%;
+    position: fixed;
+    top: 0;
+    left: 0;
+
+    .tutorial-content {
+        height: 100%;
+        $padding: 40px;
+        padding: $padding;
+        position: relative;
+
+        .tutorial-body {
+            position: absolute;
+            color: white;
+            padding: 2px;
+        }
+
+        .tutorial-btns {
+            position: absolute;
+            bottom: $padding;
+            display: flex;
+            flex-direction: row;
+            margin-top: auto;
+            justify-content: space-around;
+            gap: 12px;
+            width: 100%;
+
+            .tutorial-step-btns {
+                display: flex;
+                flex-direction: row;
+
+                .tutorial-step-btn {
+                    outline: none;
+                    border: none;
+                    padding: 8px;
+                    cursor: pointer;
+                    background-color: transparent;
+                    color: white;
+                }
+            }
+        }
+    }
+}
+
+.tutorial-focus {
+    z-index: 1000;
+    outline: 5000px solid rgba(0, 0, 0, 0.6);
+}
+</style>
+
+<style lang="scss">
+body.no-scroll {
+    overflow-y: hidden;
 }
 </style>

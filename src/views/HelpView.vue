@@ -4,8 +4,7 @@
 
 <template>
     <h2>Help Page</h2>
-    <p>Lorem ipsum dolor sit amet, consectetur adipisicing elit. Cupiditate impedit porro, aliquid aperiam ut ullam doloremque quis. Commodi necessitatibus alias quidem, molestias reiciendis consequatur velit aspernatur et dolores maiores ducimus!</p>
-    
+    <p>A brief explanation of how the FAIR &amp; CARE scores are calculated can be found <a href="https://github.com/idn-au/scores-calculator" target="_blank" rel="noopener noreferrer">here</a>.</p>
 </template>
 
 <style lang="scss" scoped>
