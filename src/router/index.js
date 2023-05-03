@@ -24,6 +24,6 @@ const router = createRouter({
             component: () => import("@/views/NotFoundView.vue")
         },
     ]
-})
+});
 
-export default router
+export default router;

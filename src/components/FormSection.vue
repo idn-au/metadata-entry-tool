@@ -7,7 +7,8 @@ const props = defineProps({
         type: Boolean,
         default: false
     },
-    description: String
+    description: String,
+    status: String // complete | incomplete | invalid
 });
 
 const emit = defineEmits(["collapse"]);
@@ -32,6 +33,11 @@ defineExpose({ expand, collapse });
     <div :class="`form-section ${isCollapsed ? 'collapse' : ''}`">
         <div class="section-header" @click="isCollapsed = !isCollapsed; emit('collapse', isCollapsed);">
             <div class="title-container">
+                <span :class="props.status">
+                    <i v-if="props.status === 'complete'" class="fa-regular fa-circle-check" title="All fields have been completed."></i>
+                    <i v-else-if="props.status === 'incomplete'" class="fa-regular fa-circle-exclamation" title="All required fields have been completed but more information can be added."></i>
+                    <i v-else-if="props.status === 'invalid'" class="fa-regular fa-circle-xmark" title="Required fields have not been completed."></i>
+                </span>
                 <h3 v-if="props.title">{{ props.title }}</h3>
             </div>
             <button class="section-collapse">
@@ -73,6 +79,24 @@ defineExpose({ expand, collapse });
         .title-container {
             flex-grow: 1;
             padding: 12px;
+            display: flex;
+            flex-direction: row;
+            gap: 8px;
+            align-items: center;
+
+            span {
+                &.complete {
+                    color: green;
+                }
+
+                &.incomplete {
+                    color: orange;
+                }
+
+                &.invalid {
+                    color: red;
+                }
+            }
 
             h3 {
                 margin: 0;

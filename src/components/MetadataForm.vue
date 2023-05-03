@@ -28,6 +28,37 @@ const rdfFormats = {
     "n3": "text/n3",
 };
 
+const emptyData = {
+    iri: "",
+    assignIri: true,
+    title: "",
+    description: "",
+    created: "",
+    modified: "",
+    issued: "",
+    license: "",
+    useCustomLicense: false,
+    customLicense: "",
+    rights: "",
+    accessRights: "",
+    spatialGeom: "",
+    useSpatialIri: false,
+    spatialIri: "",
+    temporalStart: "",
+    temporalEnd: "",
+    accessUrl: "",
+    agentRoles: [
+        {
+            agent: "",
+            role: []
+        }
+    ],
+    themes: [],
+    contactName: "",
+    contactEmail: "",
+    contactPhone: ""
+};
+
 const { store, qname, serialize } = useRdfStore();
 
 const { data: agentData, loading: agentLoading, error: agentError, doSparqlGetQuery: agentDoSparqlGetQuery, doSparqlPostQuery: agentDoSparqlPostQuery } = useGetRequest();
@@ -161,7 +192,13 @@ const calcLicense = computed(() => {
 });
 
 const empty = computed(() => {
-    return Object.values(data.value).filter(item => typeof(item) !== "boolean" && item.length > 0).length === 0;
+    // return Object.values(data.value).filter(item => typeof(item) !== "boolean" && item.length > 0).length === 0;
+    return JSON.stringify(data.value) === JSON.stringify(emptyData);
+});
+
+const minData = computed(() => {
+    // iri, title, created, modified
+    return !(calcIri.value === "" || data.value.title === "" || data.value.created === "" || data.value.modified === "");
 });
 
 const fairScore = computed(() => {
@@ -553,36 +590,7 @@ function loadRDF(e) {
 
 function clearData(clicked = false) {
     if (!clicked || confirm("Warning: This will delete all data in the form. Do you wish to continue?")) {
-        data.value = {
-            iri: "",
-            assignIri: true,
-            title: "",
-            description: "",
-            created: "",
-            modified: "",
-            issued: "",
-            license: "",
-            useCustomLicense: false,
-            customLicense: "",
-            rights: "",
-            accessRights: "",
-            spatialGeom: "",
-            useSpatialIri: false,
-            spatialIri: "",
-            temporalStart: "",
-            temporalEnd: "",
-            accessUrl: "",
-            agentRoles: [
-                {
-                    agent: "",
-                    role: []
-                }
-            ],
-            themes: [],
-            contactName: "",
-            contactEmail: "",
-            contactPhone: ""
-        };
+        data.value = emptyData;
         validation.value = {};
         if (clicked) {
             startClearedDataTimeout();
@@ -693,7 +701,7 @@ function tutorialSetStep(stepNo) {
         showRDF.value = false;
         nextTick(() => {
             positionTutorialContent(stepNo);
-        })
+        });
     }
 }
 
@@ -718,6 +726,110 @@ function closeTutorial() {
     tutorialStep.value = 0;
     document.body.classList.remove("no-scroll");
     window.scrollTo({ top: 0, behavior: "smooth" });
+}
+
+// function getSectionStatus(fields, requiredFields) {
+//     let status = "complete";
+
+//     fields.every(field => {
+//         if (!validation.value[field]) {
+//             status = "invalid";
+//             return false;
+//         } else if (data.value[field] === emptyData[field]) {
+//             if (requiredFields.includes(field)) {
+//                 status = "invalid";
+//                 return false;
+//             } else {
+//                 status = "incomplete";
+//                 return false;
+//             }
+//         } else {
+//              return true;
+//         }
+//     });
+
+//     return status;
+// }
+
+function getSectionStatus(section) {
+    if (section === "general") {
+        if (calcIri.value === "" || ("iri" in validation.value && !validation.value.iri)) {
+            return "invalid";
+        } else if (data.value.title === "") {
+            return "invalid";
+        } else if (data.value.description === "") {
+            return "incomplete";
+        } else {
+            return "complete";
+        }
+    } else if (section === "agent") {
+        if (data.value.agentRoles.length === 1 && data.value.agentRoles[0].agent === "" && data.value.agentRoles[0].role.length === 0) {
+            return "incomplete";
+        } else {
+            let status = "complete";
+            data.value.agentRoles.every(agentRole => {
+                console.log(agentRole)
+                if (agentRole.agent === "" ^ agentRole.role.length === 0) {
+                    status = "invalid";
+                    return false;
+                } else if (data.value.agentRoles.length > 1 && agentRole.agent === "" && agentRole.role.length === 0) {
+                    status = "invalid";
+                    return false;
+                } else {
+                    return true;
+                }
+            });
+            return status;
+        }
+    } else if (section === "dates") {
+        if (data.value.created === "") {
+            return "invalid";
+        } else if (data.value.modified === "") {
+            return "invalid";
+        } else if (data.value.issued === "") {
+            return "incomplete";
+        } else {
+            return "complete";
+        }
+    } else if (section === "rights") {
+        if ("customLicense" in validation.value && !validation.value.customLicense) {
+            return "invalid";
+        } else if (calcLicense.value === "" || data.value.rights === "" || data.value.accessRights === "") {
+            return "incomplete";
+        } else {
+            return "complete";
+        }
+    } else if (section === "spatial") {
+        if ("spatialGeom" in validation.value && !validation.value.spatialGeom) {
+            return "invalid";
+        } else if ("spatialIri" in validation.value && !validation.value.spatialIri) {
+            return "invalid";
+        } else if (calcGeometry.value === "" || data.value.temporalStart === "" || data.value.temporalEnd === "") {
+            return "incomplete";
+        } else {
+            return "complete";
+        }
+    } else if (section === "distribution") {
+        if ("accessUrl" in validation.value && !validation.value.accessUrl) {
+            return "invalid";
+        } else if (data.value.accessUrl === "") {
+            return "incomplete";
+        } else {
+            return "complete";
+        }
+    } else if (section === "theme") {
+        if (data.value.themes.length === 0) {
+            return "incomplete";
+        } else {
+            return "complete";
+        }
+    } else if (section === "contact") {
+        if (data.value.contactName === "" || data.value.contactEmail === "" || data.value.contactPhone === "") {
+            return "incomplete";
+        } else {
+            return "complete";
+        }
+    }
 }
 
 onMounted(() => {
@@ -835,9 +947,10 @@ onMounted(() => {
 </script>
 
 <template>
-    <div id="metadata-container">
+    <div id="metadata-container" @keyup.esc="tutorialEnabled && closeTutorial()">
         <div v-if="tutorialEnabled" class="tutorial-overlay">
             <div class="tutorial-content">
+                <button class="tutorial-close-btn" @click="closeTutorial" title="Close tutorial"><i class="fa-regular fa-xmark"></i></button>
                 <div class="tutorial-body">
                     {{ tutorialContent[tutorialStep].content }}
                 </div>
@@ -925,7 +1038,7 @@ onMounted(() => {
         <div id="metadata-body" :class="`${showRDF ? 'show-rdf' : ''}`">
             <div :ref="el => tutorialFocus[1] = el" :class="`metadata-col ${tutorialStep === 1 ? 'tutorial-focus' : ''}`" id="metadata-form">
                 <div class="col-body" id="form-items">
-                    <FormSection defaultOpen title="General" :ref="el => sectionRefs.general = el" @collapse="sectionCollapsed.general = $event">
+                    <FormSection defaultOpen title="General" :ref="el => sectionRefs.general = el" @collapse="sectionCollapsed.general = $event" :status="getSectionStatus('general')">
                         <template #description>
                             Basic information about this data.
                         </template>
@@ -936,7 +1049,7 @@ onMounted(() => {
                                 id="iri"
                                 placeholder="e.g. http://example.com/1234"
                                 required
-                                @validate="handleValidate('iri', $event)"
+                                @validate="!data.assignIri && handleValidate('iri', $event)"
                                 :validationFns="[validateIri]"
                                 v-model="data.iri"
                                 clearButton
@@ -989,7 +1102,7 @@ onMounted(() => {
                             </FormInput>
                         </FormField>
                     </FormSection>
-                    <FormSection title="Agent Information" :ref="el => sectionRefs.agent = el" @collapse="sectionCollapsed.agent = $event">
+                    <FormSection title="Agent Information" :ref="el => sectionRefs.agent = el" @collapse="sectionCollapsed.agent = $event" :status="getSectionStatus('agent')">
                         <template #description>
                             Information about the roles that agents (people and organisations) play with respect to this data. These roles are critical in determining whether this data is managed properly. Each Agent must have a matching Role.
                         </template>
@@ -1047,9 +1160,9 @@ onMounted(() => {
                             </FormInput>
                             <button v-if="index > 0" class="btn outline danger delete-agent-btn" title="Delete agent-role pair" @click="data.agentRoles.splice(index, 1);"><i class="fa-regular fa-xmark"></i></button>
                         </FormField>
-                        <button class="btn secondary outline add-agent-btn" @click="data.agentRoles.push({agent: '', role: []})"><i class="fa-regular fa-plus"></i> Add Agent</button>
+                        <button class="btn secondary outline add-agent-btn" @click="data.agentRoles.push({ agent: '', role: [] })"><i class="fa-regular fa-plus"></i> Add Agent</button>
                     </FormSection>
-                    <FormSection title="Dates" :ref="el => sectionRefs.dates = el" @collapse="sectionCollapsed.dates = $event">
+                    <FormSection title="Dates" :ref="el => sectionRefs.dates = el" @collapse="sectionCollapsed.dates = $event" :status="getSectionStatus('dates')">
                         <template #description>
                             Standard dates for the establishment and update times of this dataset. A dataset about early 20th century data might only have been made last year and the created date is then some time last year. "Issued" indicates when, if ever, this dataset was published.
                         </template>
@@ -1106,7 +1219,7 @@ onMounted(() => {
                             </FormInput>
                         </FormField>
                     </FormSection>
-                    <FormSection title="Rights" :ref="el => sectionRefs.rights = el" @collapse="sectionCollapsed.rights = $event">
+                    <FormSection title="Rights" :ref="el => sectionRefs.rights = el" @collapse="sectionCollapsed.rights = $event" :status="getSectionStatus('rights')">
                         <template #description>
                             Ownership and access information of the data. If a license is selected then the rights holder to that license should also be included.
                         </template>
@@ -1210,7 +1323,7 @@ onMounted(() => {
                             </FormInput>
                         </FormField>
                     </FormSection>
-                    <FormSection title="Spatio/Temporal" :ref="el => sectionRefs.spatial = el" @collapse="sectionCollapsed.spatial = $event">
+                    <FormSection title="Spatio/Temporal" :ref="el => sectionRefs.spatial = el" @collapse="sectionCollapsed.spatial = $event" :status="getSectionStatus('spatial')">
                         <template #description>
                             The spatial (geographical) and temporal (time period) extent of the data. Temporal information is different from the dates section as, for example, this dataset may have been created recently but is about someone or something long ago.
                         </template>
@@ -1230,7 +1343,7 @@ onMounted(() => {
                                 <template #tooltip>
                                     <PropTooltip v-if="showPropTooltips" v-bind="propDetails.spatialGeometry" />
                                     <template v-else>
-                                        If WKT String is selected, this is the ASCII representation of a spatial object provided in <a href="https://www.vertica.com/docs/9.3.x/HTML/Content/Authoring/AnalyzingData/Geospatial/Spatial_Definitions/WellknownTextWKT.htm" target="_blank" rel="noopener noreferrer">Well Known Text (WKT)</a> format. If Spatial IRI is selected, this is the standard identifier (URL) link to the location connected to the data. e.g. Melbourne has the following spatial IRI -  https://linked.data.gov.au/dataset/asgsed3/GCCSA/2GMEL
+                                        If WKT String is selected, this is the ASCII representation of a spatial object provided in <a href="https://www.vertica.com/docs/9.3.x/HTML/Content/Authoring/AnalyzingData/Geospatial/Spatial_Definitions/WellknownTextWKT.htm" target="_blank" rel="noopener noreferrer">Well Known Text (WKT)</a> format - e.g. POLYGON((1 2, 3 4, 5 6, 7 8)) (order of coords is [long, lat]). If Spatial IRI is selected, this is the standard identifier (URL) link to the location connected to the data. e.g. Melbourne has the following spatial IRI -  https://linked.data.gov.au/dataset/asgsed3/GCCSA/2GMEL
                                     </template>
                                 </template>
                             </FormInput>
@@ -1286,7 +1399,7 @@ onMounted(() => {
                             </template>
                         </FormField>
                     </FormSection>
-                    <FormSection title="Distribution Info" :ref="el => sectionRefs.distribution = el" @collapse="sectionCollapsed.distribution = $event">
+                    <FormSection title="Distribution Info" :ref="el => sectionRefs.distribution = el" @collapse="sectionCollapsed.distribution = $event" :status="getSectionStatus('distribution')">
                         <template #description>
                             This is optional information in the form of a publicly resolvable URL that gives the user access to the data.
                         </template>
@@ -1322,7 +1435,7 @@ onMounted(() => {
                             </FormInput>
                         </FormField>
                     </FormSection>
-                    <FormSection title="Theme" :ref="el => sectionRefs.theme = el" @collapse="sectionCollapsed.theme = $event">
+                    <FormSection title="Theme" :ref="el => sectionRefs.theme = el" @collapse="sectionCollapsed.theme = $event" :status="getSectionStatus('theme')">
                         <template #description>
                             Classification or categorisation of this data. We are mostly concerned with indications of "indigeneity", i.e. how this data is related to indigenous people, however other classifications may also be added. Our primary indigenous classification vocabulary is online at <a href="https://w3id.org/idn/vocab/idn-th" target="_blank" rel="noopener noreferrer">https://w3id.org/idn/vocab/idn-th</a> which may be browsed for classification suggestions.
                         </template>
@@ -1350,7 +1463,7 @@ onMounted(() => {
                             </FormInput>
                         </FormField>
                     </FormSection>
-                    <FormSection title="Contact Details" :ref="el => sectionRefs.contact = el" @collapse="sectionCollapsed.contact = $event">
+                    <FormSection title="Contact Details" :ref="el => sectionRefs.contact = el" @collapse="sectionCollapsed.contact = $event" :status="getSectionStatus('contact')">
                         <template #description>
                             These details are required if you are submitting this metadata to the IDN.
                             <br/><br/>
@@ -1454,7 +1567,7 @@ onMounted(() => {
                         :ref="el => tutorialFocus[10] = el"
                         :class="`btn success lg submit-btn ${tutorialStep === 10 ? 'tutorial-focus' : ''}`"
                         title="Coming soon"
-                        :disabled="empty || !isValid"
+                        :disabled="tutorialEnabled ? false : (!isValid || !minData)"
                         @click="modal = 'submit'"
                     >
                         Submit for review
@@ -1755,6 +1868,22 @@ button.delete-agent-btn {
         $padding: 40px;
         padding: $padding;
         position: relative;
+
+        button.tutorial-close-btn {
+            cursor: pointer;
+            position: absolute;
+            top: calc($padding / 2);
+            right: calc($padding / 2);
+            background-color: transparent;
+            border: none;
+            color: #e2e2e2;
+            font-size: 1.3em;
+            @include transition(color);
+
+            &:hover {
+                color: white;
+            }
+        }
 
         .tutorial-body {
             position: absolute;
