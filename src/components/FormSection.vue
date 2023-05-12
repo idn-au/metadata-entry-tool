@@ -35,7 +35,11 @@ defineExpose({ expand, collapse });
             <div class="title-container">
                 <span :class="props.status">
                     <i v-if="props.status === 'complete'" class="fa-regular fa-circle-check" title="All fields have been completed."></i>
-                    <i v-else-if="props.status === 'incomplete'" class="fa-regular fa-circle-exclamation" title="All required fields have been completed but more information can be added."></i>
+                    <span v-else-if="props.status === 'incomplete'" class="fa-stack incomplete-icon-stack" title="All required fields have been completed but more information can be added.">
+                        <i class="fa-regular fa-check fa-stack-1x"></i>
+                        <i class="fa-regular fa-circle-dashed fa-stack-2x"></i>
+                    </span>
+                    <!-- <i v-else-if="props.status === 'incomplete'" class="fa-regular fa-circle-exclamation" title="All required fields have been completed but more information can be added."></i> -->
                     <i v-else-if="props.status === 'invalid'" class="fa-regular fa-circle-xmark" title="Required fields have not been completed."></i>
                 </span>
                 <h3 v-if="props.title">{{ props.title }}</h3>
@@ -90,7 +94,12 @@ defineExpose({ expand, collapse });
                 }
 
                 &.incomplete {
-                    color: orange;
+                    color: grey;
+
+                    span.incomplete-icon-stack {
+                        font-size: 0.5em;
+                        width: 16px;
+                    }
                 }
 
                 &.invalid {

@@ -1,5 +1,5 @@
 <script setup>
-import { ref, computed, watch, onMounted, nextTick } from "vue";
+import { ref, computed, watch, onMounted, nextTick, inject } from "vue";
 import { DataFactory } from "n3";
 import { v4 as uuid4 } from "uuid";
 import { FormInput, FormField, BaseModal } from "@idn-au/idn-lib";
@@ -14,10 +14,11 @@ import { useBtnTimeout } from "@/composables/btnTimeout";
 import propDetails from "@/util/props.json";
 import exampleData from "@/util/exampleData";
 import formOptions from "@/util/formOptions";
-import config from "@/config";
 import tutorialContent from "@/util/tutorialContent";
 
 const { namedNode, literal } = DataFactory;
+
+const useRemoteOptions = false;
 
 const defaultIri = `https://pid.idnau.org/resource/${uuid4()}`;
 
@@ -27,6 +28,10 @@ const rdfFormats = {
     "nt": "application/n-triples",
     "n3": "text/n3",
 };
+
+const agentNamedGraph = inject("agentNamedGraph");
+const agentTriplestoreUrl = inject("agentTriplestoreUrl");
+const vocabTriplestoreUrl = inject("vocabTriplestoreUrl");
 
 const emptyData = {
     iri: "",
@@ -50,7 +55,9 @@ const emptyData = {
     agentRoles: [
         {
             agent: "",
-            role: []
+            role: [],
+            useCustomAgent: false,
+            customAgent: ""
         }
     ],
     themes: [],
@@ -108,7 +115,9 @@ const data = ref({
     agentRoles: [
         {
             agent: "",
-            role: []
+            role: [],
+            useCustomAgent: false,
+            customAgent: ""
         }
     ],
     themes: [],
@@ -199,6 +208,10 @@ const empty = computed(() => {
 const minData = computed(() => {
     // iri, title, created, modified
     return !(calcIri.value === "" || data.value.title === "" || data.value.created === "" || data.value.modified === "");
+});
+
+const usingCustomAgents = computed(() => {
+    return !data.value.agentRoles.every(agentRole => agentRole.useCustomAgent === false);
 });
 
 const fairScore = computed(() => {
@@ -433,10 +446,12 @@ watch(() => data.value.agentRoles, (newValue, oldValue) => {
 
     if (newValue && newValue.length > 0) {
         newValue.forEach((agentRole) => {
-            if (agentRole.agent !== "" || agentRole.role.length > 0) {
+            if (agentRole.agent !== "" || (agentRole.useCustomAgent && agentRole.customAgent !== "") || agentRole.role.length > 0) {
                 const newBnode = store.value.createBlankNode();
                 store.value.addQuad(namedNode(calcIri.value), namedNode(qname("prov:qualifiedAttribution")), newBnode);
-                if (agentRole.agent !== "") {
+                if (agentRole.useCustomAgent && agentRole.customAgent !== "") {
+                    store.value.addQuad(newBnode, namedNode(qname("prov:agent")), namedNode(agentRole.customAgent));
+                } else if (agentRole.agent !== "") {
                     store.value.addQuad(newBnode, namedNode(qname("prov:agent")), namedNode(agentRole.agent));
                 }
                 if (agentRole.role.length > 0) {
@@ -569,16 +584,23 @@ function loadRDF(e) {
             if (q.object.termType === "BlankNode") {
                 let agentRole = {
                     agent: "",
-                    role: []
+                    role: [],
+                    useCustomAgent: false,
+                    customAgent: ""
                 };
                 loadedStore.value.forEach(q1 => {
                     if (q1.predicate.value === loadedQname("prov:agent")) {
-                        agentRole.agent = q1.object.value;
+                        if (agentOptionsRequested.value.includes(q1.object.value)) {
+                            agentRole.agent = q1.object.value;
+                        } else {
+                            agentRole.useCustomAgent = true;
+                            agentRole.customAgent = q1.object.value;
+                        }
                     } else if (q1.predicate.value === loadedQname("dcat:hadRole")) {
                         agentRole.role.push(q1.object.value);
                     }
                 }, q.object, null, null);
-                if (data.value.agentRoles[0].agent === "") { // first blank agent-role pair, replace
+                if (JSON.stringify(data.value.agentRoles[0]) === JSON.stringify(emptyData.agentRoles[0])) { // first blank agent-role pair, replace
                     data.value.agentRoles[0] = agentRole;
                 } else {
                     data.value.agentRoles.push(agentRole);
@@ -757,30 +779,39 @@ function getSectionStatus(section) {
             return "invalid";
         } else if (data.value.title === "") {
             return "invalid";
-        } else if (data.value.description === "") {
-            return "incomplete";
+        } else if (data.value.description.trim() === "") {
+            return "invalid";
         } else {
             return "complete";
         }
     } else if (section === "agent") {
-        if (data.value.agentRoles.length === 1 && data.value.agentRoles[0].agent === "" && data.value.agentRoles[0].role.length === 0) {
-            return "incomplete";
-        } else {
-            let status = "complete";
-            data.value.agentRoles.every(agentRole => {
-                console.log(agentRole)
-                if (agentRole.agent === "" ^ agentRole.role.length === 0) {
-                    status = "invalid";
-                    return false;
-                } else if (data.value.agentRoles.length > 1 && agentRole.agent === "" && agentRole.role.length === 0) {
-                    status = "invalid";
-                    return false;
-                } else {
-                    return true;
-                }
-            });
-            return status;
-        }
+        // if (data.value.agentRoles.length === 1 && data.value.agentRoles[0].agent === "" && data.value.agentRoles[0].role.length === 0) {
+        //     return "invalid";
+        // } else {
+        //     let status = "complete";
+        //     data.value.agentRoles.every(agentRole => {
+        //         if ((agentRole.agent === "" || (agentRole.useCustomAgent && agentRole.customAgent === "")) ^ agentRole.role.length === 0) {
+        //             status = "invalid";
+        //             return false;
+        //         } else if (data.value.agentRoles.length > 1 && agentRole.agent === "" && agentRole.role.length === 0) {
+        //             status = "invalid";
+        //             return false;
+        //         } else {
+        //             return true;
+        //         }
+        //     });
+        //     return status;
+        // }
+        let status = "complete";
+        data.value.agentRoles.every(agentRole => {
+            if (((agentRole.agent === "" && !agentRole.useCustomAgent) || (agentRole.customAgent === "" && agentRole.useCustomAgent)) || agentRole.role.length === 0) {
+                status = "invalid";
+                return false;
+            } else {
+                return true;
+            }
+        });
+        return status;
     } else if (section === "dates") {
         if (data.value.created === "") {
             return "invalid";
@@ -819,7 +850,7 @@ function getSectionStatus(section) {
         }
     } else if (section === "theme") {
         if (data.value.themes.length === 0) {
-            return "incomplete";
+            return "invalid";
         } else {
             return "complete";
         }
@@ -842,12 +873,12 @@ onMounted(() => {
         serializedData.value = serialize();
     }
 
-    if (config.useRemoteOptions) {
+    if (useRemoteOptions) {
         // query triplestore for form options
-        agentDoSparqlPostQuery(config.agentTriplestoreUrl, `PREFIX sdo: <https://schema.org/>
+        agentDoSparqlPostQuery(agentTriplestoreUrl, `PREFIX sdo: <https://schema.org/>
             SELECT DISTINCT ?agent ?name
             WHERE {
-                GRAPH <${config.agentNamedGraph}> {
+                GRAPH <${agentNamedGraph}> {
                     VALUES ?agentType { sdo:Person sdo:Organization sdo:Organisation }
                     ?agent a ?agentType ;
                         sdo:name ?name .
@@ -862,7 +893,7 @@ onMounted(() => {
             agentOptionsRequested.value.sort((a, b) => a.label.localeCompare(b.label));
         });
 
-        roleDoSparqlPostQuery(config.vocabTriplestoreUrl, `PREFIX skos: <http://www.w3.org/2004/02/skos/core#>
+        roleDoSparqlPostQuery(vocabTriplestoreUrl, `PREFIX skos: <http://www.w3.org/2004/02/skos/core#>
             SELECT DISTINCT ?role ?name ?desc
             WHERE {
                 BIND(<https://w3id.org/idn/vocab/idn-role-codes> AS ?cs)
@@ -882,7 +913,7 @@ onMounted(() => {
             roleOptionsRequested.value.sort((a, b) => a.label.localeCompare(b.label));
         });
 
-        licenseDoSparqlPostQuery(config.vocabTriplestoreUrl, `PREFIX skos: <http://www.w3.org/2004/02/skos/core#>
+        licenseDoSparqlPostQuery(vocabTriplestoreUrl, `PREFIX skos: <http://www.w3.org/2004/02/skos/core#>
             SELECT DISTINCT ?license ?name
             WHERE {
                 BIND(<https://w3id.org/idn/vocab/idn-licenses> AS ?cs)
@@ -900,7 +931,7 @@ onMounted(() => {
             licenseOptionsRequested.value.sort((a, b) => a.label.localeCompare(b.label));
         });
         
-        accessRightsDoSparqlPostQuery(config.vocabTriplestoreUrl, `PREFIX skos: <http://www.w3.org/2004/02/skos/core#>
+        accessRightsDoSparqlPostQuery(vocabTriplestoreUrl, `PREFIX skos: <http://www.w3.org/2004/02/skos/core#>
             SELECT DISTINCT ?accessRight ?name
             WHERE {
                 BIND(<https://linked.data.gov.au/def/data-access-rights> AS ?cs)
@@ -918,7 +949,7 @@ onMounted(() => {
             accessRightsOptionsRequested.value.sort((a, b) => a.label.localeCompare(b.label));
         });
 
-        themeDoSparqlPostQuery(config.vocabTriplestoreUrl, `PREFIX skos: <http://www.w3.org/2004/02/skos/core#>
+        themeDoSparqlPostQuery(vocabTriplestoreUrl, `PREFIX skos: <http://www.w3.org/2004/02/skos/core#>
             SELECT DISTINCT ?theme ?name
             WHERE {
                 BIND(<https://w3id.org/idn/vocab/idn-th> AS ?cs)
@@ -1092,6 +1123,8 @@ onMounted(() => {
                                 id="description"
                                 v-model="data.description"
                                 description="Supports new lines and basic formatting"
+                                required
+                                @validate="handleValidate('description', $event)"
                             >
                                 <template #tooltip>
                                     <PropTooltip v-if="showPropTooltips" v-bind="propDetails.description" />
@@ -1107,22 +1140,40 @@ onMounted(() => {
                             Information about the roles that agents (people and organisations) play with respect to this data. These roles are critical in determining whether this data is managed properly. Each Agent must have a matching Role.
                         </template>
                         <FormField v-for="(agentRole, index) in data.agentRoles" direction="row" :span="2">
-                            <FormInput
-                                label="Agent"
-                                type="select"
-                                id="agent"
-                                v-model="agentRole.agent"
-                                clearButton
-                                :options="filteredAgentOptions(agentRole, index)"
-                                searchable
-                            >
-                                <template #tooltip>
-                                    <PropTooltip v-if="showPropTooltips" v-bind="propDetails.agent" />
-                                    <template v-else>
-                                        The name of the person, community or business that is providing this data.
+                            <FormField>
+                                <FormInput
+                                    v-show="agentRole.useCustomAgent"
+                                    type="url"
+                                    v-model="agentRole.customAgent"
+                                    label="Custom Agent"
+                                    placeholder="e.g. http://example.com/1234"
+                                    clearButton
+                                    description="Must be a valid IRI. Note: submission will be disabled when using custom agents."
+                                    @validate="handleValidate('customAgent', $event)"
+                                    :validationFns="[validateIri]"
+                                    required
+                                />
+                                <FormInput
+                                    v-show="!agentRole.useCustomAgent"
+                                    label="Agent"
+                                    type="select"
+                                    id="agent"
+                                    v-model="agentRole.agent"
+                                    clearButton
+                                    :options="filteredAgentOptions(agentRole, index)"
+                                    searchable
+                                    required
+                                    @validate="handleValidate('agent', $event)"
+                                >
+                                    <template #tooltip>
+                                        <PropTooltip v-if="showPropTooltips" v-bind="propDetails.agent" />
+                                        <template v-else>
+                                            The name of the person, community or business that is providing this data.
+                                        </template>
                                     </template>
-                                </template>
-                            </FormInput>
+                                </FormInput>
+                                <FormInput type="checkbox" switch label="Use Custom Agent" v-model="agentRole.useCustomAgent" />
+                            </FormField>
                             <FormInput
                                 label="Role"
                                 type="select"
@@ -1132,6 +1183,8 @@ onMounted(() => {
                                 :options="roleOptionsRequested"
                                 searchable
                                 multiple
+                                required
+                                @validate="handleValidate('role', $event)"
                             >
                                 <template #append>
                                     <button class="modal-btn" @click="modal = 'agentRole'" title="Role info">
@@ -1141,14 +1194,13 @@ onMounted(() => {
                                         <template #headerMiddle>
                                             <h3>Agent Roles</h3>
                                         </template>
-                                        <p>Below is a list for reference of roles and their brief definitions. The full list of agent roles can be found <a href="https://w3id.org/idn/vocab/idn-role-codes" target="_blank" rel="noopener noreferrer">here</a>.</p>
+                                        <p>Below is a list for reference of roles and their brief definitions. The full list of agent roles can be found <a href="https://data.idnau.org/v/vocab/vocab:idn-role-codes" target="_blank" rel="noopener noreferrer">here</a>.</p>
                                         <div class="modal-items">
                                             <div v-for="role in roleOptionsRequested" class="modal-item">
                                                 <a :href="role.value" target="_blank" rel="noopener noreferrer">{{ role.label }}</a>
                                                 <p>{{ role.desc }}</p>
                                             </div>
                                         </div>
-                                        
                                     </BaseModal>
                                 </template>
                                 <template #tooltip>
@@ -1160,7 +1212,7 @@ onMounted(() => {
                             </FormInput>
                             <button v-if="index > 0" class="btn outline danger delete-agent-btn" title="Delete agent-role pair" @click="data.agentRoles.splice(index, 1);"><i class="fa-regular fa-xmark"></i></button>
                         </FormField>
-                        <button class="btn secondary outline add-agent-btn" @click="data.agentRoles.push({ agent: '', role: [] })"><i class="fa-regular fa-plus"></i> Add Agent</button>
+                        <button class="btn secondary outline add-agent-btn" @click="data.agentRoles.push({ agent: '', role: [], useCustomAgent: false, customAgent: '' })"><i class="fa-regular fa-plus"></i> Add Agent</button>
                     </FormSection>
                     <FormSection title="Dates" :ref="el => sectionRefs.dates = el" @collapse="sectionCollapsed.dates = $event" :status="getSectionStatus('dates')">
                         <template #description>
@@ -1317,7 +1369,7 @@ onMounted(() => {
                                 <template #tooltip>
                                     <PropTooltip v-if="showPropTooltips" v-bind="propDetails.accessRights" />
                                     <template v-else>
-                                        Data access rights control how users and systems access a data resource. e.g. Metadata access only.  Definitions can be found <a href="http://idn.kurrawong.net/vocab/data-access-rights" target="_blank" rel="noopener noreferrer">here</a>.
+                                        Data access rights control how users and systems access a data resource. e.g. Metadata access only. Definitions can be found <a href="https://data.idnau.org/v/vocab/df:data-access-rights" target="_blank" rel="noopener noreferrer">here</a>.
                                     </template>
                                 </template>
                             </FormInput>
@@ -1343,7 +1395,7 @@ onMounted(() => {
                                 <template #tooltip>
                                     <PropTooltip v-if="showPropTooltips" v-bind="propDetails.spatialGeometry" />
                                     <template v-else>
-                                        If WKT String is selected, this is the ASCII representation of a spatial object provided in <a href="https://www.vertica.com/docs/9.3.x/HTML/Content/Authoring/AnalyzingData/Geospatial/Spatial_Definitions/WellknownTextWKT.htm" target="_blank" rel="noopener noreferrer">Well Known Text (WKT)</a> format - e.g. POLYGON((1 2, 3 4, 5 6, 7 8)) (order of coords is [long, lat]). If Spatial IRI is selected, this is the standard identifier (URL) link to the location connected to the data. e.g. Melbourne has the following spatial IRI -  https://linked.data.gov.au/dataset/asgsed3/GCCSA/2GMEL
+                                        If WKT String is selected, this is the ASCII representation of a spatial object provided in <a href="https://www.vertica.com/docs/9.3.x/HTML/Content/Authoring/AnalyzingData/Geospatial/Spatial_Definitions/WellknownTextWKT.htm" target="_blank" rel="noopener noreferrer">Well Known Text (WKT)</a> format - e.g. POLYGON ((96 -45, 96 -9, 168 -9, 168 -45, 96 -45)) (order of coords is [long, lat]). If Spatial IRI is selected, this is the standard identifier (URL) link to the location connected to the data. e.g. Melbourne has the following spatial IRI -  https://linked.data.gov.au/dataset/asgsed3/GCCSA/2GMEL
                                     </template>
                                 </template>
                             </FormInput>
@@ -1437,7 +1489,7 @@ onMounted(() => {
                     </FormSection>
                     <FormSection title="Theme" :ref="el => sectionRefs.theme = el" @collapse="sectionCollapsed.theme = $event" :status="getSectionStatus('theme')">
                         <template #description>
-                            Classification or categorisation of this data. We are mostly concerned with indications of "indigeneity", i.e. how this data is related to indigenous people, however other classifications may also be added. Our primary indigenous classification vocabulary is online at <a href="https://w3id.org/idn/vocab/idn-th" target="_blank" rel="noopener noreferrer">https://w3id.org/idn/vocab/idn-th</a> which may be browsed for classification suggestions.
+                            Classification or categorisation of this data. We are mostly concerned with indications of "indigeneity", i.e. how this data is related to indigenous people, however other classifications may also be added. Our primary indigenous classification vocabulary is online at <a href="https://data.idnau.org/v/vocab/vocab:idn-th" target="_blank" rel="noopener noreferrer">https://data.idnau.org/v/vocab/vocab:idn-th</a> which may be browsed for classification suggestions.
                         </template>
                         <FormField :span="2">
                             <FormInput
@@ -1450,6 +1502,8 @@ onMounted(() => {
                                 multiple
                                 searchable
                                 allowAdd
+                                required
+                                @validate="handleValidate('theme', $event)"
                             >
                                 <template #description>
                                     You can add more than one Theme term. Click on Theme and select the required term or type the required term in the Search field, then select “+ Add option”. Repeat for further terms - they will appear in the field separated by commas.
@@ -1457,7 +1511,7 @@ onMounted(() => {
                                 <template #tooltip>
                                     <PropTooltip v-if="showPropTooltips" v-bind="propDetails.theme" />
                                     <template v-else>
-                                        Our vocabulary for the primary classification for indigeneity of data being described can be browsed <a href="https://w3id.org/idn/vocab/idn-th" target="_blank" rel="noopener noreferrer">here</a>. This vocabulary contains historical terms which exist in legacy data but are no longer used today. We welcome suggestions and feedback on this vocabulary.
+                                        Our vocabulary for the primary classification for indigeneity of data being described can be browsed <a href="https://data.idnau.org/v/vocab/vocab:idn-th" target="_blank" rel="noopener noreferrer">here</a>. This vocabulary contains historical terms which exist in legacy data but are no longer used today. We welcome suggestions and feedback on this vocabulary.
                                     </template>
                                 </template>
                             </FormInput>
@@ -1567,7 +1621,7 @@ onMounted(() => {
                         :ref="el => tutorialFocus[10] = el"
                         :class="`btn success lg submit-btn ${tutorialStep === 10 ? 'tutorial-focus' : ''}`"
                         title="Coming soon"
-                        :disabled="tutorialEnabled ? false : (!isValid || !minData)"
+                        :disabled="tutorialEnabled ? false : (usingCustomAgents ? true : (!isValid || !minData))"
                         @click="modal = 'submit'"
                     >
                         Submit for review
@@ -1831,7 +1885,8 @@ button.add-agent-btn {
 }
 
 button.delete-agent-btn {
-    align-self: center;
+    align-self: baseline;
+    margin-top: 7px;
 }
 
 :deep(.modal-items) {
