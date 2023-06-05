@@ -6,7 +6,6 @@ import { RouterLink } from "vue-router";
     <nav id="metadata-nav">
         <RouterLink class="nav-link" to="/">Form</RouterLink>
         <RouterLink class="nav-link ml-auto" to="/help">Help</RouterLink>
-        <RouterLink class="nav-link" to="/contact">Contact</RouterLink>
     </nav>
 </template>
 

@@ -18,9 +18,9 @@ import tutorialContent from "@/util/tutorialContent";
 
 const { namedNode, literal } = DataFactory;
 
-const useRemoteOptions = false;
+const useRemoteOptions = true;
 
-const defaultIri = `https://pid.idnau.org/resource/${uuid4()}`;
+const defaultIri = `https://data.idnau.org/pid/resource/${uuid4()}`;
 
 const rdfFormats = {
     "ttl": "text/turtle",
@@ -896,7 +896,7 @@ onMounted(() => {
         roleDoSparqlPostQuery(vocabTriplestoreUrl, `PREFIX skos: <http://www.w3.org/2004/02/skos/core#>
             SELECT DISTINCT ?role ?name ?desc
             WHERE {
-                BIND(<https://w3id.org/idn/vocab/idn-role-codes> AS ?cs)
+                BIND(<https://data.idnau.org/pid/vocab/idn-role-codes> AS ?cs)
                 ?cs a skos:ConceptScheme .
                 ?role a skos:Concept ;
                     skos:inScheme ?cs ;
@@ -952,7 +952,7 @@ onMounted(() => {
         themeDoSparqlPostQuery(vocabTriplestoreUrl, `PREFIX skos: <http://www.w3.org/2004/02/skos/core#>
             SELECT DISTINCT ?theme ?name
             WHERE {
-                BIND(<https://w3id.org/idn/vocab/idn-th> AS ?cs)
+                BIND(<https://data.idnau.org/pid/vocab/idn-th> AS ?cs)
                 ?cs a skos:ConceptScheme .
                 ?theme a skos:Concept ;
                     skos:inScheme ?cs ;
