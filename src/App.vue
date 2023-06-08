@@ -28,6 +28,10 @@ const banners = [
     gap: unset !important;
 }
 
+body {
+    line-height: 1.2;
+}
+
 h2 {
     margin: 0.8em 0 0.5em 0;
 }

@@ -1,6 +1,7 @@
 <script setup>
 import { ref, onMounted, nextTick, watch } from "vue";
 import { RouterLink, useRoute } from "vue-router";
+import helpImage from "@/assets/images/MetadataCreatorPage-HELP-Image.png";
 
 const headingAnchors = [
     "introduction",
@@ -56,53 +57,73 @@ onMounted(() => {
 
 <template>
     <h2>Help Page</h2>
-    <div class="table-of-contents">
-        <h5>Contents</h5>
-        <ul>
-            <li><RouterLink to="/help#introduction">Introduction</RouterLink></li>
-            <li><RouterLink to="/help#metadatacreationtool">The Metadata Creation Tool</RouterLink></li>
-            <li>
-                <RouterLink to="/help#completingmetadatarecord">Completing a metadata record for your data</RouterLink>
-                <ul>
-                    <li><RouterLink to="/help#general">General</RouterLink></li>
-                    <li><RouterLink to="/help#agentinformation">Agent Information</RouterLink></li>
-                    <li><RouterLink to="/help#dates">Dates</RouterLink></li>
-                    <li><RouterLink to="/help#rights">Rights for accessing this dataset</RouterLink></li>
-                    <li><RouterLink to="/help#spatiotemporal">Spatio/Temporal (Where and When)</RouterLink></li>
-                    <li><RouterLink to="/help#distribution">Distribution Information</RouterLink></li>
-                    <li><RouterLink to="/help#theme">Theme</RouterLink></li>
-                    <li><RouterLink to="/help#contactdetails">Contact Details</RouterLink></li>
-                </ul>
-            </li>
-        </ul>
+    <div class="top-row">
+        <div class="table-of-contents" :style="{flexGrow: '1'}">
+            <h5>Contents</h5>
+            <ul>
+                <li><RouterLink to="/help#introduction">Introduction</RouterLink></li>
+                <li><RouterLink to="/help#metadatacreationtool">The Metadata Creation Tool</RouterLink></li>
+                <li>
+                    <RouterLink to="/help#completingmetadatarecord">Completing a metadata record for your data</RouterLink>
+                    <ul>
+                        <li><RouterLink to="/help#general">General</RouterLink></li>
+                        <li><RouterLink to="/help#agentinformation">Agent Information</RouterLink></li>
+                        <li><RouterLink to="/help#dates">Dates</RouterLink></li>
+                        <li><RouterLink to="/help#rights">Rights for accessing this dataset</RouterLink></li>
+                        <li><RouterLink to="/help#spatiotemporal">Spatio/Temporal (Where and When)</RouterLink></li>
+                        <li><RouterLink to="/help#distribution">Distribution Information</RouterLink></li>
+                        <li><RouterLink to="/help#theme">Theme</RouterLink></li>
+                        <li><RouterLink to="/help#contactdetails">Contact Details</RouterLink></li>
+                    </ul>
+                </li>
+            </ul>
+        </div>
+        <div>
+            <h3 id="introduction">Introduction</h3>
+            <p>To catalogue Indigenous data, the metadata describing the data needs to be collected, described, and stored in a standardised way to be machine readable and consistent for enabling search.</p>
+            <p>The metadata for Indigenous Data discovery needs to incorporate specific elements to identify the Indigeneity of the data and we have trialled the following as a starting point:</p>
+            <ul>
+                <li>Data Agents - a person or organisation that has been registered in the IDN Data Agents Database that holds or has created an Indigenous Data Asset</li>
+                <li>Themes - Indigenous Demographics, Indigenous Languages, and other terms to be drawn from the IDN Theme vocabulary.</li>
+            </ul>
+        </div>
     </div>
-    <h3 id="introduction">Introduction</h3>
-    <p>Lorem ipsum dolor sit amet consectetur adipisicing elit. Nostrum, dolorem laboriosam praesentium pariatur ullam incidunt officiis voluptatibus temporibus aliquam earum quaerat, ad assumenda. Quas distinctio ab quis nostrum totam eum.</p>
     <h3 id="metadatacreationtool">The Metadata Creation Tool</h3>
-    <p>Lorem ipsum, dolor sit amet consectetur adipisicing elit. Omnis eligendi cumque placeat. Iste fugit ipsum quis iusto sed similique aut atque quibusdam sapiente, qui quo voluptatibus et accusantium laborum dolorem.</p>
+    <p>With this tool you can describe your data using the metadata elements described in the <a href="https://idn-au.github.io/idn-catalogue-profile/rd/guidance.html" target="_blank" rel="noopener noreferrer">IDN Catalogue Profile Guidance</a>.</p>
+    <p>You can download your completed metadata record in RDF and, if appropriate, submit the metadata record to catalogue your Indigenous Data in the IDN Data Catalogue. <em>Note that this will require pre-registration in the IDN Agents Database before the IDN can accept the metadata record.</em></p>
     <div class="section-split">
         <div class="subsection">
-            image of tutorial
+            <img :src="helpImage" alt="Screenshot of the Metadata Entry tool with step numbers">
         </div>
         <div class="subsection fill">
             <div class="grid-list">
                 <span class="grid-list-number"><i class="fa-regular fa-circle-1"></i></span>
-                <div>Lorem ipsum dolor, sit amet consectetur adipisicing elit. Consequuntur, natus pariatur nobis aliquid impedit architecto quam iste, maiores odio quos itaque incidunt labore ad eius reprehenderit. Excepturi impedit quae quisquam?</div>
+                <div>If this is the first time you have attempted to use the Metadata Creation Tool, please run through the tutorial first to get a feel for the sections on the MCT page. This will highlight the different sections of the page that you may be completing or interacting with. You will need to quickly click through to the last page of the tutorial to end it.</div>
                 <span class="grid-list-number"><i class="fa-regular fa-circle-2"></i></span>
-                <div>Lorem ipsum dolor, sit amet consectetur adipisicing elit. Consequuntur, natus pariatur nobis aliquid impedit architecto quam iste, maiores odio quos itaque incidunt labore ad eius reprehenderit. Excepturi impedit quae quisquam?</div>
+                <div>
+                    <div class="icon-grid">
+                        <div><i class="fa-regular fa-circle-xmark" :style="{color: 'red'}"></i></div><div>means this tab must be completed and is not valid</div>
+                        <div><span class="fa-stack incomplete-icon-stack" :style="{color: 'grey', fontSize: '0.5em', width: '16px'}">
+                            <i class="fa-regular fa-check fa-stack-1x"></i>
+                            <i class="fa-regular fa-circle-dashed fa-stack-2x"></i>
+                        </span></div><div>means that this tab should be completed but is not mandatory for a valid record.</div>
+                        <div><i class="fa-regular fa-circle-check" :style="{color: 'green'}"></i></div><div>means this tab has been completed successfully</div>
+                    </div>
+                </div>
                 <span class="grid-list-number"><i class="fa-regular fa-circle-3"></i> + <i class="fa-regular fa-circle-4"></i></span>
-                <div>Lorem ipsum dolor, sit amet consectetur adipisicing elit. Consequuntur, natus pariatur nobis aliquid impedit architecto quam iste, maiores odio quos itaque incidunt labore ad eius reprehenderit. Excepturi impedit quae quisquam?</div>
+                <div>As you describe your data, the <a href="https://idn-au.github.io/dev.idnau.org/#/resources/faircare" target="_blank" rel="noopener noreferrer">FAIR and CARE data score</a> is indicated in the radial graphs.</div>
                 <span class="grid-list-number"><i class="fa-regular fa-circle-5"></i></span>
-                <div>Lorem ipsum dolor, sit amet consectetur adipisicing elit. Consequuntur, natus pariatur nobis aliquid impedit architecto quam iste, maiores odio quos itaque incidunt labore ad eius reprehenderit. Excepturi impedit quae quisquam?</div>
+                <div>Save a draft copy of your metadata record to your browser to continue later. This will stay in your browser until cleared.</div>
                 <span class="grid-list-number"><i class="fa-regular fa-circle-6"></i></span>
-                <div>Lorem ipsum dolor, sit amet consectetur adipisicing elit. Consequuntur, natus pariatur nobis aliquid impedit architecto quam iste, maiores odio quos itaque incidunt labore ad eius reprehenderit. Excepturi impedit quae quisquam?</div>
+                <div>Once your record has no <i class="fa-regular fa-circle-xmark" :style="{color: 'red'}"></i> against a tab it is valid for this profile and can be downloaded to your computer.</div>
                 <span class="grid-list-number"><i class="fa-regular fa-circle-7"></i></span>
-                <div>Lorem ipsum dolor, sit amet consectetur adipisicing elit. Consequuntur, natus pariatur nobis aliquid impedit architecto quam iste, maiores odio quos itaque incidunt labore ad eius reprehenderit. Excepturi impedit quae quisquam?</div>
+                <div>Before you begin a new record (unless you want to clone the record) clear the data.</div>
             </div>
         </div>
     </div>
     <h3 id="completingmetadatarecord">Completing a metadata record for your data</h3>
-    <p>Lorem ipsum, dolor sit amet consectetur adipisicing elit. Dolore quam quae quod id hic soluta veniam eius quibusdam vero perferendis nisi, quo, molestias earum adipisci distinctio exercitationem reiciendis nam neque?</p>
+    <p>There are eight areas of metadata that need to be completed to fully describe the data asset. You are able to limit your description to the fields that have a red asterixis but it is encouraged to complete as much information as you are able.</p>
+    <p><i class="fa-regular fa-circle-question"></i> If you hover over this text you will get a brief description of what should be entered in this field.</p>
     <div class="accordion">
         <div class="section" id="general">
             <div class="section-header" @click="accordionActive === 'general' ? accordionActive = '' : accordionActive = 'general'">
@@ -111,7 +132,7 @@ onMounted(() => {
             </div>
             <div :class="`section-body-wrapper ${accordionActive === 'general' ? 'open' : ''}`">
                 <div class="section-body">
-                    <p>Lorem ipsum dolor sit amet consectetur adipisicing elit. Error, quo, tempore nobis saepe modi vel deleniti sunt repellendus mollitia recusandae libero provident totam magnam sequi deserunt officiis enim vero quod!</p>
+                    <p>Basic information about the data.</p>
                     <table class="accordion-table">
                         <thead>
                             <tr>
@@ -123,17 +144,17 @@ onMounted(() => {
                         <tbody>
                             <tr>
                                 <td>IRI</td>
-                                <td>...</td>
+                                <td>If you already have a persistent (URL) identifier for the data, you can de-select the “Assign IRI” to enter your IRI.</td>
                                 <td>URL</td>
                             </tr>
                             <tr>
                                 <td>Title</td>
-                                <td>...</td>
+                                <td>This will be how the data is titled and listed in the catalogue. There should be no acronyms in the title.</td>
                                 <td>Text</td>
                             </tr>
                             <tr>
                                 <td>Description</td>
-                                <td>...</td>
+                                <td>This information should fully describe the dataset, how it was created and its intended purpose.</td>
                                 <td>Text</td>
                             </tr>
                         </tbody>
@@ -148,7 +169,7 @@ onMounted(() => {
             </div>
             <div :class="`section-body-wrapper ${accordionActive === 'agentinformation' ? 'open' : ''}`">
                 <div class="section-body">
-                    <p>Lorem ipsum dolor sit amet consectetur adipisicing elit. Ratione quis consectetur corrupti saepe adipisci! Magni porro corporis soluta placeat distinctio, minus totam ullam veritatis ratione consequatur dolores repudiandae assumenda ad.</p>
+                    <p>Information about the roles that agents (people and organisations) play with respect to this data. These roles are critical in determining whether this data is managed properly. Each Agent <b>must</b> have a matching Role.</p>
                     <table class="accordion-table">
                         <thead>
                             <tr>
@@ -160,13 +181,18 @@ onMounted(() => {
                         <tbody>
                             <tr>
                                 <td>Agent</td>
-                                <td>...</td>
+                                <td>This is the name of the People and/or Organisation that have a role for this data.</td>
                                 <td>Pick list</td>
                             </tr>
                             <tr>
                                 <td>Role</td>
-                                <td>...</td>
+                                <td>This is the role that the Agent has in relation to the data.</td>
                                 <td>Pick list</td>
+                            </tr>
+                            <tr>
+                                <td colspan="3"><em>There can be multiple Agents with Roles, or Agents that have multiple Roles but each Agent must each have a separate line. Select <b>+Add Agent</b> to add another Agent/Role.
+If you want to add an Agent that is not in the IDN Agents Database, select “Use Custom Agent”. This will add the Agent details to the RDF but the record cannot be submitted to the IDN for inclusion in the catalogue at this point in time.
+</em></td>
                             </tr>
                         </tbody>
                     </table>
@@ -180,7 +206,7 @@ onMounted(() => {
             </div>
             <div :class="`section-body-wrapper ${accordionActive === 'dates' ? 'open' : ''}`">
                 <div class="section-body">
-                    <p>Lorem ipsum, dolor sit amet consectetur adipisicing elit. Aspernatur fugiat molestias voluptatibus veritatis, beatae enim perspiciatis velit aliquam corporis modi molestiae adipisci ea, culpa delectus itaque ipsam necessitatibus. Eum, unde.</p>
+                    <p>Standard dates for the establishment and update times of this dataset. A dataset about early 20th century data might only have been made last year and the created date is then some time last year. "Issued" indicates when, if ever, this dataset was published.</p>
                     <table class="accordion-table">
                         <thead>
                             <tr>
@@ -192,17 +218,17 @@ onMounted(() => {
                         <tbody>
                             <tr>
                                 <td>Created</td>
-                                <td>...</td>
+                                <td>Date that this dataset was created/started.</td>
                                 <td>dd/mm/yyyy</td>
                             </tr>
                             <tr>
                                 <td>Modified</td>
-                                <td>...</td>
+                                <td>Date that the dataset was updated.</td>
                                 <td>dd/mm/yyyy</td>
                             </tr>
                             <tr>
                                 <td>Issued</td>
-                                <td>...</td>
+                                <td>Date that the dataset was published or distributed.</td>
                                 <td>dd/mm/yyyy</td>
                             </tr>
                         </tbody>
@@ -217,7 +243,6 @@ onMounted(() => {
             </div>
             <div :class="`section-body-wrapper ${accordionActive === 'rights' ? 'open' : ''}`">
                 <div class="section-body">
-                    <p>Lorem ipsum dolor sit amet consectetur adipisicing elit. Quibusdam cum eos quaerat sed sit qui voluptatum dignissimos nobis alias quas magni est itaque aspernatur veritatis suscipit, quia, laboriosam consequatur. Libero.</p>
                     <table class="accordion-table">
                         <thead>
                             <tr>
@@ -229,23 +254,26 @@ onMounted(() => {
                         <tbody>
                             <tr>
                                 <td>License</td>
-                                <td>...</td>
+                                <td>This is the legal information for the data. </td>
                                 <td>Pick list</td>
                             </tr>
                             <tr>
                                 <td>License IRI</td>
-                                <td>...</td>
+                                <td>If an online link to the legal notice exists, it should be included here.</td>
                                 <td>URL</td>
                             </tr>
                             <tr>
                                 <td>Rights</td>
-                                <td>...</td>
+                                <td>This is the Person or Organisation that holds the legal rights to the data.</td>
                                 <td>Pick list</td>
                             </tr>
                             <tr>
                                 <td>Access Rights</td>
-                                <td>...</td>
+                                <td>This is the general description of the access available to the data.</td>
                                 <td>Pick list</td>
+                            </tr>
+                            <tr>
+                                <td colspan="3"><em>e.g., License=Creative Commons 4, License IRI= https://creativecommons.org/licenses/by/4.0/, Rights = ©University of Melbourne, Access Rights= Metadata Only Access </em></td>
                             </tr>
                         </tbody>
                     </table>
@@ -259,7 +287,6 @@ onMounted(() => {
             </div>
             <div :class="`section-body-wrapper ${accordionActive === 'spatiotemporal' ? 'open' : ''}`">
                 <div class="section-body">
-                    <p>Lorem ipsum dolor sit, amet consectetur adipisicing elit. Tempora perferendis suscipit, obcaecati minus nihil ipsa! Et voluptas doloribus amet repellendus itaque vel natus ad? Eius tenetur blanditiis aliquid doloribus optio.</p>
                     <table class="accordion-table">
                         <thead>
                             <tr>
@@ -271,21 +298,26 @@ onMounted(() => {
                         <tbody>
                             <tr>
                                 <td rowspan="2">Spatial Geometry</td>
-                                <td>...</td>
+                                <td>A WKT string is the ASCII representation of a spatial object (coordinate reference) provided in Well Known Text (WKT) </td>
                                 <td>WKT string</td>
                             </tr>
                             <tr>
-                                <td>...</td>
+                                <td>A spatial IRI is the standard identifier (URL) link to the location connected to the data.</td>
                                 <td>Spatial IRI</td>
                             </tr>
                             <tr>
                                 <td rowspan="2">Temporal</td>
-                                <td>...</td>
+                                <td>This is the date the data begins in the dataset (NOT the published date)</td>
                                 <td>dd/mm/yyyy</td>
                             </tr>
                             <tr>
-                                <td>...</td>
+                                <td>This is the data of the last data in the dataset</td>
                                 <td>dd/mm/yyyy</td>
+                            </tr>
+                            <tr>
+                                <td colspan="3"><em>e.g., Geographic bounding box enveloping Australia<br/>
+WKT:  POLYGON ((96 -45, 96 -9, 168 -9, 168 -45, 96 -45))<br/>
+IRI:  https://linked.data.gov.au/dataset/asgsed3/AUS/AUS</em></td>
                             </tr>
                         </tbody>
                     </table>
@@ -299,7 +331,6 @@ onMounted(() => {
             </div>
             <div :class="`section-body-wrapper ${accordionActive === 'distribution' ? 'open' : ''}`">
                 <div class="section-body">
-                    <p>Lorem ipsum dolor sit amet consectetur adipisicing elit. Laboriosam similique velit consequatur? Aut vero consequatur, dignissimos quis praesentium earum eos accusantium alias ratione hic non deleniti inventore, magni consectetur suscipit?</p>
                     <table class="accordion-table">
                         <thead>
                             <tr>
@@ -311,8 +342,11 @@ onMounted(() => {
                         <tbody>
                             <tr>
                                 <td>Access URL</td>
-                                <td>...</td>
+                                <td>This is optional information in the form of a publicly resolvable URL that gives the user access to the data.</td>
                                 <td>URL</td>
+                            </tr>
+                            <tr>
+                                <td colspan="3"><em>E.g., http://pid.geoscience.gov.au/dataset/ga/130329 gives access to multibeam sonar backscatter data for Beagle Marine Park (Bass Strait).</em></td>
                             </tr>
                         </tbody>
                     </table>
@@ -326,7 +360,6 @@ onMounted(() => {
             </div>
             <div :class="`section-body-wrapper ${accordionActive === 'theme' ? 'open' : ''}`">
                 <div class="section-body">
-                    <p>Lorem ipsum dolor sit amet consectetur, adipisicing elit. Quos laudantium fugiat repellendus, minima unde iure excepturi mollitia maiores. Illum, soluta impedit voluptate similique suscipit porro. Error, iusto? Nisi, aut culpa.</p>
                     <table class="accordion-table">
                         <thead>
                             <tr>
@@ -338,8 +371,11 @@ onMounted(() => {
                         <tbody>
                             <tr>
                                 <td>Theme</td>
-                                <td>...</td>
+                                <td>Indigenous Demographics, Indigenous Languages, etc</td>
                                 <td>Pick list</td>
+                            </tr>
+                            <tr>
+                                <td colspan="3"><em>You can add more than one theme. Select all the themes check-boxes that apply – they will appear in the field separated by a comma.</em></td>
                             </tr>
                         </tbody>
                     </table>
@@ -353,7 +389,7 @@ onMounted(() => {
             </div>
             <div :class="`section-body-wrapper ${accordionActive === 'contactdetails' ? 'open' : ''}`">
                 <div class="section-body">
-                    <p>Lorem ipsum dolor sit amet consectetur adipisicing elit. Modi perspiciatis facere culpa cum ipsa tenetur quia quas et exercitationem optio nemo eligendi possimus, nihil unde iste maxime beatae deleniti pariatur?</p>
+                    <p>These details are required if you are submitting data to the IDN but are also useful for any metadata record to create a 'point of contact' for the data. This could be a specified subject matter expert if the Agent has also been made a point of contact.</p>
                     <table class="accordion-table">
                         <thead>
                             <tr>
@@ -365,18 +401,21 @@ onMounted(() => {
                         <tbody>
                             <tr>
                                 <td>Name</td>
-                                <td>...</td>
+                                <td>First-name_Last-name</td>
                                 <td>Text</td>
                             </tr>
                             <tr>
                                 <td>Email</td>
-                                <td>...</td>
-                                <td>Email</td>
+                                <td>The best email to receive questions about the data and metadata</td>
+                                <td>Text@txt.txt etc</td>
                             </tr>
                             <tr>
                                 <td>Phone</td>
-                                <td>...</td>
+                                <td>The best contact phone number</td>
                                 <td>Telephone</td>
+                            </tr>
+                            <tr>
+                                <td colspan="3"><em>E.g., Alf Smith, Alfsmith@egsomewhere.com, 1234 567 890</em></td>
                             </tr>
                         </tbody>
                     </table>
@@ -389,11 +428,17 @@ onMounted(() => {
 <style lang="scss" scoped>
 @import "@/assets/_variables.scss";
 
+.top-row {
+    display: flex;
+    flex-direction: row;
+    gap: 20px;
+}
+
 .table-of-contents {
     background-color: $bg1;
     padding: 16px;
     border-radius: $borderRadius;
-    align-self: baseline;
+    flex-shrink: 0;
 
     h5 {
         margin-top: 0;
@@ -421,6 +466,7 @@ onMounted(() => {
     .subsection {
         width: 50%;
         padding: 12px;
+        display: flex;
 
         p {
             margin-top: 0;
@@ -430,11 +476,17 @@ onMounted(() => {
             background-color: $bg1;
         }
 
+        img {
+            width: 100%;
+            margin: auto 0;
+        }
+
         .grid-list {
             display: grid;
             // grid-template-columns: min-content 1fr;
             grid-template-columns: 64px 1fr;
             gap: 8px;
+            align-self: baseline;
 
             .grid-list-number {
                 color: #3591e2;
@@ -443,6 +495,12 @@ onMounted(() => {
             }
         }
     }
+}
+
+.icon-grid {
+    display: grid;
+    grid-template-columns: 16px 1fr;
+    gap: 6px;
 }
 
 .accordion {
@@ -481,7 +539,11 @@ onMounted(() => {
                 padding: 12px;
 
                 table.accordion-table {
+                    width: 100%;
 
+                    th, td {
+                        padding: 4px;
+                    }
                 }
             }
         }
