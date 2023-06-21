@@ -7,8 +7,7 @@ import config from "@/config";
 const app = createApp(App);
 
 app.provide("agentNamedGraph", config.agentNamedGraph.replace(/\/$/, ""));
-app.provide("agentTriplestoreUrl", config.agentTriplestoreUrl.replace(/\/$/, ""));
-app.provide("vocabTriplestoreUrl", config.vocabTriplestoreUrl.replace(/\/$/, ""));
+app.provide("triplestoreUrl", config.triplestoreUrl.replace(/\/$/, ""));
 
 Chart.register(...registerables);
 

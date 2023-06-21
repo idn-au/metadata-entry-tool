@@ -111,7 +111,7 @@ onMounted(() => {
                     </div>
                 </div>
                 <span class="grid-list-number"><i class="fa-regular fa-circle-3"></i> + <i class="fa-regular fa-circle-4"></i></span>
-                <div>As you describe your data, the <a href="https://idn-au.github.io/dev.idnau.org/#/resources/faircare" target="_blank" rel="noopener noreferrer">FAIR and CARE data score</a> is indicated in the radial graphs.</div>
+                <div>As you describe your data, the <a href="https://idnau.org/#/resources/faircare" target="_blank" rel="noopener noreferrer">FAIR and CARE data score</a> is indicated in the radial graphs.</div>
                 <span class="grid-list-number"><i class="fa-regular fa-circle-5"></i></span>
                 <div>Save a draft copy of your metadata record to your browser to continue later. This will stay in your browser until cleared.</div>
                 <span class="grid-list-number"><i class="fa-regular fa-circle-6"></i></span>

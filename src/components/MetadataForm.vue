@@ -15,6 +15,7 @@ import propDetails from "@/util/props.json";
 import exampleData from "@/util/exampleData";
 import formOptions from "@/util/formOptions";
 import tutorialContent from "@/util/tutorialContent";
+import CustomAgentForm from "@/components/CustomAgentForm.vue";
 
 const { namedNode, literal } = DataFactory;
 
@@ -30,13 +31,13 @@ const rdfFormats = {
 };
 
 const agentNamedGraph = inject("agentNamedGraph");
-const agentTriplestoreUrl = inject("agentTriplestoreUrl");
-const vocabTriplestoreUrl = inject("vocabTriplestoreUrl");
+const triplestoreUrl = inject("triplestoreUrl");
 
 const emptyData = {
     iri: "",
     assignIri: true,
     title: "",
+    indigeneity: [],
     description: "",
     created: "",
     modified: "",
@@ -57,7 +58,20 @@ const emptyData = {
             agent: "",
             role: [],
             useCustomAgent: false,
-            customAgent: ""
+            customAgent: {
+                iri: "",
+                isPerson: false,
+                name: "",
+                description: "",
+                url: "",
+                identifiers: [
+                    {
+                        value: "",
+                        datatype: ""
+                    }
+                ],
+                review: false
+            }
         }
     ],
     themes: [],
@@ -73,12 +87,14 @@ const { data: roleData, loading: roleLoading, error: roleError, doSparqlGetQuery
 const { data: licenseData, loading: licenseLoading, error: licenseError, doSparqlGetQuery: licenseDoSparqlGetQuery, doSparqlPostQuery: licenseDoSparqlPostQuery } = useGetRequest();
 const { data: accessRightsData, loading: accessRightsLoading, error: accessRightsError, doSparqlGetQuery: accessRightsDoSparqlGetQuery, doSparqlPostQuery: accessRightsDoSparqlPostQuery } = useGetRequest();
 const { data: themeData, loading: themeLoading, error: themeError, doSparqlGetQuery: themeDoSparqlGetQuery, doSparqlPostQuery: themeDoSparqlPostQuery } = useGetRequest();
+const { data: indigeneityData, loading: indigeneityLoading, error: indigeneityError, doSparqlGetQuery: indigeneityDoSparqlGetQuery, doSparqlPostQuery: indigeneityDoSparqlPostQuery } = useGetRequest();
 
 const agentOptionsRequested = ref([]);
 const roleOptionsRequested = ref([]);
 const licenseOptionsRequested = ref([]);
 const accessRightsOptionsRequested = ref([]);
 const themeOptionsRequested = ref([]);
+const indigeneityOptionsRequested = ref([]);
 
 const { clicked: savedDraft, startTimeout: startSavedDraftTimeout } = useBtnTimeout();
 const { clicked: deletedDraft, startTimeout: startDeletedDraftTimeout } = useBtnTimeout();
@@ -97,6 +113,7 @@ const data = ref({
     iri: "",
     assignIri: true,
     title: "",
+    indigeneity: [],
     description: "",
     created: "",
     modified: "",
@@ -117,7 +134,20 @@ const data = ref({
             agent: "",
             role: [],
             useCustomAgent: false,
-            customAgent: ""
+            customAgent: {
+                iri: "",
+                isPerson: false,
+                name: "",
+                description: "",
+                url: "",
+                identifiers: [
+                    {
+                        value: "",
+                        datatype: ""
+                    }
+                ],
+                review: false
+            }
         }
     ],
     themes: [],
@@ -300,6 +330,15 @@ watch(() => data.value.title, (newValue, oldValue) => {
     updateTriple(newValue, "dcterms:title", literal(newValue, namedNode(qname("xsd:string"))));
 });
 
+watch(() => data.value.indigeneity, (newValue, oldValue) => {
+    const indigeneityQuads = store.value.getQuads(namedNode(calcIri.value), namedNode(qname("dcterms:type")), null);
+    store.value.removeQuads(indigeneityQuads);
+    if (newValue.length > 0) {
+        newValue.forEach(indigeneity => store.value.addQuad(namedNode(calcIri.value), namedNode(qname("dcterms:type")), namedNode(indigeneity)));
+    }
+    serializedData.value = serialize();
+});
+
 watch(() => data.value.description, (newValue, oldValue) => {
     updateTriple(newValue, "dcterms:description", literal(newValue, namedNode(qname("xsd:string"))));
 });
@@ -438,6 +477,12 @@ watch(() => data.value.agentRoles, (newValue, oldValue) => {
         qualifiedQuads.forEach(q => {
             if (q.object.termType === "BlankNode") {
                 const bnodeQuads2 = store.value.getQuads(q.object, null, null);
+                bnodeQuads2.forEach(q2 => {
+                    if (q2.object.termType === "NamedNode") {
+                        const bnodeQuads3 = store.value.getQuads(q2.object, null, null);
+                        store.value.removeQuads(bnodeQuads3);
+                    }
+                })
                 store.value.removeQuads(bnodeQuads2);
             }
         });
@@ -446,11 +491,26 @@ watch(() => data.value.agentRoles, (newValue, oldValue) => {
 
     if (newValue && newValue.length > 0) {
         newValue.forEach((agentRole) => {
-            if (agentRole.agent !== "" || (agentRole.useCustomAgent && agentRole.customAgent !== "") || agentRole.role.length > 0) {
+            if (agentRole.agent !== "" || (agentRole.useCustomAgent && agentRole.customAgent.iri !== "" && agentRole.customAgent.name !== "") || agentRole.role.length > 0) {
                 const newBnode = store.value.createBlankNode();
                 store.value.addQuad(namedNode(calcIri.value), namedNode(qname("prov:qualifiedAttribution")), newBnode);
-                if (agentRole.useCustomAgent && agentRole.customAgent !== "") {
-                    store.value.addQuad(newBnode, namedNode(qname("prov:agent")), namedNode(agentRole.customAgent));
+                if (agentRole.useCustomAgent && agentRole.customAgent.iri !== "" && agentRole.customAgent.name !== "") {
+                    store.value.addQuad(newBnode, namedNode(qname("prov:agent")), namedNode(agentRole.customAgent.iri));
+                    store.value.addQuad(agentRole.customAgent.iri, namedNode(qname("sdo:name")), literal(agentRole.customAgent.name));
+                    store.value.addQuad(agentRole.customAgent.iri, namedNode(qname("a")), namedNode(qname(`sdo:${agentRole.customAgent.isPerson ? "Person" : "Organization"}`)));
+                    if (agentRole.customAgent.description !== "") {
+                        store.value.addQuad(agentRole.customAgent.iri, namedNode(qname("sdo:description")), literal(agentRole.customAgent.description));
+                    }
+                    if (agentRole.customAgent.url !== "") {
+                        store.value.addQuad(agentRole.customAgent.iri, namedNode(qname("sdo:url")), literal(agentRole.customAgent.url), namedNode(qname("xsd:anyURI")));
+                    }
+                    if (agentRole.customAgent.identifiers.length > 0) {
+                        agentRole.customAgent.identifiers.forEach(id => {
+                            if (id.value !== "") {
+                                store.value.addQuad(agentRole.customAgent.iri, namedNode(qname("sdo:identifier")), literal(id.value, namedNode(id.datatype)));
+                            }
+                        });
+                    }
                 } else if (agentRole.agent !== "") {
                     store.value.addQuad(newBnode, namedNode(qname("prov:agent")), namedNode(agentRole.agent));
                 }
@@ -542,6 +602,8 @@ function loadRDF(e) {
     loadedStore.value.forEach(q => { // get preds & objs
         if (q.predicate.value === loadedQname("dcterms:title")) {
             data.value.title = q.object.value;
+        } else if (q.predicate.value === loadedQname("dcterms:type")) {
+            data.value.indigeneity.push(q.object.value);
         } else if (q.predicate.value === loadedQname("dcterms:description")) {
             data.value.description = q.object.value;
         } else if (q.predicate.value === loadedQname("dcterms:created")) {
@@ -875,7 +937,7 @@ onMounted(() => {
 
     if (useRemoteOptions) {
         // query triplestore for form options
-        agentDoSparqlPostQuery(agentTriplestoreUrl, `PREFIX sdo: <https://schema.org/>
+        agentDoSparqlPostQuery(triplestoreUrl, `PREFIX sdo: <https://schema.org/>
             SELECT DISTINCT ?agent ?name
             WHERE {
                 GRAPH <${agentNamedGraph}> {
@@ -893,7 +955,7 @@ onMounted(() => {
             agentOptionsRequested.value.sort((a, b) => a.label.localeCompare(b.label));
         });
 
-        roleDoSparqlPostQuery(vocabTriplestoreUrl, `PREFIX skos: <http://www.w3.org/2004/02/skos/core#>
+        roleDoSparqlPostQuery(triplestoreUrl, `PREFIX skos: <http://www.w3.org/2004/02/skos/core#>
             SELECT DISTINCT ?role ?name ?desc
             WHERE {
                 BIND(<https://data.idnau.org/pid/vocab/idn-role-codes> AS ?cs)
@@ -907,13 +969,13 @@ onMounted(() => {
                 roleOptionsRequested.value.push({
                     value: result.role.value,
                     label: titleCase(result.name.value),
-                    desc: result.desc.value,
+                    desc: result.desc.value.charAt(0).toUpperCase() + result.desc.value.slice(1),
                 });
             });
             roleOptionsRequested.value.sort((a, b) => a.label.localeCompare(b.label));
         });
 
-        licenseDoSparqlPostQuery(vocabTriplestoreUrl, `PREFIX skos: <http://www.w3.org/2004/02/skos/core#>
+        licenseDoSparqlPostQuery(triplestoreUrl, `PREFIX skos: <http://www.w3.org/2004/02/skos/core#>
             SELECT DISTINCT ?license ?name
             WHERE {
                 BIND(<https://w3id.org/idn/vocab/idn-licenses> AS ?cs)
@@ -931,7 +993,7 @@ onMounted(() => {
             licenseOptionsRequested.value.sort((a, b) => a.label.localeCompare(b.label));
         });
         
-        accessRightsDoSparqlPostQuery(vocabTriplestoreUrl, `PREFIX skos: <http://www.w3.org/2004/02/skos/core#>
+        accessRightsDoSparqlPostQuery(triplestoreUrl, `PREFIX skos: <http://www.w3.org/2004/02/skos/core#>
             SELECT DISTINCT ?accessRight ?name
             WHERE {
                 BIND(<https://linked.data.gov.au/def/data-access-rights> AS ?cs)
@@ -949,7 +1011,7 @@ onMounted(() => {
             accessRightsOptionsRequested.value.sort((a, b) => a.label.localeCompare(b.label));
         });
 
-        themeDoSparqlPostQuery(vocabTriplestoreUrl, `PREFIX skos: <http://www.w3.org/2004/02/skos/core#>
+        themeDoSparqlPostQuery(triplestoreUrl, `PREFIX skos: <http://www.w3.org/2004/02/skos/core#>
             SELECT DISTINCT ?theme ?name
             WHERE {
                 BIND(<https://data.idnau.org/pid/vocab/idn-th> AS ?cs)
@@ -966,6 +1028,24 @@ onMounted(() => {
             });
             themeOptionsRequested.value.sort((a, b) => a.label.localeCompare(b.label));
         });
+
+        indigeneityDoSparqlPostQuery(triplestoreUrl, `PREFIX skos: <http://www.w3.org/2004/02/skos/core#>
+            SELECT DISTINCT ?indigeneity ?name
+            WHERE {
+                BIND(<https://data.idnau.org/pid/vocab/indigeneity> AS ?cs)
+                ?cs a skos:ConceptScheme .
+                ?indigeneity a skos:Concept ;
+                    skos:inScheme ?cs ;
+                    skos:prefLabel ?name .
+            }`,() => {
+            indigeneityData.value.forEach(result => {
+                indigeneityOptionsRequested.value.push({
+                    value: result.indigeneity.value,
+                    label: result.name.value
+                });
+            });
+            indigeneityOptionsRequested.value.sort((a, b) => a.label.localeCompare(b.label));
+        });
     } else {
         // use hard-coded options
         agentOptionsRequested.value = formOptions.agentOptions;
@@ -973,6 +1053,7 @@ onMounted(() => {
         licenseOptionsRequested.value = formOptions.licenseOptions;
         accessRightsOptionsRequested.value = formOptions.accessRightsOptions;
         themeOptionsRequested.value = formOptions.themeOptions;
+        indigeneityOptionsRequested.value = formOptions.indigeneityOptions;
     }
 });
 </script>
@@ -1118,6 +1199,24 @@ onMounted(() => {
                         </FormField>
                         <FormField :span="2">
                             <FormInput
+                                label="Indigeneity"
+                                type="select"
+                                v-model="data.indigeneity"
+                                :options="indigeneityOptionsRequested"
+                                description="You can add mulitple indigeneity terms"
+                                multiple
+                                clearButton
+                            >
+                                <template #tooltip>
+                                    <PropTooltip v-if="showPropTooltips" v-bind="propDetails.indigeneity" />
+                                    <template v-else>
+                                        The indigeneity of this dataset.
+                                    </template>
+                                </template>
+                            </FormInput>
+                        </FormField>
+                        <FormField :span="2">
+                            <FormInput
                                 label="Description"
                                 type="textarea"
                                 id="description"
@@ -1141,7 +1240,7 @@ onMounted(() => {
                         </template>
                         <FormField v-for="(agentRole, index) in data.agentRoles" direction="row" :span="2">
                             <FormField>
-                                <FormInput
+                                <!-- <FormInput
                                     v-show="agentRole.useCustomAgent"
                                     type="url"
                                     v-model="agentRole.customAgent"
@@ -1152,7 +1251,39 @@ onMounted(() => {
                                     @validate="handleValidate('customAgent', $event)"
                                     :validationFns="[validateIri]"
                                     required
-                                />
+                                /> -->
+                                <FormField v-show="agentRole.useCustomAgent" direction="row">
+                                    <FormInput
+                                        type="text"
+                                        v-model="agentRole.customAgent.name"
+                                        label="Custom Agent"
+                                        disabled
+                                    />
+                                    <button
+                                        class="btn primary outline"
+                                        @click="modal = `customAgent-${index}`"
+                                        title="Add custom agent data"
+                                    >
+                                        <i v-if="agentRole.customAgent.name === ''" class="fa-regular fa-plus"></i>
+                                        <i v-else class="fa-regular fa-pencil"></i>
+                                    </button>
+                                    <template #tooltip>
+                                        <PropTooltip v-if="showPropTooltips" v-bind="propDetails.agent" />
+                                        <template v-else>
+                                            The name of the person, community or business that is providing this data.
+                                        </template>
+                                    </template>
+                                    <template v-if="agentRole.customAgent.review" #description><i class="fa-regular fa-circle-exclamation"></i> Review requested</template>
+                                </FormField>
+                                <BaseModal v-if="modal === `customAgent-${index}`" @modalClosed="modal = null">
+                                    <template #headerMiddle>Custom Agent</template>
+                                    <CustomAgentForm
+                                        :customAgent="agentRole.customAgent"
+                                        @save="customAgent => {data.agentRoles[index].customAgent = customAgent; modal = null}"
+                                        @delete="data.agentRoles[index].customAgent = {...emptyData.agentRoles[0].customAgent}; modal = null"
+                                        @modalClosed="modal = null"
+                                    />
+                                </BaseModal>
                                 <FormInput
                                     v-show="!agentRole.useCustomAgent"
                                     label="Agent"
@@ -1197,7 +1328,7 @@ onMounted(() => {
                                         <p>Below is a list for reference of roles and their brief definitions. The full list of agent roles can be found <a href="https://data.idnau.org/v/vocab/vocab:idn-role-codes" target="_blank" rel="noopener noreferrer">here</a>.</p>
                                         <div class="modal-items">
                                             <div v-for="role in roleOptionsRequested" class="modal-item">
-                                                <a :href="role.value" target="_blank" rel="noopener noreferrer">{{ role.label }}</a>
+                                                <a :href="`https://data.idnau.org/object?uri=${encodeURIComponent(role.value)}`" target="_blank" rel="noopener noreferrer">{{ role.label }}</a>
                                                 <p>{{ role.desc }}</p>
                                             </div>
                                         </div>
@@ -1210,9 +1341,9 @@ onMounted(() => {
                                     </template>
                                 </template>
                             </FormInput>
-                            <button v-if="index > 0" class="btn outline danger delete-agent-btn" title="Delete agent-role pair" @click="data.agentRoles.splice(index, 1);"><i class="fa-regular fa-xmark"></i></button>
+                            <button v-if="index > 0" class="btn outline danger delete-agent-btn" title="Delete agent-role pair" @click="data.agentRoles.splice(index, 1);"><i class="fa-solid fa-trash"></i></button>
                         </FormField>
-                        <button class="btn secondary outline add-agent-btn" @click="data.agentRoles.push({ agent: '', role: [], useCustomAgent: false, customAgent: '' })"><i class="fa-regular fa-plus"></i> Add Agent</button>
+                        <button class="btn secondary outline add-agent-btn" @click="data.agentRoles.push({...emptyData.agentRoles[0]})"><i class="fa-regular fa-plus"></i> Add Agent</button>
                     </FormSection>
                     <FormSection title="Dates" :ref="el => sectionRefs.dates = el" @collapse="sectionCollapsed.dates = $event" :status="getSectionStatus('dates')">
                         <template #description>
@@ -1896,7 +2027,7 @@ button.delete-agent-btn {
 
     .modal-item {
         background-color: $bg1;
-        padding: 6px;
+        padding: 8px;
         border-radius: $borderRadius;
         display: flex;
         flex-direction: column;
@@ -1904,7 +2035,7 @@ button.delete-agent-btn {
 
         p {
             margin: 0;
-            font-size: 0.9em;
+            font-size: 0.85em;
             font-style: italic;
         }
     }
