@@ -153,9 +153,17 @@ onMounted(() => {
                                 <td>Text</td>
                             </tr>
                             <tr>
+                                <td>Indigeneity</td>
+                                <td>If the indigeneity of the data is known, use this vocabulary to identify the indigeneity of the data.</td>
+                                <td>Pick List</td>
+                            </tr>
+                            <tr>
                                 <td>Description</td>
                                 <td>This information should fully describe the dataset, how it was created and its intended purpose.</td>
                                 <td>Text</td>
+                            </tr>
+                            <tr>
+                                <td colspan="3"><em>Multiple Indigeneity terms can be selected using the tick boxes.</em></td>
                             </tr>
                         </tbody>
                     </table>
@@ -185,14 +193,18 @@ onMounted(() => {
                                 <td>Pick list</td>
                             </tr>
                             <tr>
+                                <td>Use Custom Agent</td>
+                                <td>If your Agent is not in the pick list, use the “+” button next to the Custom Agent field to open the web form to create a new Agent.</td>
+                                <td>Toggle button opens a web form</td>
+                            </tr>
+                            <tr>
                                 <td>Role</td>
                                 <td>This is the role that the Agent has in relation to the data.</td>
                                 <td>Pick list</td>
                             </tr>
                             <tr>
                                 <td colspan="3"><em>There can be multiple Agents with Roles, or Agents that have multiple Roles but each Agent must each have a separate line. Select <b>+Add Agent</b> to add another Agent/Role.
-If you want to add an Agent that is not in the IDN Agents Database, select “Use Custom Agent”. This will add the Agent details to the RDF but the record cannot be submitted to the IDN for inclusion in the catalogue at this point in time.
-</em></td>
+If you want to add an Agent that is not in the IDN Agents Database, select “Use Custom Agent” and complete the web form to add a new Agent.</em></td>
                             </tr>
                         </tbody>
                     </table>
