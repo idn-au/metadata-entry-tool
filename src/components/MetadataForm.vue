@@ -82,12 +82,12 @@ const emptyData = {
 
 const { store, qname, serialize } = useRdfStore();
 
-const { data: agentData, loading: agentLoading, error: agentError, doSparqlGetQuery: agentDoSparqlGetQuery, doSparqlPostQuery: agentDoSparqlPostQuery } = useGetRequest();
-const { data: roleData, loading: roleLoading, error: roleError, doSparqlGetQuery: roleDoSparqlGetQuery, doSparqlPostQuery: roleDoSparqlPostQuery } = useGetRequest();
-const { data: licenseData, loading: licenseLoading, error: licenseError, doSparqlGetQuery: licenseDoSparqlGetQuery, doSparqlPostQuery: licenseDoSparqlPostQuery } = useGetRequest();
-const { data: accessRightsData, loading: accessRightsLoading, error: accessRightsError, doSparqlGetQuery: accessRightsDoSparqlGetQuery, doSparqlPostQuery: accessRightsDoSparqlPostQuery } = useGetRequest();
-const { data: themeData, loading: themeLoading, error: themeError, doSparqlGetQuery: themeDoSparqlGetQuery, doSparqlPostQuery: themeDoSparqlPostQuery } = useGetRequest();
-const { data: indigeneityData, loading: indigeneityLoading, error: indigeneityError, doSparqlGetQuery: indigeneityDoSparqlGetQuery, doSparqlPostQuery: indigeneityDoSparqlPostQuery } = useGetRequest();
+const { data: agentData, loading: agentLoading, error: agentError, doSparqlGetQuery: agentDoSparqlGetQuery } = useGetRequest();
+const { data: roleData, loading: roleLoading, error: roleError, doSparqlGetQuery: roleDoSparqlGetQuery } = useGetRequest();
+const { data: licenseData, loading: licenseLoading, error: licenseError, doSparqlGetQuery: licenseDoSparqlGetQuery } = useGetRequest();
+const { data: accessRightsData, loading: accessRightsLoading, error: accessRightsError, doSparqlGetQuery: accessRightsDoSparqlGetQuery } = useGetRequest();
+const { data: themeData, loading: themeLoading, error: themeError, doSparqlGetQuery: themeDoSparqlGetQuery } = useGetRequest();
+const { data: indigeneityData, loading: indigeneityLoading, error: indigeneityError, doSparqlGetQuery: indigeneityDoSparqlGetQuery } = useGetRequest();
 
 const agentOptionsRequested = ref([]);
 const roleOptionsRequested = ref([]);
@@ -937,7 +937,7 @@ onMounted(() => {
 
     if (useRemoteOptions) {
         // query triplestore for form options
-        agentDoSparqlPostQuery(triplestoreUrl, `PREFIX sdo: <https://schema.org/>
+        agentDoSparqlGetQuery(triplestoreUrl, `PREFIX sdo: <https://schema.org/>
             SELECT DISTINCT ?agent ?name
             WHERE {
                 GRAPH <${agentNamedGraph}> {
@@ -955,7 +955,7 @@ onMounted(() => {
             agentOptionsRequested.value.sort((a, b) => a.label.localeCompare(b.label));
         });
 
-        roleDoSparqlPostQuery(triplestoreUrl, `PREFIX skos: <http://www.w3.org/2004/02/skos/core#>
+        roleDoSparqlGetQuery(triplestoreUrl, `PREFIX skos: <http://www.w3.org/2004/02/skos/core#>
             SELECT DISTINCT ?role ?name ?desc
             WHERE {
                 BIND(<https://data.idnau.org/pid/vocab/idn-role-codes> AS ?cs)
@@ -975,7 +975,7 @@ onMounted(() => {
             roleOptionsRequested.value.sort((a, b) => a.label.localeCompare(b.label));
         });
 
-        licenseDoSparqlPostQuery(triplestoreUrl, `PREFIX skos: <http://www.w3.org/2004/02/skos/core#>
+        licenseDoSparqlGetQuery(triplestoreUrl, `PREFIX skos: <http://www.w3.org/2004/02/skos/core#>
             SELECT DISTINCT ?license ?name
             WHERE {
                 BIND(<https://w3id.org/idn/vocab/idn-licenses> AS ?cs)
@@ -993,7 +993,7 @@ onMounted(() => {
             licenseOptionsRequested.value.sort((a, b) => a.label.localeCompare(b.label));
         });
         
-        accessRightsDoSparqlPostQuery(triplestoreUrl, `PREFIX skos: <http://www.w3.org/2004/02/skos/core#>
+        accessRightsDoSparqlGetQuery(triplestoreUrl, `PREFIX skos: <http://www.w3.org/2004/02/skos/core#>
             SELECT DISTINCT ?accessRight ?name
             WHERE {
                 BIND(<https://linked.data.gov.au/def/data-access-rights> AS ?cs)
@@ -1011,7 +1011,7 @@ onMounted(() => {
             accessRightsOptionsRequested.value.sort((a, b) => a.label.localeCompare(b.label));
         });
 
-        themeDoSparqlPostQuery(triplestoreUrl, `PREFIX skos: <http://www.w3.org/2004/02/skos/core#>
+        themeDoSparqlGetQuery(triplestoreUrl, `PREFIX skos: <http://www.w3.org/2004/02/skos/core#>
             SELECT DISTINCT ?theme ?name
             WHERE {
                 BIND(<https://data.idnau.org/pid/vocab/idn-th> AS ?cs)
@@ -1029,7 +1029,7 @@ onMounted(() => {
             themeOptionsRequested.value.sort((a, b) => a.label.localeCompare(b.label));
         });
 
-        indigeneityDoSparqlPostQuery(triplestoreUrl, `PREFIX skos: <http://www.w3.org/2004/02/skos/core#>
+        indigeneityDoSparqlGetQuery(triplestoreUrl, `PREFIX skos: <http://www.w3.org/2004/02/skos/core#>
             SELECT DISTINCT ?indigeneity ?name
             WHERE {
                 BIND(<https://data.idnau.org/pid/vocab/indigeneity> AS ?cs)
