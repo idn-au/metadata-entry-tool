@@ -1,6 +1,7 @@
 <script setup>
-import { useBtnTimeout } from "@/composables/btnTimeout";
+import { faCopy } from "@fortawesome/free-solid-svg-icons";
 import { FormInput } from "@idn-au/idn-lib";
+import { useBtnTimeout } from "@/composables/btnTimeout";
 
 const props = defineProps({
     data: {
@@ -32,7 +33,7 @@ function copyRDF() {
                 Copied!
             </template>
             <template v-else>
-                Copy <i class="fa-regular fa-copy"></i>
+                Copy <font-awesome-icon :icon="faCopy" />
             </template>
         </button>
     </div>

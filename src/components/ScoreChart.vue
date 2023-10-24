@@ -1,6 +1,8 @@
 <script setup>
 import { ref, computed } from "vue";
 import { Radar } from "vue-chartjs";
+import { faChevronDown, faChevronUp, faInfo } from "@fortawesome/free-solid-svg-icons";
+import { faCircle as faCircleRegular } from "@fortawesome/free-regular-svg-icons";
 
 const props = defineProps({
     title: {
@@ -140,8 +142,11 @@ function progressGradient(percentage) {
         </div>
         <div class="collapse-btns">
             <button @click="toggleCollapseAll" class="scores-collapse-btn btn primary outline" :title="`${props.title} score details`">
-                <i class="fa-regular fa-circle-info"></i>
-                <i :class="`fa-regular fa-chevron-${collapse.top ? 'down' : 'up'}`"></i>
+                <font-awesome-layers fixed-width>
+                    <font-awesome-icon :icon="faCircleRegular" />
+                    <font-awesome-icon :icon="faInfo" transform="shrink-6" />
+                </font-awesome-layers>
+                <font-awesome-icon :icon="collapse.top ? faChevronDown : faChevronUp" />
             </button>
         </div>
         <div :class="`score-details ${collapse.top ? 'collapse' : ''}`">
@@ -151,7 +156,7 @@ function progressGradient(percentage) {
                     <span class="header-right">
                         <span class="score-value">{{ scores[score.abbreviation] }}/{{ maxScores[score.abbreviation] }}</span>
                         <button class="subscore-collapse-btn" :title="`${score.abbreviation} subscore details`">
-                            <i :class="`fa-regular fa-chevron-${collapse[score.abbreviation] ? 'down' : 'up'}`"></i>
+                            <font-awesome-icon :icon="collapse[score.abbreviation] ? faChevronDown : faChevronUp" />
                         </button>
                     </span>
                 </div>

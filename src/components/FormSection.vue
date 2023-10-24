@@ -1,5 +1,7 @@
 <script setup>
 import { ref, useSlots } from "vue";
+import { faChevronUp, faChevronDown } from "@fortawesome/free-solid-svg-icons";
+import { faCheckCircle, faXmarkCircle } from "@fortawesome/free-regular-svg-icons";
 
 const props = defineProps({
     title: String,
@@ -34,18 +36,14 @@ defineExpose({ expand, collapse });
         <div class="section-header" @click="isCollapsed = !isCollapsed; emit('collapse', isCollapsed);">
             <div class="title-container">
                 <span :class="props.status">
-                    <i v-if="props.status === 'complete'" class="fa-regular fa-circle-check" title="All fields have been completed."></i>
-                    <span v-else-if="props.status === 'incomplete'" class="fa-stack incomplete-icon-stack" title="All required fields have been completed but more information can be added.">
-                        <i class="fa-regular fa-check fa-stack-1x"></i>
-                        <i class="fa-regular fa-circle-dashed fa-stack-2x"></i>
-                    </span>
-                    <!-- <i v-else-if="props.status === 'incomplete'" class="fa-regular fa-circle-exclamation" title="All required fields have been completed but more information can be added."></i> -->
-                    <i v-else-if="props.status === 'invalid'" class="fa-regular fa-circle-xmark" title="Required fields have not been completed."></i>
+                    <font-awesome-icon v-if="props.status === 'complete'" :icon="faCheckCircle" title="All fields have been completed." />
+                    <font-awesome-icon v-else-if="props.status === 'incomplete'" :icon="faCheckCircle" title="All required fields have been completed but more information can be added." />
+                    <font-awesome-icon v-else-if="props.status === 'invalid'" :icon="faXmarkCircle" title="Required fields have not been completed." />
                 </span>
                 <h3 v-if="props.title">{{ props.title }}</h3>
             </div>
             <button class="section-collapse">
-                <i :class="`fa-regular fa-chevron-${isCollapsed ? 'down' : 'up'}`"></i>
+                <font-awesome-icon :icon="isCollapsed ? faChevronDown : faChevronUp" />
             </button>
         </div>
         <div class="section-body-container">
