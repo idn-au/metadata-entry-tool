@@ -7,19 +7,24 @@
         "preview": "vite preview --port 4173"
     },
     "dependencies": {
-        "@idn-au/idn-lib": "^0.0.11",
+        "@fortawesome/fontawesome-svg-core": "^6.4.2",
+        "@fortawesome/free-brands-svg-icons": "^6.4.2",
+        "@fortawesome/free-regular-svg-icons": "^6.4.2",
+        "@fortawesome/free-solid-svg-icons": "^6.4.2",
+        "@fortawesome/vue-fontawesome": "^3.0.3",
+        "@idn-au/idn-lib": "^0.1.0",
         "chart.js": "<4.0.0",
-        "n3": "^1.16.4",
-        "uuid": "^9.0.0",
-        "vue": "^3.2.47",
+        "n3": "^1.17.1",
+        "uuid": "^9.0.1",
+        "vue": "^3.3.6",
         "vue-chartjs": "<5.0.0",
-        "vue-router": "^4.1.6"
+        "vue-router": "^4.2.5"
     },
     "devDependencies": {
-        "@vitejs/plugin-vue": "^4.2.1",
-        "@vitejs/plugin-vue-jsx": "^3.0.1",
-        "sass": "^1.62.1",
+        "@vitejs/plugin-vue": "^4.4.0",
+        "@vitejs/plugin-vue-jsx": "^3.0.2",
+        "sass": "^1.69.4",
         "shx": "^0.3.4",
-        "vite": "^4.3.5"
+        "vite": "^4.5.0"
     }
 }

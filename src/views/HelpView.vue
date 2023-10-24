@@ -1,7 +1,9 @@
 <script setup>
 import { ref, onMounted, nextTick, watch } from "vue";
 import { RouterLink, useRoute } from "vue-router";
+import { faCircle as faCircleRegular, faCircleXmark, faCircleCheck, faCircleQuestion } from "@fortawesome/free-regular-svg-icons";
 import helpImage from "@/assets/images/MetadataCreatorPage-HELP-Image.png";
+import { faChevronDown, faChevronUp } from "@fortawesome/free-solid-svg-icons";
 
 const headingAnchors = [
     "introduction",
@@ -97,38 +99,70 @@ onMounted(() => {
         </div>
         <div class="subsection fill">
             <div class="grid-list">
-                <span class="grid-list-number"><i class="fa-regular fa-circle-1"></i></span>
-                <div>If this is the first time you have attempted to use the Metadata Creation Tool, please run through the tutorial first to get a feel for the sections on the MCT page. This will highlight the different sections of the page that you may be completing or interacting with. You will need to quickly click through to the last page of the tutorial to end it.</div>
-                <span class="grid-list-number"><i class="fa-regular fa-circle-2"></i></span>
+                <span class="grid-list-number">
+                    <font-awesome-layers fixed-width>
+                        <font-awesome-icon :icon="faCircleRegular" />
+                        <font-awesome-layers-text value="1" transform="shrink-6" />
+                    </font-awesome-layers>
+                </span>
+                <div>If this is the first time you have attempted to use the Metadata Creation Tool, please run through the tutorial first to get a feel for the sections on the MCT page. This will highlight the different sections of the page that you may be completing or interacting with.</div>
+                <span class="grid-list-number">
+                    <font-awesome-layers fixed-width>
+                        <font-awesome-icon :icon="faCircleRegular" />
+                        <font-awesome-layers-text value="2" transform="shrink-6" />
+                    </font-awesome-layers>
+                </span>
                 <div>
                     <div class="icon-grid">
-                        <div><i class="fa-regular fa-circle-xmark" :style="{color: 'red'}"></i></div><div>means this tab must be completed and is not valid</div>
-                        <div><span class="fa-stack incomplete-icon-stack" :style="{color: 'grey', fontSize: '0.5em', width: '16px'}">
-                            <i class="fa-regular fa-check fa-stack-1x"></i>
-                            <i class="fa-regular fa-circle-dashed fa-stack-2x"></i>
-                        </span></div><div>means that this tab should be completed but is not mandatory for a valid record.</div>
-                        <div><i class="fa-regular fa-circle-check" :style="{color: 'green'}"></i></div><div>means this tab has been completed successfully</div>
+                        <div><font-awesome-icon :icon="faCircleXmark" :style="{color: 'red'}" /></div><div>means this tab must be completed and is not valid</div>
+                        <div><font-awesome-icon :icon="faCircleCheck" :style="{color: 'grey'}" /></div><div>means that this tab should be completed but is not mandatory for a valid record.</div>
+                        <div><font-awesome-icon :icon="faCircleCheck" :style="{color: 'green'}" /></div><div>means this tab has been completed successfully</div>
                     </div>
                 </div>
-                <span class="grid-list-number"><i class="fa-regular fa-circle-3"></i> + <i class="fa-regular fa-circle-4"></i></span>
+                <span class="grid-list-number">
+                    <font-awesome-layers fixed-width>
+                        <font-awesome-icon :icon="faCircleRegular" />
+                        <font-awesome-layers-text value="3" transform="shrink-6" />
+                    </font-awesome-layers>
+                    +
+                    <font-awesome-layers fixed-width>
+                        <font-awesome-icon :icon="faCircleRegular" />
+                        <font-awesome-layers-text value="4" transform="shrink-6" />
+                    </font-awesome-layers>
+                </span>
                 <div>As you describe your data, the <a href="https://idnau.org/#/resources/faircare" target="_blank" rel="noopener noreferrer">FAIR and CARE data score</a> is indicated in the radial graphs.</div>
-                <span class="grid-list-number"><i class="fa-regular fa-circle-5"></i></span>
+                <span class="grid-list-number">
+                    <font-awesome-layers fixed-width>
+                        <font-awesome-icon :icon="faCircleRegular" />
+                        <font-awesome-layers-text value="5" transform="shrink-6" />
+                    </font-awesome-layers>
+                </span>
                 <div>Save a draft copy of your metadata record to your browser to continue later. This will stay in your browser until cleared.</div>
-                <span class="grid-list-number"><i class="fa-regular fa-circle-6"></i></span>
-                <div>Once your record has no <i class="fa-regular fa-circle-xmark" :style="{color: 'red'}"></i> against a tab it is valid for this profile and can be downloaded to your computer.</div>
-                <span class="grid-list-number"><i class="fa-regular fa-circle-7"></i></span>
+                <span class="grid-list-number">
+                    <font-awesome-layers fixed-width>
+                        <font-awesome-icon :icon="faCircleRegular" />
+                        <font-awesome-layers-text value="6" transform="shrink-6" />
+                    </font-awesome-layers>
+                </span>
+                <div>Once your record has no <font-awesome-icon :icon="faCircleXmark" :style="{color: 'red'}" /> against a tab it is valid for this profile and can be downloaded to your computer.</div>
+                <span class="grid-list-number">
+                    <font-awesome-layers fixed-width>
+                        <font-awesome-icon :icon="faCircleRegular" />
+                        <font-awesome-layers-text value="7" transform="shrink-6" />
+                    </font-awesome-layers>
+                </span>
                 <div>Before you begin a new record (unless you want to clone the record) clear the data.</div>
             </div>
         </div>
     </div>
     <h3 id="completingmetadatarecord">Completing a metadata record for your data</h3>
     <p>There are eight areas of metadata that need to be completed to fully describe the data asset. You are able to limit your description to the fields that have a red asterixis but it is encouraged to complete as much information as you are able.</p>
-    <p><i class="fa-regular fa-circle-question"></i> If you hover over this text you will get a brief description of what should be entered in this field.</p>
+    <p><font-awesome-icon :icon="faCircleQuestion" /> If you hover over this text you will get a brief description of what should be entered in this field.</p>
     <div class="accordion">
         <div class="section" id="general">
             <div class="section-header" @click="accordionActive === 'general' ? accordionActive = '' : accordionActive = 'general'">
                 <h4>General</h4>
-                <i :class="`fa-regular fa-chevron-${accordionActive === 'general' ? 'up' : 'down'}`"></i>
+                <font-awesome-icon :icon="accordionActive === 'general' ? faChevronUp : faChevronDown" />
             </div>
             <div :class="`section-body-wrapper ${accordionActive === 'general' ? 'open' : ''}`">
                 <div class="section-body">
@@ -173,7 +207,7 @@ onMounted(() => {
         <div class="section" id="agentinformation">
             <div class="section-header" @click="accordionActive === 'agentinformation' ? accordionActive = '' : accordionActive = 'agentinformation'">
                 <h4>Agent Information</h4>
-                <i :class="`fa-regular fa-chevron-${accordionActive === 'agentinformation' ? 'up' : 'down'}`"></i>
+                <font-awesome-icon :icon="accordionActive === 'agentinformation' ? faChevronUp : faChevronDown" />
             </div>
             <div :class="`section-body-wrapper ${accordionActive === 'agentinformation' ? 'open' : ''}`">
                 <div class="section-body">
@@ -214,7 +248,7 @@ If you want to add an Agent that is not in the IDN Agents Database, select “Us
         <div class="section" id="dates">
             <div class="section-header" @click="accordionActive === 'dates' ? accordionActive = '' : accordionActive = 'dates'">
                 <h4>Dates</h4>
-                <i :class="`fa-regular fa-chevron-${accordionActive === 'dates' ? 'up' : 'down'}`"></i>
+                <font-awesome-icon :icon="accordionActive === 'dates' ? faChevronUp : faChevronDown" />
             </div>
             <div :class="`section-body-wrapper ${accordionActive === 'dates' ? 'open' : ''}`">
                 <div class="section-body">
@@ -251,7 +285,7 @@ If you want to add an Agent that is not in the IDN Agents Database, select “Us
         <div class="section" id="rights">
             <div class="section-header" @click="accordionActive === 'rights' ? accordionActive = '' : accordionActive = 'rights'">
                 <h4>Rights for accessing this dataset</h4>
-                <i :class="`fa-regular fa-chevron-${accordionActive === 'rights' ? 'up' : 'down'}`"></i>
+                <font-awesome-icon :icon="accordionActive === 'rights' ? faChevronUp : faChevronDown" />
             </div>
             <div :class="`section-body-wrapper ${accordionActive === 'rights' ? 'open' : ''}`">
                 <div class="section-body">
@@ -295,7 +329,7 @@ If you want to add an Agent that is not in the IDN Agents Database, select “Us
         <div class="section" id="spatiotemporal">
             <div class="section-header" @click="accordionActive === 'spatiotemporal' ? accordionActive = '' : accordionActive = 'spatiotemporal'">
                 <h4>Spatio/Temporal (Where and When)</h4>
-                <i :class="`fa-regular fa-chevron-${accordionActive === 'spatiotemporal' ? 'up' : 'down'}`"></i>
+                <font-awesome-icon :icon="accordionActive === 'spatiotemporal' ? faChevronUp : faChevronDown" />
             </div>
             <div :class="`section-body-wrapper ${accordionActive === 'spatiotemporal' ? 'open' : ''}`">
                 <div class="section-body">
@@ -339,7 +373,7 @@ IRI:  https://linked.data.gov.au/dataset/asgsed3/AUS/AUS</em></td>
         <div class="section" id="distribution">
             <div class="section-header" @click="accordionActive === 'distribution' ? accordionActive = '' : accordionActive = 'distribution'">
                 <h4>Distribution Information</h4>
-                <i :class="`fa-regular fa-chevron-${accordionActive === 'distribution' ? 'up' : 'down'}`"></i>
+                <font-awesome-icon :icon="accordionActive === 'distribution' ? faChevronUp : faChevronDown" />
             </div>
             <div :class="`section-body-wrapper ${accordionActive === 'distribution' ? 'open' : ''}`">
                 <div class="section-body">
@@ -368,7 +402,7 @@ IRI:  https://linked.data.gov.au/dataset/asgsed3/AUS/AUS</em></td>
         <div class="section" id="theme">
             <div class="section-header" @click="accordionActive === 'theme' ? accordionActive = '' : accordionActive = 'theme'">
                 <h4>Theme</h4>
-                <i :class="`fa-regular fa-chevron-${accordionActive === 'theme' ? 'up' : 'down'}`"></i>
+                <font-awesome-icon :icon="accordionActive === 'theme' ? faChevronUp : faChevronDown" />
             </div>
             <div :class="`section-body-wrapper ${accordionActive === 'theme' ? 'open' : ''}`">
                 <div class="section-body">
@@ -387,7 +421,7 @@ IRI:  https://linked.data.gov.au/dataset/asgsed3/AUS/AUS</em></td>
                                 <td>Pick list</td>
                             </tr>
                             <tr>
-                                <td colspan="3"><em>You can add more than one theme. Select all the themes check-boxes that apply – they will appear in the field separated by a comma.</em></td>
+                                <td colspan="3"><em>You can add more than one theme. Select all the themes check-boxes that apply - they will appear in the field separated by a comma.</em></td>
                             </tr>
                         </tbody>
                     </table>
@@ -397,7 +431,7 @@ IRI:  https://linked.data.gov.au/dataset/asgsed3/AUS/AUS</em></td>
         <div class="section" id="contactdetails">
             <div class="section-header" @click="accordionActive === 'contactdetails' ? accordionActive = '' : accordionActive = 'contactdetails'">
                 <h4>Contact Details</h4>
-                <i :class="`fa-regular fa-chevron-${accordionActive === 'contactdetails' ? 'up' : 'down'}`"></i>
+                <font-awesome-icon :icon="accordionActive === 'contactdetails' ? faChevronUp : faChevronDown" />
             </div>
             <div :class="`section-body-wrapper ${accordionActive === 'contactdetails' ? 'open' : ''}`">
                 <div class="section-body">
@@ -503,7 +537,9 @@ IRI:  https://linked.data.gov.au/dataset/asgsed3/AUS/AUS</em></td>
             .grid-list-number {
                 color: #3591e2;
                 font-size: 1.2em;
-                text-align: right;
+                // text-align: right;
+                display: flex;
+                justify-content: end;
             }
         }
     }

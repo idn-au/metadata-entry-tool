@@ -2,6 +2,8 @@
 import { ref, computed, watch, onMounted, nextTick, inject } from "vue";
 import { DataFactory } from "n3";
 import { v4 as uuid4 } from "uuid";
+import { faChevronDown, faChevronUp, faXmark, faCircle as faCircleSolid, faFileImport, faChevronLeft, faChevronRight, faPlus, faPencil, faExclamation, faInfo, faTrash, faCircleNotch, faFloppyDisk, faFileExport, faDeleteLeft } from "@fortawesome/free-solid-svg-icons";
+import { faCircle as faCircleRegular } from "@fortawesome/free-regular-svg-icons";
 import { FormInput, FormField, BaseModal } from "@idn-au/idn-lib";
 import PropTooltip from "@/components/PropTooltip.vue";
 import FormSection from "@/components/FormSection.vue";
@@ -70,6 +72,7 @@ const emptyData = {
                         datatype: ""
                     }
                 ],
+                indigeneity: "",
                 review: false
             }
         }
@@ -82,12 +85,13 @@ const emptyData = {
 
 const { store, qname, serialize } = useRdfStore();
 
-const { data: agentData, loading: agentLoading, error: agentError, doSparqlGetQuery: agentDoSparqlGetQuery } = useGetRequest();
-const { data: roleData, loading: roleLoading, error: roleError, doSparqlGetQuery: roleDoSparqlGetQuery } = useGetRequest();
-const { data: licenseData, loading: licenseLoading, error: licenseError, doSparqlGetQuery: licenseDoSparqlGetQuery } = useGetRequest();
-const { data: accessRightsData, loading: accessRightsLoading, error: accessRightsError, doSparqlGetQuery: accessRightsDoSparqlGetQuery } = useGetRequest();
-const { data: themeData, loading: themeLoading, error: themeError, doSparqlGetQuery: themeDoSparqlGetQuery } = useGetRequest();
-const { data: indigeneityData, loading: indigeneityLoading, error: indigeneityError, doSparqlGetQuery: indigeneityDoSparqlGetQuery } = useGetRequest();
+const { data: agentData, loading: agentLoading, error: agentError, doSparqlGetQuery: agentDoSparqlGetQuery, doSparqlPostQuery: agentDoSparqlPostQuery } = useGetRequest();
+const { data: roleData, loading: roleLoading, error: roleError, doSparqlGetQuery: roleDoSparqlGetQuery, doSparqlPostQuery: roleDoSparqlPostQuery } = useGetRequest();
+const { data: licenseData, loading: licenseLoading, error: licenseError, doSparqlGetQuery: licenseDoSparqlGetQuery, doSparqlPostQuery: licenseDoSparqlPostQuery } = useGetRequest();
+const { data: accessRightsData, loading: accessRightsLoading, error: accessRightsError, doSparqlGetQuery: accessRightsDoSparqlGetQuery, doSparqlPostQuery: accessRightsDoSparqlPostQuery } = useGetRequest();
+const { data: themeData, loading: themeLoading, error: themeError, doSparqlGetQuery: themeDoSparqlGetQuery, doSparqlPostQuery: themeDoSparqlPostQuery } = useGetRequest();
+const { data: indigeneityData, loading: indigeneityLoading, error: indigeneityError, doSparqlGetQuery: indigeneityDoSparqlGetQuery, doSparqlPostQuery: indigeneityDoSparqlPostQuery } = useGetRequest();
+const { data: agentIndigeneityData, loading: agentIndigeneityLoading, error: agentIndigeneityError, doSparqlGetQuery: agentIndigeneityDoSparqlGetQuery, doSparqlPostQuery: agentIndigeneityDoSparqlPostQuery } = useGetRequest();
 
 const agentOptionsRequested = ref([]);
 const roleOptionsRequested = ref([]);
@@ -95,6 +99,7 @@ const licenseOptionsRequested = ref([]);
 const accessRightsOptionsRequested = ref([]);
 const themeOptionsRequested = ref([]);
 const indigeneityOptionsRequested = ref([]);
+const agentIndigeneityOptionsRequested = ref([]);
 
 const { clicked: savedDraft, startTimeout: startSavedDraftTimeout } = useBtnTimeout();
 const { clicked: deletedDraft, startTimeout: startDeletedDraftTimeout } = useBtnTimeout();
@@ -146,6 +151,7 @@ const data = ref({
                         datatype: ""
                     }
                 ],
+                indigeneity: "",
                 review: false
             }
         }
@@ -1046,6 +1052,24 @@ onMounted(() => {
             });
             indigeneityOptionsRequested.value.sort((a, b) => a.label.localeCompare(b.label));
         });
+
+        agentIndigeneityDoSparqlGetQuery(triplestoreUrl, `PREFIX skos: <http://www.w3.org/2004/02/skos/core#>
+            SELECT DISTINCT ?indigeneity ?name
+            WHERE {
+                BIND(<https://data.idnau.org/pid/vocab/org-indigeneity> AS ?cs)
+                ?cs a skos:ConceptScheme .
+                ?indigeneity a skos:Concept ;
+                    skos:inScheme ?cs ;
+                    skos:prefLabel ?name .
+            }`,() => {
+            agentIndigeneityData.value.forEach(result => {
+                agentIndigeneityOptionsRequested.value.push({
+                    value: result.indigeneity.value,
+                    label: result.name.value
+                });
+            });
+            agentIndigeneityOptionsRequested.value.sort((a, b) => a.label.localeCompare(b.label));
+        });
     } else {
         // use hard-coded options
         agentOptionsRequested.value = formOptions.agentOptions;
@@ -1062,7 +1086,7 @@ onMounted(() => {
     <div id="metadata-container" @keyup.esc="tutorialEnabled && closeTutorial()">
         <div v-if="tutorialEnabled" class="tutorial-overlay">
             <div class="tutorial-content">
-                <button class="tutorial-close-btn" @click="closeTutorial" title="Close tutorial"><i class="fa-regular fa-xmark"></i></button>
+                <button class="tutorial-close-btn" @click="closeTutorial" title="Close tutorial"><font-awesome-icon :icon="faXmark" /></button>
                 <div class="tutorial-body">
                     {{ tutorialContent[tutorialStep].content }}
                 </div>
@@ -1087,7 +1111,7 @@ onMounted(() => {
                             :class="`tutorial-step-btn ${stepNo === tutorialStep ? 'active' : ''}`"
                             @click="tutorialSetStep(stepNo)"
                         >
-                            <i :class="`fa-${stepNo === tutorialStep ? 'solid' : 'regular'} fa-circle`"></i>
+                            <font-awesome-icon :icon="stepNo === tutorialStep ? faCircleSolid : faCircleRegular" />
                         </button>
                     </div>
                     <button
@@ -1114,14 +1138,14 @@ onMounted(() => {
                 </div>
                 <div class="btn-group">
                     <button class="btn primary outline" @click="collapseAllSections">
-                        <template v-if="allOpen">Collapse all <i class="fa-regular fa-chevron-up"></i></template>
-                        <template v-else>Expand all <i class="fa-regular fa-chevron-down"></i></template>
+                        <template v-if="allOpen">Collapse all <font-awesome-icon :icon="faChevronUp" /></template>
+                        <template v-else>Expand all <font-awesome-icon :icon="faChevronDown" /></template>
                     </button>
                 </div>
                 <div class="btn-group">
                     <div class="btn-with-desc">
                         <input type="file" name="rdfFile" id="rdfFile" :accept="Object.keys(rdfFormats).map(ext => `.${ext}`).join(',')" @change="setFile" hidden>
-                        <label :ref="el => tutorialFocus[3] = el" for="rdfFile" :class="`btn secondary outline import-btn ${tutorialStep === 3 ? 'tutorial-focus' : ''}`" title="Import RDF file">Import <i class="fa-regular fa-file-import"></i></label>
+                        <label :ref="el => tutorialFocus[3] = el" for="rdfFile" :class="`btn secondary outline import-btn ${tutorialStep === 3 ? 'tutorial-focus' : ''}`" title="Import RDF file">Import <font-awesome-icon :icon="faFileImport" /></label>
                         <span class="btn-desc">.ttl, .n3, .nt, .trig</span>
                     </div>
                 </div>
@@ -1142,7 +1166,7 @@ onMounted(() => {
                 <div class="btn-group">
                     <button id="toggle-rdf-btn" :ref="el => tutorialFocus[5] = el" :class="`btn primary outline ${tutorialStep === 5 ? 'tutorial-focus' : ''}`" @click="showRDF = !showRDF">
                         <span><template v-if="showRDF">Hide</template><template v-else>Show</template> RDF</span>
-                        <i :class="`fa-regular fa-chevron-${showRDF ? 'right' : 'left'}`"></i>
+                        <font-awesome-icon :icon="showRDF ? faChevronRight : faChevronLeft" />
                     </button>
                 </div>
             </div>
@@ -1264,8 +1288,7 @@ onMounted(() => {
                                         @click="modal = `customAgent-${index}`"
                                         title="Add custom agent data"
                                     >
-                                        <i v-if="agentRole.customAgent.name === ''" class="fa-regular fa-plus"></i>
-                                        <i v-else class="fa-regular fa-pencil"></i>
+                                        <font-awesome-icon :icon="agentRole.customAgent.name === '' ? faPlus : faPencil" />
                                     </button>
                                     <template #tooltip>
                                         <PropTooltip v-if="showPropTooltips" v-bind="propDetails.agent" />
@@ -1273,12 +1296,19 @@ onMounted(() => {
                                             The name of the person, community or business that is providing this data.
                                         </template>
                                     </template>
-                                    <template v-if="agentRole.customAgent.review" #description><i class="fa-regular fa-circle-exclamation"></i> Review requested</template>
+                                    <template v-if="agentRole.customAgent.review" #description>
+                                        <font-awesome-layers fixed-width>
+                                            <font-awesome-icon :icon="faCircleRegular" />
+                                            <font-awesome-icon :icon="faExclamation" transform="shrink-6" />
+                                        </font-awesome-layers>
+                                         Review requested
+                                    </template>
                                 </FormField>
                                 <BaseModal v-if="modal === `customAgent-${index}`" @modalClosed="modal = null">
                                     <template #headerMiddle>Custom Agent</template>
                                     <CustomAgentForm
                                         :customAgent="agentRole.customAgent"
+                                        :indigeneityOptions="agentIndigeneityOptionsRequested"
                                         @save="customAgent => {data.agentRoles[index].customAgent = customAgent; modal = null}"
                                         @delete="data.agentRoles[index].customAgent = {...emptyData.agentRoles[0].customAgent}; modal = null"
                                         @modalClosed="modal = null"
@@ -1319,7 +1349,10 @@ onMounted(() => {
                             >
                                 <template #append>
                                     <button class="modal-btn" @click="modal = 'agentRole'" title="Role info">
-                                        <i class="fa-regular fa-circle-info"></i>
+                                        <font-awesome-layers fixed-width>
+                                            <font-awesome-icon :icon="faCircleRegular" />
+                                            <font-awesome-icon :icon="faInfo" transform="shrink-6" />
+                                        </font-awesome-layers>
                                     </button>
                                     <BaseModal v-if="modal === 'agentRole'" @modalClosed="modal = null">
                                         <template #headerMiddle>
@@ -1341,9 +1374,9 @@ onMounted(() => {
                                     </template>
                                 </template>
                             </FormInput>
-                            <button v-if="index > 0" class="btn outline danger delete-agent-btn" title="Delete agent-role pair" @click="data.agentRoles.splice(index, 1);"><i class="fa-solid fa-trash"></i></button>
+                            <button v-if="index > 0" class="btn outline danger delete-agent-btn" title="Delete agent-role pair" @click="data.agentRoles.splice(index, 1);"><font-awesome-icon :icon="faTrash" /></button>
                         </FormField>
-                        <button class="btn secondary outline add-agent-btn" @click="data.agentRoles.push({...emptyData.agentRoles[0]})"><i class="fa-regular fa-plus"></i> Add Agent</button>
+                        <button class="btn secondary outline add-agent-btn" @click="data.agentRoles.push({...emptyData.agentRoles[0]})"><font-awesome-icon :icon="faPlus" /> Add Agent</button>
                     </FormSection>
                     <FormSection title="Dates" :ref="el => sectionRefs.dates = el" @collapse="sectionCollapsed.dates = $event" :status="getSectionStatus('dates')">
                         <template #description>
@@ -1419,7 +1452,10 @@ onMounted(() => {
                             >
                                 <template #append>
                                     <button class="modal-btn" @click="modal = 'license'" title="License info">
-                                        <i class="fa-regular fa-circle-info"></i>
+                                        <font-awesome-layers fixed-width>
+                                            <font-awesome-icon :icon="faCircleRegular" />
+                                            <font-awesome-icon :icon="faInfo" transform="shrink-6" />
+                                        </font-awesome-layers>
                                     </button>
                                     <BaseModal v-if="modal === 'license'" @modalClosed="modal = null">
                                         <template #headerMiddle>
@@ -1607,7 +1643,7 @@ onMounted(() => {
                                     />
                                 </template> -->
                                 <template #append v-if="loading.accessUrl">
-                                    <span><i class="fa-regular fa-spinner-third"></i></span>
+                                    <span><font-awesome-icon :icon="faCircleNotch" /></span>
                                 </template>
                                 <template #tooltip>
                                     <PropTooltip v-if="showPropTooltips" v-bind="propDetails.accessUrl" />
@@ -1713,7 +1749,7 @@ onMounted(() => {
                             Draft saved!
                         </template>
                         <template v-else>
-                            Save Draft <i class="fa-regular fa-floppy-disk"></i>
+                            Save Draft <font-awesome-icon :icon="faFloppyDisk" />
                         </template>
                     </button>
                 </div>
@@ -1726,7 +1762,7 @@ onMounted(() => {
                         :disabled="empty"
                         title="Export as RDF file (.ttl)"
                     >
-                        Export <i class="fa-regular fa-file-export"></i>
+                        Export <font-awesome-icon :icon="faFileExport" />
                     </a>
                 </div>
                 <div :ref="el => tutorialFocus[8] = el" :class="`btn-group ${tutorialStep === 8 ? 'tutorial-focus' : ''}`">
@@ -1735,7 +1771,7 @@ onMounted(() => {
                             Draft deleted!
                         </template>
                         <template v-else>
-                            Delete Draft <i class="fa-regular fa-trash"></i>
+                            Delete Draft <font-awesome-icon :icon="faTrash" />
                         </template>
                     </button>
                     <button class="btn danger" @click="clearData(true)" :disabled="empty">
@@ -1743,7 +1779,7 @@ onMounted(() => {
                             Cleared data!
                         </template>
                         <template v-else>
-                            Clear Data <i class="fa-regular fa-delete-left"></i>
+                            Clear Data <font-awesome-icon :icon="faDeleteLeft" />
                         </template>
                     </button>
                 </div>

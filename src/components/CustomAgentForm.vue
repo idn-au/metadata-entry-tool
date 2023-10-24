@@ -1,6 +1,7 @@
 <script setup>
 import { ref, computed, onMounted, watch } from "vue";
 import { v4 as uuid4 } from "uuid";
+import { faCheck, faCopy, faPlus, faTrash, faFloppyDisk } from "@fortawesome/free-solid-svg-icons";
 import { FormInput, FormField } from "@idn-au/idn-lib";
 import { useBtnTimeout } from "@/composables/btnTimeout";
 
@@ -23,6 +24,7 @@ const defaultData = {
             datatype: ""
         }
     ],
+    indigeneity: "",
     review: false
 };
 
@@ -101,7 +103,7 @@ onMounted(() => {
                     :style="{ cursor: 'pointer' }"
                     title="Copy IRI"
                 >
-                    <i :class="`fa-regular fa-${iriCopied ? 'check' : 'copy'}`"></i>
+                    <font-awesome-icon :icon="iriCopied ? faCheck : faCopy" />
                 </button>
             </template>
         </FormInput>
@@ -133,6 +135,14 @@ onMounted(() => {
                 type="textarea"
             />
         </FormField>
+        <FormInput
+            v-model="customAgent.indigeneity"
+            label="Indigeneity"
+            type="select"
+            :options="props.indigeneityOptions"
+            clearButton
+            searchable
+        />
         <FormField v-for="(identifier, index) in customAgent.identifiers" direction="row" :span="2" :label="index === 0 ? 'Identifiers' : null">
             <FormInput
                 v-model="identifier.value"
@@ -155,14 +165,14 @@ onMounted(() => {
                 title="Remove identifier"
                 @click="customAgent.identifiers.splice(index, 1)"
             >
-                <i class="fa-solid fa-trash"></i>
+                <font-awesome-icon :icon="faTrash" />
             </button>
         </FormField>
         <div><button
             class="btn primary outline"
             @click="customAgent.identifiers.push({ value: '', datatype: '' })"
         >
-            <i class="fa-regular fa-plus"></i> Add ID
+            <font-awesome-icon :icon="faPlus" /> Add ID
         </button></div>
     </div>
     <div :style="{padding: '12px'}">
@@ -174,10 +184,10 @@ onMounted(() => {
         />
     </div>
     <div class="bottom-buttons">
-        <button class="btn danger outline" @click="deleteAgent">Delete <i class="fa-solid fa-trash"></i></button>
+        <button class="btn danger outline" @click="deleteAgent">Delete <font-awesome-icon :icon="faTrash" /></button>
         <div class="right-buttons">
             <button class="btn secondary outline" @click="emit('modalClosed')">Cancel</button>
-            <button class="btn success save-btn" :disabled="empty || !isValid" @click="saveAgent">Save <i class="fa-solid fa-floppy-disk"></i></button>
+            <button class="btn success save-btn" :disabled="empty || !isValid" @click="saveAgent">Save <font-awesome-icon :icon="faFloppyDisk" /></button>
         </div>
     </div>
     
