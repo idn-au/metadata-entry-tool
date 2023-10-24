@@ -33,7 +33,7 @@ jobs:
       - name: Setup node
         uses: actions/setup-node@v3
         with:
-          node-version: latest
+          node-version: 20 # sass breaks with node v21
           cache: npm
           registry-url: "https://npm.pkg.github.com"
       - name: Install and build
