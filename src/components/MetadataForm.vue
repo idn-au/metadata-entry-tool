@@ -5,11 +5,6 @@ import { v4 as uuid4 } from "uuid";
 import { faChevronDown, faChevronUp, faXmark, faCircle as faCircleSolid, faFileImport, faChevronLeft, faChevronRight, faPlus, faPencil, faExclamation, faInfo, faTrash, faCircleNotch, faFloppyDisk, faFileExport, faDeleteLeft } from "@fortawesome/free-solid-svg-icons";
 import { faCircle as faCircleRegular } from "@fortawesome/free-regular-svg-icons";
 import { FormInput, FormField, BaseModal } from "@idn-au/idn-lib";
-import PropTooltip from "@/components/PropTooltip.vue";
-import FormSection from "@/components/FormSection.vue";
-import FairScore from "@/components/FairScore.vue";
-import CareScore from "@/components/CareScore.vue";
-import RDFPreview from "@/components/RDFPreview.vue";
 import { useRdfStore } from "@/composables/rdfStore";
 import { useGetRequest } from "@/composables/api";
 import { useBtnTimeout } from "@/composables/btnTimeout";
@@ -17,7 +12,14 @@ import propDetails from "@/util/props.json";
 import exampleData from "@/util/exampleData";
 import formOptions from "@/util/formOptions";
 import tutorialContent from "@/util/tutorialContent";
+import { fair, care } from "@/util/scoreData";
+import { setRequirement, calculateScoreMax, calculateScore } from "@/util/helpers";
 import CustomAgentForm from "@/components/CustomAgentForm.vue";
+import PropTooltip from "@/components/PropTooltip.vue";
+import FormSection from "@/components/FormSection.vue";
+import RDFPreview from "@/components/RDFPreview.vue";
+import FairScore from "@/components/scores/FairScore.vue";
+import CareScore from "@/components/scores/CareScore.vue";
 
 const { namedNode, literal } = DataFactory;
 
@@ -250,67 +252,44 @@ const usingCustomAgents = computed(() => {
     return !data.value.agentRoles.every(agentRole => agentRole.useCustomAgent === false);
 });
 
+// scores
 const fairScore = computed(() => {
-    let score = {
-        f1: 0,
-        f2: 0,
-        f3: 0,
-        f4: 0,
-        a1: 0,
-        a2: 0,
-        i1: 0,
-        i2: 0,
-        i3: 0,
-        r1: 0
-    }
+    const computedFair = {...fair};
+    calculateScoreMax(computedFair)
+    
+    // has an IRI
+    setRequirement(computedFair, ["f", "f1"], 0, calcIri.value !== "");
+    setRequirement(computedFair, ["f", "f1"], 1, calcIri.value !== "");
+    setRequirement(computedFair, ["f", "f1"], 2, calcIri.value !== "");
 
-    if (data.value.iri !== "") {
-        score.f1 = 2;
-        score.i1 = 1;
-    }
+    // has title & desc
+    setRequirement(computedFair, ["f", "f2"], 0, data.value.title !== "" && data.value.description !== "");
 
-    if (data.value.title !== "") {
-        score.a1 = 3;
-    }
+    // structured, machine-readable - in RDF
+    setRequirement(computedFair, ["i", "i1"], 0, true);
+    setRequirement(computedFair, ["i", "i1"], 1, true);
 
-    if (data.value.description !== "") {
-        score.r1 = 2;
-    }
+    // has a license
+    setRequirement(computedFair, ["r", "r1", "r1.1"], 0, data.value.license !== "" || data.value.customLicense !== "");
 
-    return score;
+    calculateScore(computedFair)
+    
+    return computedFair;
 });
 
 const careScore = computed(() => {
-    let score = {
-        c1: 0,
-        c2: 0,
-        c3: 0,
-        a1: 0,
-        a2: 0,
-        a3: 0,
-        r1: 0,
-        r2: 0,
-        r3: 0,
-        e1: 0,
-        e2: 0,
-        e3: 0
-    }
+    const computedCare = {...care};
+    calculateScoreMax(computedCare)
+    
+    // has desc
+    setRequirement(computedCare, ["c", "c2"], 2, data.value.description !== "");
 
-    if (data.value.created !== "") {
-        score.c1 = 3;
-        
-    }
+    // has Licence, Rights and Access Rights
+    setRequirement(computedCare, ["a", "a1"], 0, (data.value.license !== "" || data.value.customLicense !== "") && data.value.rights !== "" && data.value.accessRights !== "");
 
-    if (data.value.modified !== "") {
-        score.a1 = 2;
-    }
-
-    if (data.value.issued !== "") {
-        score.r1 = 4;
-        score.e1 = 1;
-    }
-
-    return score;
+    calculateScore(computedCare)
+    
+    return computedCare;
 });
 
 watch(serializedData, (newValue, oldValue) => {
@@ -1722,8 +1701,8 @@ onMounted(() => {
             </div>
             <div :ref="el => tutorialFocus[4] = el" :class="`metadata-col ${tutorialStep === 4 ? 'tutorial-focus' : ''}`" id="metadata-scores">
                 <div class="col-body">
-                    <FairScore :subscores="fairScore" />
-                    <CareScore :subscores="careScore" />
+                    <FairScore :score="fairScore" />
+                    <CareScore :score="careScore" />
                 </div>
             </div>
             <div :ref="el => tutorialFocus[6] = el" :class="`metadata-col ${tutorialStep === 6 ? 'tutorial-focus' : ''}`" id="metadata-rdf">

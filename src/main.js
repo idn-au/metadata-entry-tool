@@ -1,5 +1,4 @@
 import { createApp } from "vue";
-import { Chart, registerables } from "chart.js";
 import { FontAwesomeIcon, FontAwesomeLayers, FontAwesomeLayersText } from "@fortawesome/vue-fontawesome"
 import App from "@/App.vue";
 import router from "@/router";
@@ -9,8 +8,6 @@ const app = createApp(App);
 
 app.provide("agentNamedGraph", config.agentNamedGraph.replace(/\/$/, ""));
 app.provide("triplestoreUrl", config.triplestoreUrl.replace(/\/$/, ""));
-
-Chart.register(...registerables);
 
 app.use(router);
 

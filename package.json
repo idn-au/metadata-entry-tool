@@ -13,11 +13,9 @@
         "@fortawesome/free-solid-svg-icons": "^6.4.2",
         "@fortawesome/vue-fontawesome": "^3.0.3",
         "@idn-au/idn-lib": "^0.1.0",
-        "chart.js": "<4.0.0",
         "n3": "^1.17.1",
         "uuid": "^9.0.1",
         "vue": "^3.3.6",
-        "vue-chartjs": "<5.0.0",
         "vue-router": "^4.2.5"
     },
     "devDependencies": {
