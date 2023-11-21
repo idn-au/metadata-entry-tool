@@ -34,6 +34,17 @@ const rdfFormats = {
     "n3": "text/n3",
 };
 
+const idgOptions = [
+    {
+        label: "Yes",
+        value: "true"
+    },
+    {
+        label: "No",
+        value: "false"
+    }
+];
+
 const agentNamedGraph = inject("agentNamedGraph");
 const triplestoreUrl = inject("triplestoreUrl");
 
@@ -76,6 +87,12 @@ const emptyData = {
                 ],
                 indigeneity: "",
                 review: false
+            },
+            idg: {
+                exists: "",
+                public: "",
+                url: "",
+                desc: ""
             }
         }
     ],
@@ -155,6 +172,12 @@ const data = ref({
                 ],
                 indigeneity: "",
                 review: false
+            },
+            idg: {
+                exists: "",
+                public: "",
+                url: "",
+                desc: ""
             }
         }
     ],
@@ -1241,120 +1264,130 @@ onMounted(() => {
                         <template #description>
                             Information about the roles that agents (people and organisations) play with respect to this data. These roles are critical in determining whether this data is managed properly. Each Agent must have a matching Role.
                         </template>
-                        <FormField v-for="(agentRole, index) in data.agentRoles" direction="row" :span="2">
-                            <FormField>
-                                <!-- <FormInput
-                                    v-show="agentRole.useCustomAgent"
-                                    type="url"
-                                    v-model="agentRole.customAgent"
-                                    label="Custom Agent"
-                                    placeholder="e.g. http://example.com/1234"
-                                    clearButton
-                                    description="Must be a valid IRI. Note: submission will be disabled when using custom agents."
-                                    @validate="handleValidate('customAgent', $event)"
-                                    :validationFns="[validateIri]"
-                                    required
-                                /> -->
-                                <FormField v-show="agentRole.useCustomAgent" direction="row">
-                                    <FormInput
-                                        type="text"
-                                        v-model="agentRole.customAgent.name"
+                        <template v-for="(agentRole, index) in data.agentRoles">
+                            <FormField direction="row" :span="2">
+                                <FormField>
+                                    <!-- <FormInput
+                                        v-show="agentRole.useCustomAgent"
+                                        type="url"
+                                        v-model="agentRole.customAgent"
                                         label="Custom Agent"
-                                        disabled
-                                    />
-                                    <button
-                                        class="btn primary outline"
-                                        @click="modal = `customAgent-${index}`"
-                                        title="Add custom agent data"
-                                    >
-                                        <font-awesome-icon :icon="agentRole.customAgent.name === '' ? faPlus : faPencil" />
-                                    </button>
-                                    <template #tooltip>
-                                        <PropTooltip v-if="showPropTooltips" v-bind="propDetails.agent" />
-                                        <template v-else>
-                                            The name of the person, community or business that is providing this data.
+                                        placeholder="e.g. http://example.com/1234"
+                                        clearButton
+                                        description="Must be a valid IRI. Note: submission will be disabled when using custom agents."
+                                        @validate="handleValidate('customAgent', $event)"
+                                        :validationFns="[validateIri]"
+                                        required
+                                    /> -->
+                                    <FormField v-show="agentRole.useCustomAgent" direction="row">
+                                        <FormInput
+                                            type="text"
+                                            v-model="agentRole.customAgent.name"
+                                            label="Custom Agent"
+                                            disabled
+                                        />
+                                        <button
+                                            class="btn primary outline"
+                                            @click="modal = `customAgent-${index}`"
+                                            title="Add custom agent data"
+                                        >
+                                            <font-awesome-icon :icon="agentRole.customAgent.name === '' ? faPlus : faPencil" />
+                                        </button>
+                                        <template #tooltip>
+                                            <PropTooltip v-if="showPropTooltips" v-bind="propDetails.agent" />
+                                            <template v-else>
+                                                The name of the person, community or business that is providing this data.
+                                            </template>
                                         </template>
-                                    </template>
-                                    <template v-if="agentRole.customAgent.review" #description>
-                                        <font-awesome-layers fixed-width>
-                                            <font-awesome-icon :icon="faCircleRegular" />
-                                            <font-awesome-icon :icon="faExclamation" transform="shrink-6" />
-                                        </font-awesome-layers>
-                                         Review requested
-                                    </template>
+                                        <template v-if="agentRole.customAgent.review" #description>
+                                            <font-awesome-layers fixed-width>
+                                                <font-awesome-icon :icon="faCircleRegular" />
+                                                <font-awesome-icon :icon="faExclamation" transform="shrink-6" />
+                                            </font-awesome-layers>
+                                            Review requested
+                                        </template>
+                                    </FormField>
+                                    <BaseModal v-if="modal === `customAgent-${index}`" @modalClosed="modal = null">
+                                        <template #headerMiddle>Custom Agent</template>
+                                        <CustomAgentForm
+                                            :customAgent="agentRole.customAgent"
+                                            :indigeneityOptions="agentIndigeneityOptionsRequested"
+                                            @save="customAgent => {data.agentRoles[index].customAgent = customAgent; modal = null}"
+                                            @delete="data.agentRoles[index].customAgent = {...emptyData.agentRoles[0].customAgent}; modal = null"
+                                            @modalClosed="modal = null"
+                                        />
+                                    </BaseModal>
+                                    <FormInput
+                                        v-show="!agentRole.useCustomAgent"
+                                        label="Agent"
+                                        type="select"
+                                        id="agent"
+                                        v-model="agentRole.agent"
+                                        clearButton
+                                        :options="filteredAgentOptions(agentRole, index)"
+                                        searchable
+                                        required
+                                        @validate="handleValidate('agent', $event)"
+                                    >
+                                        <template #tooltip>
+                                            <PropTooltip v-if="showPropTooltips" v-bind="propDetails.agent" />
+                                            <template v-else>
+                                                The name of the person, community or business that is providing this data.
+                                            </template>
+                                        </template>
+                                    </FormInput>
+                                    <FormInput type="checkbox" switch label="Use Custom Agent" v-model="agentRole.useCustomAgent" />
                                 </FormField>
-                                <BaseModal v-if="modal === `customAgent-${index}`" @modalClosed="modal = null">
-                                    <template #headerMiddle>Custom Agent</template>
-                                    <CustomAgentForm
-                                        :customAgent="agentRole.customAgent"
-                                        :indigeneityOptions="agentIndigeneityOptionsRequested"
-                                        @save="customAgent => {data.agentRoles[index].customAgent = customAgent; modal = null}"
-                                        @delete="data.agentRoles[index].customAgent = {...emptyData.agentRoles[0].customAgent}; modal = null"
-                                        @modalClosed="modal = null"
-                                    />
-                                </BaseModal>
                                 <FormInput
-                                    v-show="!agentRole.useCustomAgent"
-                                    label="Agent"
+                                    label="Role"
                                     type="select"
-                                    id="agent"
-                                    v-model="agentRole.agent"
+                                    id="role"
+                                    v-model="agentRole.role"
                                     clearButton
-                                    :options="filteredAgentOptions(agentRole, index)"
+                                    :options="roleOptionsRequested"
                                     searchable
+                                    multiple
                                     required
-                                    @validate="handleValidate('agent', $event)"
+                                    @validate="handleValidate('role', $event)"
                                 >
+                                    <template #append>
+                                        <button class="modal-btn" @click="modal = 'agentRole'" title="Role info">
+                                            <font-awesome-layers fixed-width>
+                                                <font-awesome-icon :icon="faCircleRegular" />
+                                                <font-awesome-icon :icon="faInfo" transform="shrink-6" />
+                                            </font-awesome-layers>
+                                        </button>
+                                        <BaseModal v-if="modal === 'agentRole'" @modalClosed="modal = null">
+                                            <template #headerMiddle>
+                                                <h3>Agent Roles</h3>
+                                            </template>
+                                            <p>Below is a list for reference of roles and their brief definitions. The full list of agent roles can be found <a href="https://data.idnau.org/v/vocab/vocab:idn-role-codes" target="_blank" rel="noopener noreferrer">here</a>.</p>
+                                            <div class="modal-items">
+                                                <div v-for="role in roleOptionsRequested" class="modal-item">
+                                                    <a :href="`https://data.idnau.org/object?uri=${encodeURIComponent(role.value)}`" target="_blank" rel="noopener noreferrer">{{ role.label }}</a>
+                                                    <p>{{ role.desc }}</p>
+                                                </div>
+                                            </div>
+                                        </BaseModal>
+                                    </template>
                                     <template #tooltip>
-                                        <PropTooltip v-if="showPropTooltips" v-bind="propDetails.agent" />
+                                        <PropTooltip v-if="showPropTooltips" v-bind="propDetails.role" />
                                         <template v-else>
-                                            The name of the person, community or business that is providing this data.
+                                            What role (e.g. custodian) the named person, community or business has with this data.
                                         </template>
                                     </template>
                                 </FormInput>
-                                <FormInput type="checkbox" switch label="Use Custom Agent" v-model="agentRole.useCustomAgent" />
+                                <button v-if="index > 0" class="btn outline danger delete-agent-btn" title="Delete agent-role pair" @click="data.agentRoles.splice(index, 1);"><font-awesome-icon :icon="faTrash" /></button>
                             </FormField>
-                            <FormInput
-                                label="Role"
-                                type="select"
-                                id="role"
-                                v-model="agentRole.role"
-                                clearButton
-                                :options="roleOptionsRequested"
-                                searchable
-                                multiple
-                                required
-                                @validate="handleValidate('role', $event)"
-                            >
-                                <template #append>
-                                    <button class="modal-btn" @click="modal = 'agentRole'" title="Role info">
-                                        <font-awesome-layers fixed-width>
-                                            <font-awesome-icon :icon="faCircleRegular" />
-                                            <font-awesome-icon :icon="faInfo" transform="shrink-6" />
-                                        </font-awesome-layers>
-                                    </button>
-                                    <BaseModal v-if="modal === 'agentRole'" @modalClosed="modal = null">
-                                        <template #headerMiddle>
-                                            <h3>Agent Roles</h3>
-                                        </template>
-                                        <p>Below is a list for reference of roles and their brief definitions. The full list of agent roles can be found <a href="https://data.idnau.org/v/vocab/vocab:idn-role-codes" target="_blank" rel="noopener noreferrer">here</a>.</p>
-                                        <div class="modal-items">
-                                            <div v-for="role in roleOptionsRequested" class="modal-item">
-                                                <a :href="`https://data.idnau.org/object?uri=${encodeURIComponent(role.value)}`" target="_blank" rel="noopener noreferrer">{{ role.label }}</a>
-                                                <p>{{ role.desc }}</p>
-                                            </div>
-                                        </div>
-                                    </BaseModal>
-                                </template>
-                                <template #tooltip>
-                                    <PropTooltip v-if="showPropTooltips" v-bind="propDetails.role" />
-                                    <template v-else>
-                                        What role (e.g. custodian) the named person, community or business has with this data.
-                                    </template>
-                                </template>
-                            </FormInput>
-                            <button v-if="index > 0" class="btn outline danger delete-agent-btn" title="Delete agent-role pair" @click="data.agentRoles.splice(index, 1);"><font-awesome-icon :icon="faTrash" /></button>
-                        </FormField>
+                            <FormField :span="2" direction="column">
+                                <FormInput :id="`idg-exists-${index}`" type="radio" v-model="agentRole.idg.exists" :options="idgOptions" required label="Does the Agent with role Custodian have documented Indigenous Data Governance, or Stewardship Committee?" class="radio-row" />
+                                <FormInput v-show="agentRole.idg.exists === 'true'" :id="`idg-public-${index}`" type="radio" v-model="agentRole.idg.public" :options="idgOptions" required label="Is the governance publicly available?" class="radio-row">
+                                    <template v-if="agentRole.idg.public === 'false'" #description>If No, provide a description of the governance and stewardship for Indigenous Data undertaken by the Agent Organisation</template>
+                                </FormInput>
+                                <FormInput v-show="agentRole.idg.exists === 'true' && agentRole.idg.public === 'true'" type="url" v-model="agentRole.idg.url" :id="`idg-url-${index}`" required clearButton label="URL" />
+                                <FormInput v-show="agentRole.idg.exists === 'true' && agentRole.idg.public === 'false'" type="textarea" v-model="agentRole.idg.desc" :id="`idg-desc-${index}`" required clearButton label="Description" description="Supports new lines and basic formatting" />
+                            </FormField>
+                        </template>
                         <button class="btn secondary outline add-agent-btn" @click="data.agentRoles.push({...emptyData.agentRoles[0]})"><font-awesome-icon :icon="faPlus" /> Add Agent</button>
                     </FormSection>
                     <FormSection title="Dates" :ref="el => sectionRefs.dates = el" @collapse="sectionCollapsed.dates = $event" :status="getSectionStatus('dates')">
@@ -2122,6 +2155,17 @@ button.delete-agent-btn {
 .tutorial-focus {
     z-index: 1000;
     outline: 5000px solid rgba(0, 0, 0, 0.6);
+}
+
+:deep(.radio-row .input-component) {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    gap: 2px;
+
+    & > label {
+        margin-right: 2px;
+    }
 }
 </style>
 
