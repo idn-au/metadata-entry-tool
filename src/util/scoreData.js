@@ -321,17 +321,17 @@ export const care = {
                     {
                         value: 1,
                         enabled: false,
-                        desc: "Resource is discoverable",
+                        desc: "Metadata is persistently identified (i.e. is assigned an IRI)",
                     },
                     {
                         value: 1,
                         enabled: false,
-                        desc: "Resource is searchable",
+                        desc: "The data has been assigned one or more Indigeneity terms",
                     },
                     {
                         value: 1,
                         enabled: false,
-                        desc: "Data is accessible",
+                        desc: "Data has Access Rights selected",
                     }
                 ],
             },
@@ -340,21 +340,30 @@ export const care = {
                 value: 0,
                 max: 0,
                 desc: "For improved governance and citizen engagement",
+                prerequisite: {
+                    enabled: false,
+                    desc: "If C1 has scored fully then the following scores can be assigned:",
+                },
                 requirements: [
                     {
                         value: 1,
                         enabled: false,
-                        desc: "Data catalogue is discoverable",
+                        desc: "Metadata is discoverable via the internet (i.e. IRI resolves)",
                     },
                     {
                         value: 1,
                         enabled: false,
-                        desc: "Use of the data has been documented",
+                        desc: "Data title exists",
                     },
                     {
                         value: 1,
                         enabled: false,
-                        desc: "Has a description",
+                        desc: "Data description exists",
+                    },
+                    {
+                        value: 1,
+                        enabled: false,
+                        desc: "Custodian (Role) Agent information in database has indigeneity = “Indigenous Persons Organisation” OR “Owned By Indigenous Persons” OR “Run By Indigenous Persons”",
                     }
                 ],
             },
@@ -363,16 +372,20 @@ export const care = {
                 value: 0,
                 max: 0,
                 desc: "For equitable outcomes",
+                prerequisite: {
+                    enabled: false,
+                    desc: "If C2 has scored fully then the following scores can be assigned:",
+                },
                 requirements: [
                     {
-                        value: 1,
+                        value: 2,
                         enabled: false,
-                        desc: "Use of the data has been documented",
+                        desc: "Licence and Rights have been identified AND Agent with role “Rights Holder” has been identified",
                     },
                     {
                         value: 1,
                         enabled: false,
-                        desc: "Locations of data collected are discoverable",
+                        desc: "Data distribution information exists",
                     },
                     // {
                     //     value: 1,
@@ -396,9 +409,14 @@ export const care = {
                 desc: "Recognizing rights and interests",
                 requirements: [
                     {
+                        value: 1,
+                        enabled: false,
+                        desc: "Custodian (Role) Agent information in database has Indigeneity = “Indigenous Persons Organisation” OR “Owned By Indigenous Persons” OR “Run By Indigenous Persons”",
+                    },
+                    {
                         value: 2,
                         enabled: false,
-                        desc: "Licence, Rights and Access Rights are complete",
+                        desc: "License and Rights have been fully described AND Agent with role “Rights Holder” has been identified",
                     },
                 ],
             },
@@ -407,16 +425,20 @@ export const care = {
                 value: 0,
                 max: 0,
                 desc: "Recognizing rights and interests",
+                prerequisite: {
+                    enabled: false,
+                    desc: "If A1 has scored fully then the following scores can be assigned:",
+                },
                 requirements: [
                     {
-                        value: 2,
+                        value: 1,
                         enabled: false,
-                        desc: "Data Governance Framework is catalogued and associated with the metadata records",
+                        desc: "The URL link to, OR text description of, an Indigenous Data Governance Framework or Indigenous Data Committee is identified in the metadata record",
                     },
                     {
                         value: 1,
                         enabled: false,
-                        desc: "Has applied Institutional discovery/attribution Notices",
+                        desc: "Agent which has indicated the Indigenous Data Governance Framework has Role = Custodian",
                     }
                 ],
             },
@@ -425,11 +447,20 @@ export const care = {
                 value: 0,
                 max: 0,
                 desc: "Governance of data",
+                prerequisite: {
+                    enabled: false,
+                    desc: "If A2 has scored fully then the following scores can be assigned:",
+                },
                 requirements: [
                     {
-                        value: 3,
+                        value: 1,
                         enabled: false,
-                        desc: "The Institutional Data Catalogue is informed by an Indigenous Data Governance framework with an identified Indigenous Data Steward and/or Data Custodian.",
+                        desc: "Indigeneity = By Indigenous People",
+                    },
+                    {
+                        value: 1,
+                        enabled: false,
+                        desc: "URL link to an Indigenous Data Governance Framework or Indigenous Data Committee is identified in the metadata record",
                     },
                 ],
             },
@@ -448,9 +479,14 @@ export const care = {
                 desc: "For positive relationships",
                 requirements: [
                     {
-                        value: 3,
+                        value: 1,
                         enabled: false,
-                        desc: "Has applied Institutional discovery Notices; Licence, Rights and Access Rights are complete; and The Institutional Data Catalogue is informed by an Indigenous Data Governance framework with an identified Indigenous Data Steward and/or Data Custodian.",
+                        desc: "Indigeneity = By Indigenous People",
+                    },
+                    {
+                        value: 2,
+                        enabled: false,
+                        desc: "Custodian (Role) Agent information in database has Indigeneity = “Indigenous Persons Organisation” OR “Owned By Indigenous Persons” OR “Run By Indigenous Persons”",
                     },
                 ],
             },
@@ -459,11 +495,15 @@ export const care = {
                 value: 0,
                 max: 0,
                 desc: "For expanding capability and capacity",
+                prerequisite: {
+                    enabled: false,
+                    desc: "If R1 has scored fully then the following scores can be assigned:",
+                },
                 requirements: [
                     {
-                        value: 0,
+                        value: 2,
                         enabled: false,
-                        desc: "Has an Indigenous role",
+                        desc: "Custodian (Role) Agent has identified a resolvable URL link to, OR text description of, an Indigenous Data Governance Framework or Indigenous Data Committee in the metadata record",
                     },
                 ],
             },
@@ -472,26 +512,30 @@ export const care = {
                 value: 0,
                 max: 0,
                 desc: "For Indigenous languages and worldviews",
+                prerequisite: {
+                    enabled: false,
+                    desc: "If R1 has scored fully then the following scores can be assigned:",
+                },
                 requirements: [
                     {
-                        value: 1,
+                        value: 2,
                         enabled: false,
-                        desc: "The Institutional Data Catalogue is informed by an Indigenous Data Governance framework [Data Governance Framework is catalogued",
+                        desc: "C3 has scored fully",
                     },
                     {
                         value: 1,
                         enabled: false,
-                        desc: "Associated with the metadata records",
+                        desc: "Custodian (Role) Agent has identified a resolvable URL link to an Indigenous Data Governance Framework or Indigenous Data Committee in the metadata record",
                     },
                     {
                         value: 1,
                         enabled: false,
-                        desc: "Organisation/Individual has indigeneity",
+                        desc: "Spatial geometry has been identified",
                     },
                     {
-                        value: 3,
+                        value: 1,
                         enabled: false,
-                        desc: "Provenance, Protocols and Permissions labels have been negotiated and applied.",
+                        desc: "At least two themes have been selected ",
                     },
                 ],
             },
@@ -510,9 +554,14 @@ export const care = {
                 desc: "For minimizing harm and maximizing benefit",
                 requirements: [
                     {
-                        value: 3,
+                        value: 2,
                         enabled: false,
-                        desc: "Use of the data are clearly defined and accessible.",
+                        desc: "C3 has scored fully",
+                    },
+                    {
+                        value: 1,
+                        enabled: false,
+                        desc: "A1 has scored fully",
                     },
                 ],
             },
@@ -521,11 +570,20 @@ export const care = {
                 value: 0,
                 max: 0,
                 desc: "For justice",
+                prerequisite: {
+                    enabled: false,
+                    desc: "If E1 has scored fully then the following scores can be assigned:",
+                },
                 requirements: [
                     {
-                        value: 3,
+                        value: 2,
                         enabled: false,
-                        desc: "Ethical (re)use of the data are clearly defined, accessible and have an Indigenous Data Steward or Custodian identified",
+                        desc: "A3 has scored fully",
+                    },
+                    {
+                        value: 1,
+                        enabled: false,
+                        desc: "Custodian (Role) Agent’s information in database has ONLY Indigeneity = “Indigenous Persons Organisation”",
                     },
                 ],
             },
@@ -534,11 +592,20 @@ export const care = {
                 value: 0,
                 max: 0,
                 desc: "For future use",
+                prerequisite: {
+                    enabled: false,
+                    desc: "If E1 and R3 has scored fully then the following scores can be assigned:",
+                },
                 requirements: [
                     {
-                        value: 3,
+                        value: 1,
                         enabled: false,
-                        desc: "Ethical (re)use of the data are clearly defined and have an Indigenous Steward or Custodian identified within an identified Indigenous Data Governance Framework. Provenance, Protocols and Permissions labels have been negotiated and applied.",
+                        desc: "The date that the data was created and modified are identified",
+                    },
+                    {
+                        value: 1,
+                        enabled: false,
+                        desc: "Name AND point of contact (Email OR Phone) is identified",
                     },
                 ],
             },

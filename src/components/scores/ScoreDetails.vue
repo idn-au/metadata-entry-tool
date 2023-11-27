@@ -20,7 +20,11 @@ const props = defineProps({
             <ScoreDetails v-for="[subKey, subScore] in Object.entries(props.score.scores)" :score="{key: subKey, ...subScore}" />
         </div>
         <div v-else-if="props.score.requirements" class="requirements">
-            <div v-for="requirement in props.score.requirements" class="requirement">
+            <div v-if="props.score.prerequisite" class="prerequisite">
+                <span><font-awesome-icon :icon="props.score.prerequisite.enabled ? faSquareCheck : faSquare" /></span>
+                <span>{{ props.score.prerequisite.desc }}</span>
+            </div>
+            <div v-for="requirement in props.score.requirements" :class="`requirement ${props.score.prerequisite && !props.score.prerequisite.enabled ? 'disabled' : ''}`">
                 <span><font-awesome-icon :icon="requirement.enabled ? faSquareCheck : faSquare" /></span>
                 <span>{{ requirement.desc }}</span>
                 <span>[+{{ requirement.value }}]</span>
@@ -113,6 +117,7 @@ const props = defineProps({
                     font-size: 0.9rem;
                     color: grey;
                     margin: 0;
+                    font-style: italic;
                 }
             }
 
@@ -162,10 +167,18 @@ p {
     gap: 8px;
     margin-inline-start: 1.8rem;
     
-    .requirement {
+    .prerequisite, .requirement {
         display: flex;
         flex-direction: row;
         gap: 6px;
+    }
+
+    .prerequisite {
+        margin-left: -8px;
+    }
+
+    .requirement.disabled {
+        color: #9c9c9c;
     }
 }
 </style>

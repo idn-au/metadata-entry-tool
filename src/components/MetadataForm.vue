@@ -13,7 +13,7 @@ import exampleData from "@/util/exampleData";
 import formOptions from "@/util/formOptions";
 import tutorialContent from "@/util/tutorialContent";
 import { fair, care } from "@/util/scoreData";
-import { setRequirement, calculateScoreMax, calculateScore } from "@/util/helpers";
+import { setRequirement, calculateScoreMax, calculateScore, setPrerequisite, hasFullScore, calculateSubScore } from "@/util/helpers";
 import CustomAgentForm from "@/components/CustomAgentForm.vue";
 import PropTooltip from "@/components/PropTooltip.vue";
 import FormSection from "@/components/FormSection.vue";
@@ -278,7 +278,7 @@ const usingCustomAgents = computed(() => {
 // scores
 const fairScore = computed(() => {
     const computedFair = {...fair};
-    calculateScoreMax(computedFair)
+    calculateScoreMax(computedFair);
     
     // has an IRI
     setRequirement(computedFair, ["f", "f1"], 0, calcIri.value !== "");
@@ -295,22 +295,36 @@ const fairScore = computed(() => {
     // has a license
     setRequirement(computedFair, ["r", "r1", "r1.1"], 0, data.value.license !== "" || data.value.customLicense !== "");
 
-    calculateScore(computedFair)
+    calculateScore(computedFair);
     
     return computedFair;
 });
 
 const careScore = computed(() => {
     const computedCare = {...care};
-    calculateScoreMax(computedCare)
-    
-    // has desc
-    setRequirement(computedCare, ["c", "c2"], 2, data.value.description !== "");
+    calculateScoreMax(computedCare);
 
+    // C1
+    setRequirement(computedCare, ["c", "c1"], 0, calcIri.value !== "");
+    setRequirement(computedCare, ["c", "c1"], 1, data.value.indigeneity.length > 0);
+    setRequirement(computedCare, ["c", "c1"], 2, data.value.accessRights !== "");
+    calculateSubScore(computedCare, ["c", "c1"]); // needed if prerequisites depend on this score
+    
+    // C2
+    setPrerequisite(computedCare, ["c", "c2"], hasFullScore(computedCare, ["c", "c1"]));
+    setRequirement(computedCare, ["c", "c2"], 0, calcIri.value !== ""); // need to check IRI resolves
+    setRequirement(computedCare, ["c", "c2"], 1, data.value.title !== "");
+    setRequirement(computedCare, ["c", "c2"], 2, data.value.description !== "");
+    calculateSubScore(computedCare, ["c", "c2"]);
+
+    // C3
+    setPrerequisite(computedCare, ["c", "c3"], hasFullScore(computedCare, ["c", "c2"]));
+
+    // A1
     // has Licence, Rights and Access Rights
     setRequirement(computedCare, ["a", "a1"], 0, (data.value.license !== "" || data.value.customLicense !== "") && data.value.rights !== "" && data.value.accessRights !== "");
 
-    calculateScore(computedCare)
+    calculateScore(computedCare);
     
     return computedCare;
 });

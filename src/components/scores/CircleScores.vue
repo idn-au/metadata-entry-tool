@@ -158,6 +158,7 @@ function closeModal() {
                     font-size: 0.9rem;
                     color: grey;
                     margin: 0;
+                    font-style: italic;
                 }
             }
 
