@@ -130,7 +130,7 @@ onMounted(() => {
                         <font-awesome-layers-text value="4" transform="shrink-6" />
                     </font-awesome-layers>
                 </span>
-                <div>As you describe your data, the <a href="https://idnau.org/#/resources/faircare" target="_blank" rel="noopener noreferrer">FAIR and CARE data score</a> is indicated in the radial graphs.</div>
+                <div>As you describe your data, the <a href="https://idnau.org/#/resources/faircare" target="_blank" rel="noopener noreferrer">FAIR and CARE data score</a> is indicated in the circular scores.</div>
                 <span class="grid-list-number">
                     <font-awesome-layers fixed-width>
                         <font-awesome-icon :icon="faCircleRegular" />

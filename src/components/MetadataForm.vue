@@ -155,7 +155,7 @@ const data = ref({
     accessUrl: "",
     agentRoles: [
         {
-            agent: "",
+            agent: {},
             role: [],
             useCustomAgent: false,
             customAgent: {
@@ -275,25 +275,119 @@ const usingCustomAgents = computed(() => {
     return !data.value.agentRoles.every(agentRole => agentRole.useCustomAgent === false);
 });
 
+// TODO: revise score logic & check prerequisites refer to scores that have been precalculated
 // scores
 const fairScore = computed(() => {
     const computedFair = {...fair};
     calculateScoreMax(computedFair);
     
-    // has an IRI
+    // F1
+    // has an ID
     setRequirement(computedFair, ["f", "f1"], 0, calcIri.value !== "");
+    // ID is URL
     setRequirement(computedFair, ["f", "f1"], 1, calcIri.value !== "");
-    setRequirement(computedFair, ["f", "f1"], 2, calcIri.value !== "");
+    // ID is globally unique, citeable & persistent (is DOI, etc.?)
+    setRequirement(computedFair, ["f", "f1"], 2, [
+        "doi:",
+        "doi.org",
+        "ark:",
+        "purl.org",
+        "linked.data.gov.au",
+        "handle.net",
+        "w3id.org",
+    ].some(x => calcIri.value.includes(x)));
 
+    // F2
     // has title & desc
     setRequirement(computedFair, ["f", "f2"], 0, data.value.title !== "" && data.value.description !== "");
+    // any other dcterms props set
+    setRequirement(computedFair, ["f", "f2"], 1, [
+        data.value.indigeneity.some(i => i !== ""),
+        data.value.created !== "",
+        data.value.modified !== "",
+        data.value.issued !== "",
+        calcLicense.value !== "",
+        data.value.rights !== "",
+        data.value.accessRights !== "",
+        calcGeometry.value !== "",
+        data.value.temporalStart !== "",
+        data.value.temporalEnd !== "",
+    ].some(p => p));
+    // all recommended props are set - title, description, created, modified, type qualifiedAttribution
+    setRequirement(computedFair, ["f", "f2"], 2, [
+        data.value.title !== "",
+        data.value.description !== "",
+        data.value.created !== "",
+        data.value.modified !== "",
+        data.value.agentRoles.length > 0
+    ].every(p => p));
 
+    // F3
+    setRequirement(computedFair, ["f", "f3"], 0, calcIri.value !== "");
+
+    // F4
+    // dcterms:isPartOf? metadata in catalogue? or use dcat:accessURL?
+    // setRequirement(computedFair, ["f", "f4"], 0, calcIri.value !== "");
+    // setRequirement(computedFair, ["f", "f4"], 1, calcIri.value !== "");
+
+    // A1
+    setRequirement(computedFair, ["a", "a1"], 0, [
+        "https://linked.data.gov.au/def/data-access-rights/metadata-only",
+        "https://linked.data.gov.au/def/data-access-rights/conditional",
+        "https://linked.data.gov.au/def/data-access-rights/embargoed",
+        "https://linked.data.gov.au/def/data-access-rights/open"
+    ].some(p => data.value.accessRights === p));
+    setRequirement(computedFair, ["a", "a1"], 1, [
+        "https://linked.data.gov.au/def/data-access-rights/conditional",
+        "https://linked.data.gov.au/def/data-access-rights/embargoed",
+        "https://linked.data.gov.au/def/data-access-rights/open"
+    ].some(p => data.value.accessRights === p));
+    setRequirement(computedFair, ["a", "a1"], 2, [
+        "https://linked.data.gov.au/def/data-access-rights/embargoed",
+        "https://linked.data.gov.au/def/data-access-rights/open"
+    ].some(p => data.value.accessRights === p));
+    setRequirement(computedFair, ["a", "a1"], 3, [
+        "https://linked.data.gov.au/def/data-access-rights/open"
+    ].some(p => data.value.accessRights === p));
+
+    // A2
+    // record available if data is no longer available - can't test
+
+    // I1
     // structured, machine-readable - in RDF
     setRequirement(computedFair, ["i", "i1"], 0, true);
     setRequirement(computedFair, ["i", "i1"], 1, true);
 
+    // I2
+    // data has been described - ?
+    setRequirement(computedFair, ["i", "i2"], 0, true);
+    // uses reference vocabs - true due to the form using vocabs?
+    setRequirement(computedFair, ["i", "i2"], 1, true);
+    // vocab references use global ids - true because rdf vocabs use IRIs?
+    setRequirement(computedFair, ["i", "i2"], 2, true);
+
+    // I3
+    // links to other metadata - ?
+    setRequirement(computedFair, ["i", "i3"], 0, true);
+    // machine-readable - always for rdf
+    setRequirement(computedFair, ["i", "i3"], 1, true);
+
+    // R1
+    // R1.1
     // has a license
-    setRequirement(computedFair, ["r", "r1", "r1.1"], 0, data.value.license !== "" || data.value.customLicense !== "");
+    setRequirement(computedFair, ["r", "r1", "r1.1"], 0, calcLicense.value !== "");
+
+    // R1.2
+    // has prov - check prov: props? - prov:startedAtTime, prov:endedAtTime, prov:qualifiedAttribution, prov:agent
+    setRequirement(computedFair, ["r", "r1", "r1.2"], 0, [
+        data.value.temporalStart !== "",
+        data.value.temporalEnd !== "",
+        data.value.agentRoles.length > 0
+    ].some(p => p));
+
+    // R1.3
+    // has a data source - dcat:accessURL? or dcterms:source (not used here)?
+    // data source has prov
 
     calculateScore(computedFair);
     
@@ -305,24 +399,113 @@ const careScore = computed(() => {
     calculateScoreMax(computedCare);
 
     // C1
+    // has an IRI
     setRequirement(computedCare, ["c", "c1"], 0, calcIri.value !== "");
+    // indigineity is set
     setRequirement(computedCare, ["c", "c1"], 1, data.value.indigeneity.length > 0);
+    // access rights set
     setRequirement(computedCare, ["c", "c1"], 2, data.value.accessRights !== "");
     calculateSubScore(computedCare, ["c", "c1"]); // needed if prerequisites depend on this score
     
     // C2
     setPrerequisite(computedCare, ["c", "c2"], hasFullScore(computedCare, ["c", "c1"]));
+    // IRI resolves
     setRequirement(computedCare, ["c", "c2"], 0, calcIri.value !== ""); // need to check IRI resolves
+    // title exists
     setRequirement(computedCare, ["c", "c2"], 1, data.value.title !== "");
+    // description exists
     setRequirement(computedCare, ["c", "c2"], 2, data.value.description !== "");
+    // custodian has indigeneity
+    setRequirement(computedCare, ["c", "c2"], 3, data.value.agentRoles.some(x => x.role.includes("http://def.isotc211.org/iso19115/-1/2018/CitationAndResponsiblePartyInformation/code/CI_RoleCode/custodian") && [
+        "https://data.idnau.org/pid/vocab/org-indigeneity/indigenous-persons-organisation",
+        "https://data.idnau.org/pid/vocab/org-indigeneity/owned-by-indigenous-persons",
+        "https://data.idnau.org/pid/vocab/org-indigeneity/run-by-indigenous-persons"
+    ].includes(x.agent.indigeneity)));
     calculateSubScore(computedCare, ["c", "c2"]);
 
     // C3
     setPrerequisite(computedCare, ["c", "c3"], hasFullScore(computedCare, ["c", "c2"]));
+    // has license, rights & agent with role Rights Holder
+    setRequirement(computedCare, ["c", "c3"], 0, calcLicense.value !== "" && data.value.rights !== "" && data.value.agentRoles.some(x => x.role.includes("http://def.isotc211.org/iso19115/-1/2018/CitationAndResponsiblePartyInformation/code/CI_RoleCode/rightsHolder")));
+    // has distribution
+    setRequirement(computedCare, ["c", "c3"], 1, data.value.accessUrl !== "");
+    calculateSubScore(computedCare, ["c", "c3"]);
 
     // A1
-    // has Licence, Rights and Access Rights
-    setRequirement(computedCare, ["a", "a1"], 0, (data.value.license !== "" || data.value.customLicense !== "") && data.value.rights !== "" && data.value.accessRights !== "");
+    // custodian has indigeneity
+    setRequirement(computedCare, ["a", "a1"], 0, data.value.agentRoles.some(x => x.role.includes("http://def.isotc211.org/iso19115/-1/2018/CitationAndResponsiblePartyInformation/code/CI_RoleCode/custodian") && [
+        "https://data.idnau.org/pid/vocab/org-indigeneity/indigenous-persons-organisation",
+        "https://data.idnau.org/pid/vocab/org-indigeneity/owned-by-indigenous-persons",
+        "https://data.idnau.org/pid/vocab/org-indigeneity/run-by-indigenous-persons"
+    ].includes(x.agent.indigeneity)));
+    // has license, rights & agent with role Rights Holder
+    setRequirement(computedCare, ["a", "a1"], 1, calcLicense.value !== "" && data.value.rights !== "" && data.value.agentRoles.some(x => x.role.includes("http://def.isotc211.org/iso19115/-1/2018/CitationAndResponsiblePartyInformation/code/CI_RoleCode/rightsHolder")));
+    calculateSubScore(computedCare, ["a", "a1"]);
+
+    // A2
+    setPrerequisite(computedCare, ["a", "a2"], hasFullScore(computedCare, ["a", "a1"]));
+    // IDG framework exists (on any agent?)
+    setRequirement(computedCare, ["a", "a2"], 0, data.value.agentRoles.some(x => x.idg.url !== "" || x.idg.desc !== ""));
+    // agent with IDG framework has role Custodian
+    setRequirement(computedCare, ["a", "a2"], 1, data.value.agentRoles.some(x => x.idg.exists === "true" && x.role.includes("http://def.isotc211.org/iso19115/-1/2018/CitationAndResponsiblePartyInformation/code/CI_RoleCode/custodian")));
+    calculateSubScore(computedCare, ["a", "a2"]);
+
+    // A3
+    setPrerequisite(computedCare, ["a", "a3"], hasFullScore(computedCare, ["a", "a2"]));
+    // data indigeneity = by indigenous people
+    setRequirement(computedCare, ["a", "a3"], 0, data.value.indigeneity === "https://data.idnau.org/pid/vocab/indigeneity/by-indigenous-people");
+    // IDG framework has a URL
+    setRequirement(computedCare, ["a", "a3"], 0, data.value.agentRoles.some(x => x.idg.exists === "true" && x.idg.url !== ""));
+    calculateSubScore(computedCare, ["a", "a3"]);
+
+    // R1
+    // data indigeneity = by indigenous people
+    setRequirement(computedCare, ["r", "r1"], 0, data.value.indigeneity !== "https://data.idnau.org/pid/vocab/indigeneity/by-indigenous-people");
+    // custodian has indigeneity
+    setRequirement(computedCare, ["r", "r1"], 0, data.value.agentRoles.some(x => x.role.includes("http://def.isotc211.org/iso19115/-1/2018/CitationAndResponsiblePartyInformation/code/CI_RoleCode/custodian") && [
+        "https://data.idnau.org/pid/vocab/org-indigeneity/indigenous-persons-organisation",
+        "https://data.idnau.org/pid/vocab/org-indigeneity/owned-by-indigenous-persons",
+        "https://data.idnau.org/pid/vocab/org-indigeneity/run-by-indigenous-persons"
+    ].includes(x.agent.indigeneity)));
+    calculateSubScore(computedCare, ["r", "r1"]);
+
+    // R2
+    setPrerequisite(computedCare, ["r", "r2"], hasFullScore(computedCare, ["r", "r1"]));
+    // Custodian has resolvable IDG framework URL or desc
+    setRequirement(computedCare, ["r", "r2"], 0, data.value.agentRoles.some(x => x.idg.exists === "true" && ((x.idg.url !== "") || x.idg.desc !== "")));
+
+    // R3
+    setPrerequisite(computedCare, ["r", "r3"], hasFullScore(computedCare, ["r", "r1"]));
+    // C3 has scored fully
+    setRequirement(computedCare, ["r", "r3"], 0, hasFullScore(computedCare, ["c", "c3"]));
+    // custodian has resolvable url for IDG
+    setRequirement(computedCare, ["r", "r3"], 1, data.value.agentRoles.some(x => x.idg.exists === "true" && x.role.includes("http://def.isotc211.org/iso19115/-1/2018/CitationAndResponsiblePartyInformation/code/CI_RoleCode/custodian")));
+    // has spatial
+    setRequirement(computedCare, ["r", "r3"], 2, calcGeometry.value !== "");
+    // at least 2 themes selected
+    setRequirement(computedCare, ["r", "r3"], 3, data.value.themes.length > 1);
+    calculateSubScore(computedCare, ["r", "r3"]);
+
+    // E1
+    // C3 has scored fully
+    setRequirement(computedCare, ["e", "e1"], 0, hasFullScore(computedCare, ["c", "c3"]));
+    // A1 has scored fully
+    setRequirement(computedCare, ["e", "e1"], 1, hasFullScore(computedCare, ["a", "a1"]));
+    calculateSubScore(computedCare, ["e", "e1"]);
+
+    // E2
+    setPrerequisite(computedCare, ["e", "e2"], hasFullScore(computedCare, ["e", "e1"]));
+    // A3 has scored fully
+    setRequirement(computedCare, ["e", "e2"], 0, hasFullScore(computedCare, ["a", "a3"]));
+    // custodian has indigeneity = indigenous persons organisation
+    setRequirement(computedCare, ["r", "r1"], 0, data.value.agentRoles.some(x => x.role.includes("http://def.isotc211.org/iso19115/-1/2018/CitationAndResponsiblePartyInformation/code/CI_RoleCode/custodian") && x.agent.indigeneity === "https://data.idnau.org/pid/vocab/org-indigeneity/indigenous-persons-organisation"));
+
+    // E3
+    setPrerequisite(computedCare, ["e", "e3"], hasFullScore(computedCare, ["e", "e1"]) && hasFullScore(computedCare, ["r", "r3"]));
+    // created & modified exist
+    setRequirement(computedCare, ["e", "e3"], 0, data.value.created !== "" && data.value.modified !== "");
+    // name & point of contact exist
+    setRequirement(computedCare, ["e", "e3"], 1, data.value.contactName !== "" && (data.value.contactEmail !== "" || data.value.contactPhone !== ""));
 
     calculateScore(computedCare);
     
@@ -959,19 +1142,22 @@ onMounted(() => {
 
     if (useRemoteOptions) {
         // query triplestore for form options
-        agentDoSparqlGetQuery(triplestoreUrl, `PREFIX sdo: <https://schema.org/>
-            SELECT DISTINCT ?agent ?name
+        agentDoSparqlGetQuery(triplestoreUrl, `PREFIX dcterms: <http://purl.org/dc/terms/>
+            PREFIX sdo: <https://schema.org/>
+            SELECT DISTINCT ?agent ?name ?indigeneity
             WHERE {
                 GRAPH <${agentNamedGraph}> {
                     VALUES ?agentType { sdo:Person sdo:Organization sdo:Organisation }
                     ?agent a ?agentType ;
-                        sdo:name ?name .
+                        sdo:name ?name ;
+                        dcterms:type ?indigeneity .
                 }
             }`,() => {
             agentData.value.forEach(result => {
                 agentOptionsRequested.value.push({
                     value: result.agent.value,
-                    label: result.name.value
+                    label: result.name.value,
+                    indigeneity: result.indigeneity.value,
                 });
             });
             agentOptionsRequested.value.sort((a, b) => a.label.localeCompare(b.label));

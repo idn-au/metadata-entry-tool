@@ -104,3 +104,22 @@ function getSubscore(score, scorePath) {
 function traverseByKeys(obj, keyArray) {
     return keyArray.reduce((acc, curr) => acc ? acc[curr] : undefined, obj);
 };
+
+// export async function isReachable(url) {
+//     let ok = true;
+
+//     try {
+//         const r = await fetch(url, {
+//             // method: "GET",
+//             // mode: "no-cors"
+//         });
+//         if (!r.ok) {
+//             throw new Error("error");
+//         }
+//         await r.text();
+//     } catch (e) {
+//         ok = false;
+//     }
+
+//     return ok;
+// }
