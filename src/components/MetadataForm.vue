@@ -1186,7 +1186,7 @@ onMounted(() => {
         licenseDoSparqlGetQuery(triplestoreUrl, `PREFIX skos: <http://www.w3.org/2004/02/skos/core#>
             SELECT DISTINCT ?license ?name
             WHERE {
-                BIND(<https://w3id.org/idn/vocab/idn-licenses> AS ?cs)
+                BIND(<https://linked.data.gov.au/def/license> AS ?cs)
                 ?cs a skos:ConceptScheme .
                 ?license a skos:Concept ;
                     skos:inScheme ?cs ;
