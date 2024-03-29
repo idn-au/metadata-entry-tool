@@ -23,6 +23,13 @@ import CareScore from "@/components/scores/CareScore.vue";
 
 const { namedNode, literal } = DataFactory;
 
+const ROLES_VOCAB = "https://linked.data.gov.au/def/data-roles";
+const LICENSE_VOCAB = "https://linked.data.gov.au/def/licenses";
+const ACCESS_RIGHTS_VOCAB = "https://linked.data.gov.au/def/data-access-rights";
+const THEMES_VOCAB = "https://data.idnau.org/pid/vocab/idn-th";
+const DATA_INDIGENEITY_VOCAB = "https://data.idnau.org/pid/vocab/indigeneity";
+const ORG_INDIGENEITY_VOCAB = "https://data.idnau.org/pid/vocab/org-indigeneity";
+
 const useRemoteOptions = true;
 
 const defaultIri = `https://data.idnau.org/pid/resource/${uuid4()}`;
@@ -332,22 +339,22 @@ const fairScore = computed(() => {
 
     // A1
     setRequirement(computedFair, ["a", "a1"], 0, [
-        "https://linked.data.gov.au/def/data-access-rights/metadata-only",
-        "https://linked.data.gov.au/def/data-access-rights/conditional",
-        "https://linked.data.gov.au/def/data-access-rights/embargoed",
-        "https://linked.data.gov.au/def/data-access-rights/open"
+        `${ACCESS_RIGHTS_VOCAB}/metadata-only`,
+        `${ACCESS_RIGHTS_VOCAB}/conditional`,
+        `${ACCESS_RIGHTS_VOCAB}/embargoed`,
+        `${ACCESS_RIGHTS_VOCAB}/open`
     ].some(p => data.value.accessRights === p));
     setRequirement(computedFair, ["a", "a1"], 1, [
-        "https://linked.data.gov.au/def/data-access-rights/conditional",
-        "https://linked.data.gov.au/def/data-access-rights/embargoed",
-        "https://linked.data.gov.au/def/data-access-rights/open"
+        `${ACCESS_RIGHTS_VOCAB}/conditional`,
+        `${ACCESS_RIGHTS_VOCAB}/embargoed`,
+        `${ACCESS_RIGHTS_VOCAB}/open`
     ].some(p => data.value.accessRights === p));
     setRequirement(computedFair, ["a", "a1"], 2, [
-        "https://linked.data.gov.au/def/data-access-rights/embargoed",
-        "https://linked.data.gov.au/def/data-access-rights/open"
+        `${ACCESS_RIGHTS_VOCAB}/embargoed`,
+        `${ACCESS_RIGHTS_VOCAB}/open`
     ].some(p => data.value.accessRights === p));
     setRequirement(computedFair, ["a", "a1"], 3, [
-        "https://linked.data.gov.au/def/data-access-rights/open"
+        `${ACCESS_RIGHTS_VOCAB}/open`
     ].some(p => data.value.accessRights === p));
 
     // A2
@@ -416,30 +423,30 @@ const careScore = computed(() => {
     // description exists
     setRequirement(computedCare, ["c", "c2"], 2, data.value.description !== "");
     // custodian has indigeneity
-    setRequirement(computedCare, ["c", "c2"], 3, data.value.agentRoles.some(x => x.role.includes("http://def.isotc211.org/iso19115/-1/2018/CitationAndResponsiblePartyInformation/code/CI_RoleCode/custodian") && [
-        "https://data.idnau.org/pid/vocab/org-indigeneity/indigenous-persons-organisation",
-        "https://data.idnau.org/pid/vocab/org-indigeneity/owned-by-indigenous-persons",
-        "https://data.idnau.org/pid/vocab/org-indigeneity/run-by-indigenous-persons"
+    setRequirement(computedCare, ["c", "c2"], 3, data.value.agentRoles.some(x => x.role.includes(`${ROLES_VOCAB}/custodian`) && [
+        `${ORG_INDIGENEITY_VOCAB}/indigenous-persons-organisation`,
+        `${ORG_INDIGENEITY_VOCAB}/owned-by-indigenous-persons`,
+        `${ORG_INDIGENEITY_VOCAB}/run-by-indigenous-persons`
     ].includes(x.agent.indigeneity)));
     calculateSubScore(computedCare, ["c", "c2"]);
 
     // C3
     setPrerequisite(computedCare, ["c", "c3"], hasFullScore(computedCare, ["c", "c2"]));
     // has license, rights & agent with role Rights Holder
-    setRequirement(computedCare, ["c", "c3"], 0, calcLicense.value !== "" && data.value.rights !== "" && data.value.agentRoles.some(x => x.role.includes("http://def.isotc211.org/iso19115/-1/2018/CitationAndResponsiblePartyInformation/code/CI_RoleCode/rightsHolder")));
+    setRequirement(computedCare, ["c", "c3"], 0, calcLicense.value !== "" && data.value.rights !== "" && data.value.agentRoles.some(x => x.role.includes(`${ROLES_VOCAB}/rightsHolder`)));
     // has distribution
     setRequirement(computedCare, ["c", "c3"], 1, data.value.accessUrl !== "");
     calculateSubScore(computedCare, ["c", "c3"]);
 
     // A1
     // custodian has indigeneity
-    setRequirement(computedCare, ["a", "a1"], 0, data.value.agentRoles.some(x => x.role.includes("http://def.isotc211.org/iso19115/-1/2018/CitationAndResponsiblePartyInformation/code/CI_RoleCode/custodian") && [
-        "https://data.idnau.org/pid/vocab/org-indigeneity/indigenous-persons-organisation",
-        "https://data.idnau.org/pid/vocab/org-indigeneity/owned-by-indigenous-persons",
-        "https://data.idnau.org/pid/vocab/org-indigeneity/run-by-indigenous-persons"
+    setRequirement(computedCare, ["a", "a1"], 0, data.value.agentRoles.some(x => x.role.includes(`${ROLES_VOCAB}/custodian`) && [
+        `${ORG_INDIGENEITY_VOCAB}/indigenous-persons-organisation`,
+        `${ORG_INDIGENEITY_VOCAB}/owned-by-indigenous-persons`,
+        `${ORG_INDIGENEITY_VOCAB}/run-by-indigenous-persons`
     ].includes(x.agent.indigeneity)));
     // has license, rights & agent with role Rights Holder
-    setRequirement(computedCare, ["a", "a1"], 1, calcLicense.value !== "" && data.value.rights !== "" && data.value.agentRoles.some(x => x.role.includes("http://def.isotc211.org/iso19115/-1/2018/CitationAndResponsiblePartyInformation/code/CI_RoleCode/rightsHolder")));
+    setRequirement(computedCare, ["a", "a1"], 1, calcLicense.value !== "" && data.value.rights !== "" && data.value.agentRoles.some(x => x.role.includes(`${ROLES_VOCAB}/rightsHolder`)));
     calculateSubScore(computedCare, ["a", "a1"]);
 
     // A2
@@ -447,25 +454,25 @@ const careScore = computed(() => {
     // IDG framework exists (on any agent?)
     setRequirement(computedCare, ["a", "a2"], 0, data.value.agentRoles.some(x => x.idg.url !== "" || x.idg.desc !== ""));
     // agent with IDG framework has role Custodian
-    setRequirement(computedCare, ["a", "a2"], 1, data.value.agentRoles.some(x => x.idg.exists === "true" && x.role.includes("http://def.isotc211.org/iso19115/-1/2018/CitationAndResponsiblePartyInformation/code/CI_RoleCode/custodian")));
+    setRequirement(computedCare, ["a", "a2"], 1, data.value.agentRoles.some(x => x.idg.exists === "true" && x.role.includes(`${ROLES_VOCAB}/custodian`)));
     calculateSubScore(computedCare, ["a", "a2"]);
 
     // A3
     setPrerequisite(computedCare, ["a", "a3"], hasFullScore(computedCare, ["a", "a2"]));
     // data indigeneity = by indigenous people
-    setRequirement(computedCare, ["a", "a3"], 0, data.value.indigeneity === "https://data.idnau.org/pid/vocab/indigeneity/by-indigenous-people");
+    setRequirement(computedCare, ["a", "a3"], 0, data.value.indigeneity === `${DATA_INDIGENEITY_VOCAB}/by-indigenous-people`);
     // IDG framework has a URL
     setRequirement(computedCare, ["a", "a3"], 0, data.value.agentRoles.some(x => x.idg.exists === "true" && x.idg.url !== ""));
     calculateSubScore(computedCare, ["a", "a3"]);
 
     // R1
     // data indigeneity = by indigenous people
-    setRequirement(computedCare, ["r", "r1"], 0, data.value.indigeneity !== "https://data.idnau.org/pid/vocab/indigeneity/by-indigenous-people");
+    setRequirement(computedCare, ["r", "r1"], 0, data.value.indigeneity !== `${DATA_INDIGENEITY_VOCAB}/by-indigenous-people`);
     // custodian has indigeneity
-    setRequirement(computedCare, ["r", "r1"], 0, data.value.agentRoles.some(x => x.role.includes("http://def.isotc211.org/iso19115/-1/2018/CitationAndResponsiblePartyInformation/code/CI_RoleCode/custodian") && [
-        "https://data.idnau.org/pid/vocab/org-indigeneity/indigenous-persons-organisation",
-        "https://data.idnau.org/pid/vocab/org-indigeneity/owned-by-indigenous-persons",
-        "https://data.idnau.org/pid/vocab/org-indigeneity/run-by-indigenous-persons"
+    setRequirement(computedCare, ["r", "r1"], 0, data.value.agentRoles.some(x => x.role.includes(`${ROLES_VOCAB}/custodian`) && [
+        `${ORG_INDIGENEITY_VOCAB}/indigenous-persons-organisation`,
+        `${ORG_INDIGENEITY_VOCAB}/owned-by-indigenous-persons`,
+        `${ORG_INDIGENEITY_VOCAB}/run-by-indigenous-persons`
     ].includes(x.agent.indigeneity)));
     calculateSubScore(computedCare, ["r", "r1"]);
 
@@ -479,7 +486,7 @@ const careScore = computed(() => {
     // C3 has scored fully
     setRequirement(computedCare, ["r", "r3"], 0, hasFullScore(computedCare, ["c", "c3"]));
     // custodian has resolvable url for IDG
-    setRequirement(computedCare, ["r", "r3"], 1, data.value.agentRoles.some(x => x.idg.exists === "true" && x.role.includes("http://def.isotc211.org/iso19115/-1/2018/CitationAndResponsiblePartyInformation/code/CI_RoleCode/custodian")));
+    setRequirement(computedCare, ["r", "r3"], 1, data.value.agentRoles.some(x => x.idg.exists === "true" && x.role.includes(`${ROLES_VOCAB}/custodian`)));
     // has spatial
     setRequirement(computedCare, ["r", "r3"], 2, calcGeometry.value !== "");
     // at least 2 themes selected
@@ -498,7 +505,7 @@ const careScore = computed(() => {
     // A3 has scored fully
     setRequirement(computedCare, ["e", "e2"], 0, hasFullScore(computedCare, ["a", "a3"]));
     // custodian has indigeneity = indigenous persons organisation
-    setRequirement(computedCare, ["r", "r1"], 0, data.value.agentRoles.some(x => x.role.includes("http://def.isotc211.org/iso19115/-1/2018/CitationAndResponsiblePartyInformation/code/CI_RoleCode/custodian") && x.agent.indigeneity === "https://data.idnau.org/pid/vocab/org-indigeneity/indigenous-persons-organisation"));
+    setRequirement(computedCare, ["r", "r1"], 0, data.value.agentRoles.some(x => x.role.includes(`${ROLES_VOCAB}/custodian`) && x.agent.indigeneity === `${ORG_INDIGENEITY_VOCAB}/indigenous-persons-organisation`));
 
     // E3
     setPrerequisite(computedCare, ["e", "e3"], hasFullScore(computedCare, ["e", "e1"]) && hasFullScore(computedCare, ["r", "r3"]));
@@ -1166,7 +1173,7 @@ onMounted(() => {
         roleDoSparqlGetQuery(triplestoreUrl, `PREFIX skos: <http://www.w3.org/2004/02/skos/core#>
             SELECT DISTINCT ?role ?name ?desc
             WHERE {
-                BIND(<https://data.idnau.org/pid/vocab/idn-role-codes> AS ?cs)
+                BIND(<${ROLES_VOCAB}> AS ?cs)
                 ?cs a skos:ConceptScheme .
                 ?role a skos:Concept ;
                     skos:inScheme ?cs ;
@@ -1186,7 +1193,7 @@ onMounted(() => {
         licenseDoSparqlGetQuery(triplestoreUrl, `PREFIX skos: <http://www.w3.org/2004/02/skos/core#>
             SELECT DISTINCT ?license ?name
             WHERE {
-                BIND(<https://linked.data.gov.au/def/license> AS ?cs)
+                BIND(<${LICENSE_VOCAB}> AS ?cs)
                 ?cs a skos:ConceptScheme .
                 ?license a skos:Concept ;
                     skos:inScheme ?cs ;
@@ -1204,7 +1211,7 @@ onMounted(() => {
         accessRightsDoSparqlGetQuery(triplestoreUrl, `PREFIX skos: <http://www.w3.org/2004/02/skos/core#>
             SELECT DISTINCT ?accessRight ?name
             WHERE {
-                BIND(<https://linked.data.gov.au/def/data-access-rights> AS ?cs)
+                BIND(<${ACCESS_RIGHTS_VOCAB}> AS ?cs)
                 ?cs a skos:ConceptScheme .
                 ?accessRight a skos:Concept ;
                     skos:inScheme ?cs ;
@@ -1222,7 +1229,7 @@ onMounted(() => {
         themeDoSparqlGetQuery(triplestoreUrl, `PREFIX skos: <http://www.w3.org/2004/02/skos/core#>
             SELECT DISTINCT ?theme ?name
             WHERE {
-                BIND(<https://data.idnau.org/pid/vocab/idn-th> AS ?cs)
+                BIND(<${THEMES_VOCAB}> AS ?cs)
                 ?cs a skos:ConceptScheme .
                 ?theme a skos:Concept ;
                     skos:inScheme ?cs ;
@@ -1240,7 +1247,7 @@ onMounted(() => {
         indigeneityDoSparqlGetQuery(triplestoreUrl, `PREFIX skos: <http://www.w3.org/2004/02/skos/core#>
             SELECT DISTINCT ?indigeneity ?name
             WHERE {
-                BIND(<https://data.idnau.org/pid/vocab/indigeneity> AS ?cs)
+                BIND(<${DATA_INDIGENEITY_VOCAB}> AS ?cs)
                 ?cs a skos:ConceptScheme .
                 ?indigeneity a skos:Concept ;
                     skos:inScheme ?cs ;
@@ -1258,7 +1265,7 @@ onMounted(() => {
         agentIndigeneityDoSparqlGetQuery(triplestoreUrl, `PREFIX skos: <http://www.w3.org/2004/02/skos/core#>
             SELECT DISTINCT ?indigeneity ?name
             WHERE {
-                BIND(<https://data.idnau.org/pid/vocab/org-indigeneity> AS ?cs)
+                BIND(<${ORG_INDIGENEITY_VOCAB}> AS ?cs)
                 ?cs a skos:ConceptScheme .
                 ?indigeneity a skos:Concept ;
                     skos:inScheme ?cs ;
@@ -1561,7 +1568,7 @@ onMounted(() => {
                                             <template #headerMiddle>
                                                 <h3>Agent Roles</h3>
                                             </template>
-                                            <p>Below is a list for reference of roles and their brief definitions. The full list of agent roles can be found <a href="https://data.idnau.org/v/vocab/vocab:idn-role-codes" target="_blank" rel="noopener noreferrer">here</a>.</p>
+                                            <p>Below is a list for reference of roles and their brief definitions. The full list of agent roles can be found <a href="https://data.idnau.org/v/vocab/defn:data-roles" target="_blank" rel="noopener noreferrer">here</a>.</p>
                                             <div class="modal-items">
                                                 <div v-for="role in roleOptionsRequested" class="modal-item">
                                                     <a :href="`https://data.idnau.org/object?uri=${encodeURIComponent(role.value)}`" target="_blank" rel="noopener noreferrer">{{ role.label }}</a>
@@ -1748,7 +1755,7 @@ onMounted(() => {
                                 <template #tooltip>
                                     <PropTooltip v-if="showPropTooltips" v-bind="propDetails.accessRights" />
                                     <template v-else>
-                                        Data access rights control how users and systems access a data resource. e.g. Metadata access only. Definitions can be found <a href="https://data.idnau.org/v/vocab/df:data-access-rights" target="_blank" rel="noopener noreferrer">here</a>.
+                                        Data access rights control how users and systems access a data resource. e.g. Metadata access only. Definitions can be found <a href="https://data.idnau.org/v/vocab/defn:data-access-rights" target="_blank" rel="noopener noreferrer">here</a>.
                                     </template>
                                 </template>
                             </FormInput>
@@ -1868,7 +1875,7 @@ onMounted(() => {
                     </FormSection>
                     <FormSection title="Theme" :ref="el => sectionRefs.theme = el" @collapse="sectionCollapsed.theme = $event" :status="getSectionStatus('theme')">
                         <template #description>
-                            Classification or categorisation of this data. We are mostly concerned with indications of "indigeneity", i.e. how this data is related to indigenous people, however other classifications may also be added. Our primary indigenous classification vocabulary is online at <a href="https://data.idnau.org/v/vocab/vocab:idn-th" target="_blank" rel="noopener noreferrer">https://data.idnau.org/v/vocab/vocab:idn-th</a> which may be browsed for classification suggestions.
+                            Classification or categorisation of this data. We are mostly concerned with indications of "indigeneity", i.e. how this data is related to indigenous people, however other classifications may also be added. Our primary indigenous classification vocabulary is online at <a href="https://data.idnau.org/v/vocab/vcb:idn-th" target="_blank" rel="noopener noreferrer">https://data.idnau.org/v/vocab/vcb:idn-th</a> which may be browsed for classification suggestions.
                         </template>
                         <FormField :span="2">
                             <FormInput
@@ -1890,7 +1897,7 @@ onMounted(() => {
                                 <template #tooltip>
                                     <PropTooltip v-if="showPropTooltips" v-bind="propDetails.theme" />
                                     <template v-else>
-                                        Our vocabulary for the primary classification for indigeneity of data being described can be browsed <a href="https://data.idnau.org/v/vocab/vocab:idn-th" target="_blank" rel="noopener noreferrer">here</a>. This vocabulary contains historical terms which exist in legacy data but are no longer used today. We welcome suggestions and feedback on this vocabulary.
+                                        Our vocabulary for the primary classification for indigeneity of data being described can be browsed <a href="https://data.idnau.org/v/vocab/vcb:idn-th" target="_blank" rel="noopener noreferrer">here</a>. This vocabulary contains historical terms which exist in legacy data but are no longer used today. We welcome suggestions and feedback on this vocabulary.
                                     </template>
                                 </template>
                             </FormInput>

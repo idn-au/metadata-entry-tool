@@ -3,7 +3,7 @@
     "version": "0.0.0",
     "scripts": {
         "dev": "vite",
-        "build": "vite build && shx cp dist/index.html dist/404.html",
+        "build": "vite build",
         "preview": "vite preview --port 4173"
     },
     "dependencies": {
@@ -20,9 +20,7 @@
     },
     "devDependencies": {
         "@vitejs/plugin-vue": "^4.4.0",
-        "@vitejs/plugin-vue-jsx": "^3.0.2",
         "sass": "^1.69.4",
-        "shx": "^0.3.4",
         "vite": "^4.5.0"
     }
 }
