@@ -33,10 +33,16 @@ const percentColour = computed(() => {
         return "128, 128, 128"; // grey, invalid
     }
 });
+
+const percentGradient = computed(() => {
+    const minHue = 0;
+    const maxHue = 130;
+    return `hsl(${percent.value / 100 * (maxHue - minHue)}, 100%, 48%)`;
+});
 </script>
 
 <template>
-    <div :class="`circle-progress`" :style="{ background: `conic-gradient(rgb(${percentColour}) ${percent}%, 0, rgba(${percentColour}, 0.2) ${100 - percent}%)` }">
+    <div :class="`circle-progress`" :style="{ background: `conic-gradient(${percentGradient} ${percent}%, 0, rgba(80, 80, 80, 0.2) ${100 - percent}%)` }">
         <div class="circle-overlay">
             <span class="circle-value">
                 <template v-if="props.label">{{ props.label }}</template>
@@ -51,7 +57,7 @@ const percentColour = computed(() => {
 <style lang="scss" scoped>
 .circle-progress {
     border-radius: 50%;
-    height: 100%;
+    // height: 100%;
     width: 100%;
     aspect-ratio: 1;
     position: relative;

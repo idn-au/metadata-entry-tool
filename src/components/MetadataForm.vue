@@ -714,7 +714,7 @@ watch(() => data.value.agentRoles, (newValue, oldValue) => {
                         store.value.addQuad(agentRole.customAgent.iri, namedNode(qname("sdo:description")), literal(agentRole.customAgent.description));
                     }
                     if (agentRole.customAgent.url !== "") {
-                        store.value.addQuad(agentRole.customAgent.iri, namedNode(qname("sdo:url")), literal(agentRole.customAgent.url), namedNode(qname("xsd:anyURI")));
+                        store.value.addQuad(agentRole.customAgent.iri, namedNode(qname("sdo:url")), literal(agentRole.customAgent.url, namedNode(qname("xsd:anyURI"))));
                     }
                     if (agentRole.customAgent.identifiers.length > 0) {
                         agentRole.customAgent.identifiers.forEach(id => {
@@ -722,6 +722,9 @@ watch(() => data.value.agentRoles, (newValue, oldValue) => {
                                 store.value.addQuad(agentRole.customAgent.iri, namedNode(qname("sdo:identifier")), literal(id.value, namedNode(id.datatype)));
                             }
                         });
+                    }
+                    if (agentRole.customAgent.indigeneity !== "") {
+                        store.value.addQuad(agentRole.customAgent.iri, namedNode(qname("dcterms:type")), namedNode(agentRole.customAgent.indigeneity));
                     }
                 } else if (agentRole.agent !== "") {
                     store.value.addQuad(newBnode, namedNode(qname("prov:agent")), namedNode(agentRole.agent));
@@ -1398,7 +1401,7 @@ onMounted(() => {
                                 required
                                 @validate="!data.assignIri && handleValidate('iri', $event)"
                                 :validationFns="[validateIri]"
-                                v-model="data.iri"
+                                v-model="calcIri"
                                 clearButton
                                 :disabled="data.assignIri"
                             >
