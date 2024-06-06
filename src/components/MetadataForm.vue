@@ -1156,15 +1156,17 @@ onMounted(() => {
                 GRAPH <${agentNamedGraph}> {
                     VALUES ?agentType { sdo:Person sdo:Organization sdo:Organisation }
                     ?agent a ?agentType ;
-                        sdo:name ?name ;
-                        dcterms:type ?indigeneity .
+                        sdo:name ?name .
+                    OPTIONAL {
+                        ?agent dcterms:type ?indigeneity .
+                    }
                 }
             }`,() => {
             agentData.value.forEach(result => {
                 agentOptionsRequested.value.push({
                     value: result.agent.value,
                     label: result.name.value,
-                    indigeneity: result.indigeneity.value,
+                    indigeneity: result.indigeneity ? result.indigeneity.value : "",
                 });
             });
             agentOptionsRequested.value.sort((a, b) => a.label.localeCompare(b.label));
