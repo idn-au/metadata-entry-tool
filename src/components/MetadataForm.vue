@@ -162,7 +162,7 @@ const data = ref({
     accessUrl: "",
     agentRoles: [
         {
-            agent: {},
+            agent: "",
             role: [],
             useCustomAgent: false,
             customAgent: {
@@ -543,10 +543,10 @@ watch(() => data.value.title, (newValue, oldValue) => {
 });
 
 watch(() => data.value.indigeneity, (newValue, oldValue) => {
-    const indigeneityQuads = store.value.getQuads(namedNode(calcIri.value), namedNode(qname("dcterms:type")), null);
+    const indigeneityQuads = store.value.getQuads(namedNode(calcIri.value), namedNode(qname("dcat:theme")), null);
     store.value.removeQuads(indigeneityQuads);
     if (newValue.length > 0) {
-        newValue.forEach(indigeneity => store.value.addQuad(namedNode(calcIri.value), namedNode(qname("dcterms:type")), namedNode(indigeneity)));
+        newValue.forEach(indigeneity => store.value.addQuad(namedNode(calcIri.value), namedNode(qname("dcat:theme")), namedNode(indigeneity)));
     }
     serializedData.value = serialize();
 });
@@ -814,7 +814,7 @@ function loadRDF(e) {
     loadedStore.value.forEach(q => { // get preds & objs
         if (q.predicate.value === loadedQname("dcterms:title")) {
             data.value.title = q.object.value;
-        } else if (q.predicate.value === loadedQname("dcterms:type")) {
+        } else if (q.predicate.value === loadedQname("dcterms:type")) { //  ???
             data.value.indigeneity.push(q.object.value);
         } else if (q.predicate.value === loadedQname("dcterms:description")) {
             data.value.description = q.object.value;
@@ -1474,20 +1474,9 @@ onMounted(() => {
                         <template v-for="(agentRole, index) in data.agentRoles">
                             <FormField direction="row" :span="2">
                                 <FormField>
-                                    <!-- <FormInput
-                                        v-show="agentRole.useCustomAgent"
-                                        type="url"
-                                        v-model="agentRole.customAgent"
-                                        label="Custom Agent"
-                                        placeholder="e.g. http://example.com/1234"
-                                        clearButton
-                                        description="Must be a valid IRI. Note: submission will be disabled when using custom agents."
-                                        @validate="handleValidate('customAgent', $event)"
-                                        :validationFns="[validateIri]"
-                                        required
-                                    /> -->
                                     <FormField v-show="agentRole.useCustomAgent" direction="row">
                                         <FormInput
+                                            :id="`customagent-name-${index}`"
                                             type="text"
                                             v-model="agentRole.customAgent.name"
                                             label="Custom Agent"
@@ -1520,7 +1509,7 @@ onMounted(() => {
                                             :customAgent="agentRole.customAgent"
                                             :indigeneityOptions="agentIndigeneityOptionsRequested"
                                             @save="customAgent => {data.agentRoles[index].customAgent = customAgent; modal = null}"
-                                            @delete="data.agentRoles[index].customAgent = {...emptyData.agentRoles[0].customAgent}; modal = null"
+                                            @delete="() => {data.agentRoles[index].customAgent = {...emptyData.agentRoles[0].customAgent}; modal = null}"
                                             @modalClosed="modal = null"
                                         />
                                     </BaseModal>
@@ -1528,7 +1517,7 @@ onMounted(() => {
                                         v-show="!agentRole.useCustomAgent"
                                         label="Agent"
                                         type="select"
-                                        id="agent"
+                                        :id="`agent-${index}`"
                                         v-model="agentRole.agent"
                                         clearButton
                                         :options="filteredAgentOptions(agentRole, index)"
@@ -1548,7 +1537,7 @@ onMounted(() => {
                                 <FormInput
                                     label="Role"
                                     type="select"
-                                    id="role"
+                                    :id="`role-${index}`"
                                     v-model="agentRole.role"
                                     clearButton
                                     :options="roleOptionsRequested"
@@ -1595,7 +1584,7 @@ onMounted(() => {
                                 <FormInput v-show="agentRole.idg.exists === 'true' && agentRole.idg.public === 'false'" type="textarea" v-model="agentRole.idg.desc" :id="`idg-desc-${index}`" required clearButton label="Description" description="Supports new lines and basic formatting" />
                             </FormField>
                         </template>
-                        <button class="btn secondary outline add-agent-btn" @click="data.agentRoles.push({...emptyData.agentRoles[0]})"><font-awesome-icon :icon="faPlus" /> Add Agent</button>
+                        <button class="btn secondary outline add-agent-btn" @click="data.agentRoles.push(JSON.parse(JSON.stringify(emptyData.agentRoles[0])))"><font-awesome-icon :icon="faPlus" /> Add Agent</button>
                     </FormSection>
                     <FormSection title="Dates" :ref="el => sectionRefs.dates = el" @collapse="sectionCollapsed.dates = $event" :status="getSectionStatus('dates')">
                         <template #description>
@@ -1867,7 +1856,7 @@ onMounted(() => {
                                 <template #tooltip>
                                     <PropTooltip v-if="showPropTooltips" v-bind="propDetails.accessUrl" />
                                     <template v-else>
-                                        A URL is normally in the format https://… e.g. https://w3id.org/idn/resource/AUSLANG . If you are NOT submitting the metadata to the Indigenous Data Network, you could insert any resolvable URL into the metadata.
+                                        A URL is normally in the format https://… . If you are NOT submitting the metadata to the Indigenous Data Network, you could insert any resolvable URL into the metadata.
                                     </template>
                                 </template>
                             </FormInput>
@@ -1887,12 +1876,11 @@ onMounted(() => {
                                 :options="themeOptionsRequested"
                                 multiple
                                 searchable
-                                allowAdd
                                 required
                                 @validate="handleValidate('theme', $event)"
                             >
                                 <template #description>
-                                    You can add more than one Theme term. Click on Theme and select the required term or type the required term in the Search field, then select “+ Add option”. Repeat for further terms - they will appear in the field separated by commas.
+                                    You can add more than one Theme term. Click on Theme and select the required term or type the required term in the Search field.
                                 </template>
                                 <template #tooltip>
                                     <PropTooltip v-if="showPropTooltips" v-bind="propDetails.theme" />

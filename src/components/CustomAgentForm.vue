@@ -9,7 +9,11 @@ const DEFAULT_DATATYPES = [
     {
         label: "xsd:token",
         value: "http://www.w3.org/2001/XMLSchema#token"
-    }
+    },
+    {
+        label: "idncp:orcid",
+        value: "https://data.idnau.org/pid/cp/orcid"
+    },
 ];
 
 const defaultData = {
@@ -40,7 +44,21 @@ const props = defineProps({
 const emit = defineEmits(["save", "delete", "modalClosed"]);
 
 // agent relations?
-const customAgent = ref({...props.customAgent});
+const customAgent = ref({
+    iri: "",
+    isPerson: false,
+    name: "",
+    description: "",
+    url: "",
+    identifiers: [
+        {
+            value: "",
+            datatype: ""
+        }
+    ],
+    indigeneity: "",
+    review: false
+});
 
 const validation = ref({}); // { key: isValid, ... }
 
@@ -83,6 +101,7 @@ watch(() => customAgent.value.isPerson, (newValue) => {
 // }, { deep: true });
 
 onMounted(() => {
+    customAgent.value = JSON.parse(JSON.stringify(props.customAgent));
     customAgent.value.iri = `https://data.idnau.org/pid/${customAgent.value.isPerson ? "person" : "organization"}/${uuid}`;
 });
 </script>
@@ -145,12 +164,14 @@ onMounted(() => {
         />
         <FormField v-for="(identifier, index) in customAgent.identifiers" direction="row" :span="2" :label="index === 0 ? 'Identifiers' : null">
             <FormInput
+                id="id-value"
                 v-model="identifier.value"
                 label="Identifier"
                 type="text"
                 clearButton
             />
             <FormInput
+                id="id-datatype"
                 v-model="identifier.datatype"
                 label="Datatype"
                 type="select"
