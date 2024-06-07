@@ -91,7 +91,7 @@ onMounted(() => {
         </div>
     </div>
     <h3 id="metadatacreationtool">The Metadata Creation Tool</h3>
-    <p>With this tool you can describe your data using the metadata elements described in the <a href="https://idn-au.github.io/idn-catalogue-profile/rd/guidance.html" target="_blank" rel="noopener noreferrer">IDN Catalogue Profile Guidance</a>.</p>
+    <p>With this tool you can describe your data using the metadata elements described in the <a href="https://data.idnau.org/pid/cp/guide" target="_blank" rel="noopener noreferrer">IDN Catalogue Profile Guidance</a>.</p>
     <p>You can download your completed metadata record in RDF and, if appropriate, submit the metadata record to catalogue your Indigenous Data in the IDN Data Catalogue. <em>Note that this will require pre-registration in the IDN Agents Database before the IDN can accept the metadata record.</em></p>
     <div class="section-split">
         <div class="subsection">
@@ -130,7 +130,7 @@ onMounted(() => {
                         <font-awesome-layers-text value="4" transform="shrink-6" />
                     </font-awesome-layers>
                 </span>
-                <div>As you describe your data, the <a href="https://idnau.org/#/resources/faircare" target="_blank" rel="noopener noreferrer">FAIR and CARE data score</a> is indicated in the circular scores.</div>
+                <div>As you describe your data, the <a href="https://idnau.org/resources/faircare" target="_blank" rel="noopener noreferrer">FAIR and CARE data score</a> is indicated in the circular scores.</div>
                 <span class="grid-list-number">
                     <font-awesome-layers fixed-width>
                         <font-awesome-icon :icon="faCircleRegular" />
