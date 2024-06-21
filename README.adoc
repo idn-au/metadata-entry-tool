@@ -1,4 +1,6 @@
-= IDN Metadata Creator
+= IDN Metadata Entry Tool
+
+Visit here - https://metadata.idnau.org/[metadata.idnau.org]
 
 This repository contains a single page application (web page) form tool that, when filled out correctly, generates valid https://www.w3.org/RDF/[RDF] metadata, according to the https://linked.data.gov.au/def/idncp/spec[IDN Catalogue Profile], which can then be loaded into the https://idnau.org/catalogue[IDN Dataset Catalogue].
 
