@@ -1154,12 +1154,12 @@ onMounted(() => {
         // query triplestore for form options
         agentDoSparqlGetQuery(triplestoreUrl, `PREFIX dcterms: <http://purl.org/dc/terms/>
             PREFIX sdo: <https://schema.org/>
-            SELECT DISTINCT ?agent ?name ?indigeneity
+            SELECT DISTINCT ?agent (STR(?n) AS ?name) ?indigeneity
             WHERE {
                 GRAPH <${agentNamedGraph}> {
-                    VALUES ?agentType { sdo:Person sdo:Organization sdo:Organisation }
+                    VALUES ?agentType { sdo:Person sdo:Organization }
                     ?agent a ?agentType ;
-                        sdo:name ?name .
+                        sdo:name ?n .
                     OPTIONAL {
                         ?agent dcterms:type ?indigeneity .
                     }
