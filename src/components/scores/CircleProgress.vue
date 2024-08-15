@@ -57,10 +57,10 @@ const percentGradient = computed(() => {
 <style lang="scss" scoped>
 .circle-progress {
     border-radius: 50%;
-    // height: 100%;
     width: 100%;
     aspect-ratio: 1;
     position: relative;
+    flex-shrink: 0;
 
     .circle-overlay {
         border-radius: 50%;

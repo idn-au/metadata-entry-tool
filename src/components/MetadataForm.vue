@@ -127,8 +127,8 @@ const themeOptionsRequested = ref([]);
 const indigeneityOptionsRequested = ref([]);
 const agentIndigeneityOptionsRequested = ref([]);
 
-const { clicked: savedDraft, startTimeout: startSavedDraftTimeout } = useBtnTimeout();
-const { clicked: deletedDraft, startTimeout: startDeletedDraftTimeout } = useBtnTimeout();
+// const { clicked: savedDraft, startTimeout: startSavedDraftTimeout } = useBtnTimeout();
+// const { clicked: deletedDraft, startTimeout: startDeletedDraftTimeout } = useBtnTimeout();
 const { clicked: clearedData, startTimeout: startClearedDataTimeout } = useBtnTimeout();
 
 const spatialBnode = store.value.createBlankNode(); // _:b0
@@ -752,6 +752,10 @@ watch(() => data.value.agentRoles, (newValue, oldValue) => {
 //     }
 // );
 
+watch(data, (newValue) => {
+    localStorage.setItem("data", JSON.stringify(newValue));
+}, { deep: true });
+
 function updateTriple(value, predQname, object) {
     const quads = store.value.getQuads(namedNode(calcIri.value), namedNode(qname(predQname)), null);
     store.value.removeQuads(quads);
@@ -763,9 +767,14 @@ function updateTriple(value, predQname, object) {
 
 function validateMatchRegex(s, exp, invalidMessage) {
     if (s.match(exp)) {
-        return [true, ""];
+        return {
+            valid: true
+        };
     } else {
-        return [false, invalidMessage];
+        return {
+            valid: false,
+            invalidMessage: invalidMessage
+        };
     }
 }
 
@@ -777,21 +786,21 @@ function validateWktString(s) {
     return validateMatchRegex(s, /^\w+\s?\(.+\)$/, "Invalid WKT geometry");
 }
 
-function validateReachableUrl(s) {
-    if (s !== "") {
-        loading.value.accessUrl = true;
+// function validateReachableUrl(s) {
+//     if (s !== "") {
+//         loading.value.accessUrl = true;
 
-        fetch(s, {
-            method: "HEAD",
-            mode: "no-cors"
-        })
-        .catch(e => {
-            return [false, "URL is unreachable"]
-        });
+//         fetch(s, {
+//             method: "HEAD",
+//             mode: "no-cors"
+//         })
+//         .catch(e => {
+//             return [false, "URL is unreachable"]
+//         });
 
-        loading.value.accessUrl = false;
-    }
-}
+//         loading.value.accessUrl = false;
+//     }
+// }
 
 function setFile(e) {
     const file = e.target.files[0];
@@ -863,15 +872,48 @@ function loadRDF(e) {
                     agent: "",
                     role: [],
                     useCustomAgent: false,
-                    customAgent: ""
+                    customAgent: {
+                        iri: "",
+                        isPerson: false,
+                        name: "",
+                        description: "",
+                        url: "",
+                        identifiers: [],
+                        indigeneity: "",
+                        review: false
+                    },
+                    idg: {
+                        exists: "",
+                        public: "",
+                        url: "",
+                        desc: ""
+                    }
                 };
                 loadedStore.value.forEach(q1 => {
                     if (q1.predicate.value === loadedQname("prov:agent")) {
-                        if (agentOptionsRequested.value.includes(q1.object.value)) {
+                        if (agentOptionsRequested.value.includes(q1.object.value)) { // existing agent
                             agentRole.agent = q1.object.value;
-                        } else {
+                        } else { // custom agent
                             agentRole.useCustomAgent = true;
-                            agentRole.customAgent = q1.object.value;
+                            agentRole.customAgent.iri = q1.object.value;
+                            loadedStore.value.forEach(q2 => {
+                                if (q2.predicate.value === loadedQname("a")) {
+                                    agentRole.customAgent.isPerson = q2.object.value === loadedQname("sdo:Person");
+                                } else if (q2.predicate.value === loadedQname("sdo:name")) {
+                                    agentRole.customAgent.name = q2.object.value;
+                                } else if (q2.predicate.value === loadedQname("sdo:description")) {
+                                    agentRole.customAgent.description = q2.object.value;
+                                } else if (q2.predicate.value === loadedQname("sdo:identifier")) {
+                                    agentRole.customAgent.identifiers.push({
+                                        value: q2.object.value,
+                                        datatype: q2.object.datatype.value
+                                    });
+                                } else if (q2.predicate.value === loadedQname("sdo:url")) {
+                                    agentRole.customAgent.url = q2.object.value;
+                                } else if (q2.predicate.value === loadedQname("dcterms:type")) {
+                                    agentRole.customAgent.indigeneity = q2.object.value;
+                                }
+                            }, q1.object, null, null);
                         }
                     } else if (q1.predicate.value === loadedQname("dcat:hadRole")) {
                         agentRole.role.push(q1.object.value);
@@ -897,19 +939,19 @@ function clearData(clicked = false) {
     }
 }
 
-function saveDraft() {
-    localStorage.setItem("data", JSON.stringify(data.value));
-    hasSavedDraft.value = true;
-    startSavedDraftTimeout();
-}
+// function saveDraft() {
+//     localStorage.setItem("data", JSON.stringify(data.value));
+//     hasSavedDraft.value = true;
+//     startSavedDraftTimeout();
+// }
 
-function deleteDraft() {
-    if (confirm("Warning: While your current form will stay unchanged, this will delete your progress saved to the browser. You will lose progress upon browser refresh. Do you wish to continue?")) {
-        localStorage.removeItem("data");
-        hasSavedDraft.value = false;
-        startDeletedDraftTimeout();
-    }
-}
+// function deleteDraft() {
+//     if (confirm("Warning: While your current form will stay unchanged, this will delete your progress saved to the browser. You will lose progress upon browser refresh. Do you wish to continue?")) {
+//         localStorage.removeItem("data");
+//         hasSavedDraft.value = false;
+//         startDeletedDraftTimeout();
+//     }
+// }
 
 function loadExample(key) {
     if (confirm("Warning: Loading this example will clear your current form. Do you wish to continue?")) {
@@ -1401,7 +1443,7 @@ onMounted(() => {
                                 required
                                 @validate="!data.assignIri && handleValidate('iri', $event)"
                                 :validationFns="[validateIri]"
-                                v-model="calcIri"
+                                v-model="data.iri"
                                 clearButton
                                 :disabled="data.assignIri"
                             >
@@ -1955,7 +1997,7 @@ onMounted(() => {
                 v-model="declarationTicked"
             /> -->
             <div id="bottom-buttons">
-                <div class="btn-group">
+                <!-- <div class="btn-group">
                     <button :ref="el => tutorialFocus[7] = el" :class="`btn success outline ${tutorialStep === 7 ? 'tutorial-focus' : ''}`" @click="saveDraft" :disabled="empty">
                         <template v-if="savedDraft">
                             Draft saved!
@@ -1964,7 +2006,7 @@ onMounted(() => {
                             Save Draft <font-awesome-icon :icon="faFloppyDisk" />
                         </template>
                     </button>
-                </div>
+                </div> -->
                 <div class="btn-group">
                     <a
                         :ref="el => tutorialFocus[9] = el"
@@ -1972,21 +2014,21 @@ onMounted(() => {
                         :href="!empty ? `data:text/turtle;charset=utf-8,${encodeURIComponent(serializedData)}` : null"
                         :download="!empty ? `${data.title || 'metadata'}.ttl` : null"
                         :disabled="empty"
-                        title="Export as RDF file (.ttl)"
+                        title="Save as RDF file (.ttl)"
                     >
-                        Export <font-awesome-icon :icon="faFileExport" />
+                        Save As <font-awesome-icon :icon="faFileExport" />
                     </a>
                 </div>
                 <div :ref="el => tutorialFocus[8] = el" :class="`btn-group ${tutorialStep === 8 ? 'tutorial-focus' : ''}`">
-                    <button class="btn outline danger" @click="deleteDraft" :disabled="!hasSavedDraft">
+                    <!-- <button class="btn outline danger" @click="deleteDraft" :disabled="!hasSavedDraft">
                         <template v-if="deletedDraft">
                             Draft deleted!
                         </template>
                         <template v-else>
                             Delete Draft <font-awesome-icon :icon="faTrash" />
                         </template>
-                    </button>
-                    <button class="btn danger" @click="clearData(true)" :disabled="empty">
+                    </button> -->
+                    <button class="btn danger" @click="clearData(true)">
                         <template v-if="clearedData">
                             Cleared data!
                         </template>

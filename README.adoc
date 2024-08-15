@@ -2,7 +2,9 @@
 
 Visit here - https://metadata.idnau.org/[metadata.idnau.org]
 
-This repository contains a single page application (web page) form tool that, when filled out correctly, generates valid https://www.w3.org/RDF/[RDF] metadata, according to the https://linked.data.gov.au/def/idncp/spec[IDN Catalogue Profile], which can then be loaded into the https://idnau.org/catalogue[IDN Dataset Catalogue].
+This repository contains a single page web application form that, when filled out correctly, generates valid RDF metadata, according to the https://data.idnau.org/pid/cp[IDN Catalogue Profile], which can then be loaded into the https://idnau.org/resources/catalog[IDN Catalogue].
+
+The tool also scores the metadata in real-time using https://www.go-fair.org/fair-principles/[FAIR] and https://www.gida-global.org/care[CARE] principles.
 
 Currently this tool is for testing out and understanding the IDN Catalogue Profile's requirements for metadata so it doesn't submit metadata to the IDN systems automatically - it just prints it out for review. Automated submission might be added later.
 
@@ -10,7 +12,7 @@ Currently this tool is for testing out and understanding the IDN Catalogue Profi
 
 The contents of this repository is licensed under Creative Commons 4.0 International. See the LICENSE file in the repository for details.
 
-All content is &copy; Indigenous Data Network, 2022
+All content is &copy; Indigenous Data Network, 2024
 
 == Contacts
 
