@@ -1,26 +1,35 @@
 {
-    "name": "metadata-form",
-    "version": "0.0.0",
+    "name": "nuxt-app",
+    "private": true,
+    "type": "module",
     "scripts": {
-        "dev": "vite",
-        "build": "vite build",
-        "preview": "vite preview --port 4173"
+        "build": "nuxt build",
+        "dev": "nuxt dev",
+        "generate": "nuxt generate",
+        "preview": "nuxt preview",
+        "postinstall": "nuxt prepare && mkdir -p ./public/_nuxt/node_modules/.cache/vite/client/deps/ && cp ./node_modules/oxigraph/web_bg.wasm ./public/_nuxt/node_modules/.cache/vite/client/deps/web_bg.wasm"
     },
     "dependencies": {
-        "@fortawesome/fontawesome-svg-core": "^6.4.2",
-        "@fortawesome/free-brands-svg-icons": "^6.4.2",
-        "@fortawesome/free-regular-svg-icons": "^6.4.2",
-        "@fortawesome/free-solid-svg-icons": "^6.4.2",
-        "@fortawesome/vue-fontawesome": "^3.0.3",
-        "@idn-au/idn-lib": "^0.1.0",
-        "n3": "^1.17.1",
-        "uuid": "^9.0.1",
-        "vue": "^3.3.6",
-        "vue-router": "^4.2.5"
+        "@vee-validate/nuxt": "^4.13.2",
+        "@vee-validate/zod": "^4.13.2",
+        "@vueuse/core": "^11.0.1",
+        "class-variance-authority": "^0.7.0",
+        "clsx": "^2.1.1",
+        "jsonld": "^8.3.2",
+        "lucide-vue-next": "^0.429.0",
+        "nuxt": "^3.12.4",
+        "oxigraph": "0.4.0-alpha.8",
+        "radix-vue": "^1.9.4",
+        "shadcn-nuxt": "^0.10.4",
+        "tailwind-merge": "^2.5.2",
+        "tailwindcss-animate": "^1.0.7",
+        "vue": "latest",
+        "zod": "^3.23.8",
+        "zod-metadata": "^1.1.0"
     },
     "devDependencies": {
-        "@vitejs/plugin-vue": "^4.4.0",
-        "sass": "^1.69.4",
-        "vite": "^4.5.0"
+        "@nuxtjs/tailwindcss": "^6.12.1",
+        "@types/jsonld": "^1.5.15",
+        "typescript": "^5.5.4"
     }
 }
