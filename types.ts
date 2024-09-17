@@ -17,39 +17,65 @@ export type Format = "text/turtle"
     | "rdf"
 // | "xml";
 
+export type DagItem = {
+    depends: string[];
+    completed: boolean;
+};
+
+export type Dag = {
+    [key: string]: DagItem;
+};
+
+export type Condition = {
+    title: string;
+    key: string;
+    value: number | "max";
+};
+
 export type Requirement = {
     value: number;
     description: string;
-    query: string; // must be an ASK query
+    query?: string;
+    conditions?: Condition[];
 };
 
-export type RequirementScored = Omit<Requirement, "query"> & {
+export type RequirementScored = Omit<Requirement, "query" | "conditions"> & {
     enabled: boolean;
 };
 
-export type Prerequisites = {
-    key: string[]; // array of keys to traverse to score fully
+export type Prerequisite = {
+    conditions: Condition[];
+};
+
+export type PrerequisiteScored = Prerequisite & {
+    enabled: boolean;
+};
+
+export type ScoreDef = {
+    title: string;
     description: string;
+    prerequisites?: Prerequisite;
+    scores?: ScoreDefObj;
+    requirements?: Requirement[];
 };
 
-export type PrerequisitesScored = Prerequisites & {
-    enabled: boolean;
-};
-
-export type Config = {
-    [key: string]: {
-        title: string;
-        description: string;
-        scores?: Config;
-        prerequisites?: Prerequisites;
-        requirements?: Requirement[];
-    };
-};
-
-export type ConfigScored = Config & {
+export type ScoreValue = Omit<ScoreDef, "scores" | "prerequisites" | "requirements"> & {
     value: number;
     max: number;
-    scores?: ConfigScored;
-    prerequisites?: PrerequisitesScored;
+    scores?: ScoreValueObj;
+    prerequisites?: PrerequisiteScored;
     requirements?: RequirementScored[];
+};
+
+export type ScoreDefObj = {
+    [key: string]: ScoreDef;
+};
+
+export type ScoreValueObj = {
+    [key: string]: ScoreValue;
+};
+
+export type Option = {
+    label: string;
+    value: string;
 };

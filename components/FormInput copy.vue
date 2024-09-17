@@ -11,7 +11,6 @@ const props = defineProps<{
 }>();
 
 const model = defineModel<z.infer<typeof props.field>>({ required: true });
-const { value, errorMessage, meta, validate, resetField } = useField(props.fieldKey, toTypedSchema(props.field), { syncVModel: true });
 
 const fieldMeta = computed(() => props.field.getMeta() as z.ZodMeta);
 
@@ -80,19 +79,25 @@ const multiple = computed(() => {
 
 <template>
     <div class="form-input">
-        <Label :for="props.fieldKey">{{ label }}<span v-if="meta.required" class="text-destructive"> *</span></Label>
-        <component :is="inputComponent"
-            :type="inputType"
-            :placeholder="placeholder"
-            v-model="value"
-            :class="errorMessage ? 'border-destructive' : ''"
-            :options="options"
-            :multiple="multiple"
-            :fieldKey="props.fieldKey"
-            :field="props.field"
-            @blur="validate"
-        />
-        <p v-if="props.field.description" :id="`${props.fieldKey}-desc`" class="text-sm text-muted-foreground">{{ props.field.description }}</p>
-        <div v-if="errorMessage" :name="props.fieldKey" class="text-destructive">{{ errorMessage }}</div>
+        <Field
+            :name="props.fieldKey"
+            v-model="model"
+            v-slot="{ componentField, errors, meta }"
+            validateOnInput
+        >
+            <Label :for="props.fieldKey">{{ label }}<span v-if="meta.required" class="text-destructive"> *</span></Label>
+            <component :is="inputComponent"
+                :type="inputType"
+                :placeholder="placeholder"
+                v-bind="componentField"
+                :class="errors.length > 0 ? 'border-destructive' : ''"
+                :options="options"
+                :multiple="multiple"
+                :fieldKey="props.fieldKey"
+                :field="props.field"
+            />
+            <p v-if="props.field.description" :id="`${props.fieldKey}-desc`" class="text-sm text-muted-foreground">{{ props.field.description }}</p>
+            <ErrorMessage :name="props.fieldKey" class="text-destructive" />
+        </Field>
     </div>
 </template>

@@ -24,12 +24,15 @@
         "tailwind-merge": "^2.5.2",
         "tailwindcss-animate": "^1.0.7",
         "vue": "latest",
+        "yaml": "^2.5.1",
         "zod": "^3.23.8",
         "zod-metadata": "^1.1.0"
     },
     "devDependencies": {
+        "@modyfi/vite-plugin-yaml": "^1.1.0",
         "@nuxtjs/tailwindcss": "^6.12.1",
         "@types/jsonld": "^1.5.15",
+        "sass": "^1.77.8",
         "typescript": "^5.5.4"
     }
 }
