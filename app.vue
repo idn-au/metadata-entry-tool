@@ -22,11 +22,19 @@ const items = [
         label: "MET",
         to: "/met"
     },
+    {
+        label: "SPARQL",
+        to: "/sparql"
+    },
+    {
+        label: "Stepper",
+        to: "/stepper"
+    },
 ];
 </script>
 
 <template>
-    <div>
+    <header>
         <NavigationMenu>
             <NavigationMenuItem v-for="item in items">
                 <NavigationMenuLink :class="navigationMenuTriggerStyle()" as-child>
@@ -34,12 +42,18 @@ const items = [
                 </NavigationMenuLink>
             </NavigationMenuItem>
         </NavigationMenu>
+    </header>
+    <main>
         <NuxtPage />
-    </div>
+    </main>
 </template>
 
 <style lang="scss" scoped>
 li {
     list-style: none;
+}
+
+main {
+    padding: 1rem;
 }
 </style>

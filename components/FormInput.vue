@@ -35,6 +35,9 @@ const inputType = computed(() => {
             } else if (fieldDef.value.type._def.typeName === "ZodObject") {
                 return "add";
             }
+        // case "ZodEffects": // custom schema
+        case "ZodObject":
+            return "group";
         default:
             return "text";
     }
@@ -51,6 +54,12 @@ const inputComponent = computed(() => {
             return resolveComponent("ComboSelect");
         case "add":
             return resolveComponent("FormInputList");
+        case "search":
+            return resolveComponent("SearchInput");
+        case "customDate":
+            return resolveComponent("DateInput");
+        case "group":
+            return resolveComponent("FormInputGroup");
         default:
             return resolveComponent("Input");
     }
@@ -82,14 +91,15 @@ const multiple = computed(() => {
     <div class="form-input">
         <Label :for="props.fieldKey">{{ label }}<span v-if="meta.required" class="text-destructive"> *</span></Label>
         <component :is="inputComponent"
-            :type="inputType"
+            :type="['text', 'url'].includes(inputType) ? inputType : undefined"
             :placeholder="placeholder"
             v-model="value"
             :class="errorMessage ? 'border-destructive' : ''"
             :options="options"
             :multiple="multiple"
-            :fieldKey="props.fieldKey"
-            :field="props.field"
+            :fieldKey="['add', 'group'].includes(inputType) ? props.fieldKey : undefined"
+            :field="['add', 'group'].includes(inputType) ? props.field : undefined"
+            :query="fieldMeta.query || undefined"
             @blur="validate"
         />
         <p v-if="props.field.description" :id="`${props.fieldKey}-desc`" class="text-sm text-muted-foreground">{{ props.field.description }}</p>

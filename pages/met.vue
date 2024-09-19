@@ -4,35 +4,12 @@ import * as z from "zod";
 import * as jsonld from "jsonld";
 // import init, * as oxigraph from "oxigraph/web";
 import type { Option, ScoreValueObj } from "~/types";
+import { schemaCreateEmptyObject, removeEmptyValues, sparqlSelect, sparqlOptions } from "~/utils/form";
 
 register(z);
 
-// doesn't supported nested objects yet
-function schemaCreateEmptyObject(schema: z.AnyZodObject): any {
-    return Object.entries(schema.shape).reduce((obj, [key, val]) => {
-        obj[key] = structuredClone(val.getMeta().initial);
-        return obj;
-    }, {});
-}
-
-function removeEmptyValues(obj: any): any {
-    return Object.entries(obj).reduce((a, [k, v]) => (v === "" ? a : (a[k] = v, a)), {}); // TODO: check for equal to initial value
-}
-
 const SPARQL_URL = "https://api.idnau.org/sparql";
-
-async function sparqlOptions(url: string, query: string): Promise<Option[]> {
-    const r = await fetch(`${url}?query=${encodeURIComponent(query)}`);
-    const results = await r.json();
-    const options: Option[] = results.results.bindings.map(result => {
-        return {
-            value: result.value.value,
-            label: result.label.value
-        };
-    });
-    options.sort((a, b) => a.label.localeCompare(b.label));
-    return options;
-}
+const DEFAULT_IRI = "https://data.idnau.org/pid/resource/d23405b4-fc04-47e2-9e7a-9c5735ae3780";
 
 const { data: themeOptions } = await useAsyncData("themeOptions", () => sparqlOptions(SPARQL_URL, `
     PREFIX skos: <http://www.w3.org/2004/02/skos/core#>
@@ -66,6 +43,27 @@ const { data: roleOptions } = await useAsyncData("roleOptions", () => sparqlOpti
             skos:inScheme ?cs ;
             skos:prefLabel ?label .
     }`));
+
+async function agentSearch(term: string) {
+    const r = await sparqlSelect(SPARQL_URL, `PREFIX dcterms: <http://purl.org/dc/terms/>
+        PREFIX sdo: <https://schema.org/>
+        SELECT DISTINCT ?iri ?name ?type
+        WHERE {
+            GRAPH <https://data.idnau.org/pid/agentsdb> {
+                VALUES ?type { sdo:Person sdo:Organization }
+                ?iri a ?type ;
+                    sdo:name ?name .
+                FILTER regex(?name, "${term}", "i")
+            }
+        } LIMIT 20`);
+    return r.map(x => {
+        return {
+            iri: x.iri.value,
+            name: x.name.value,
+            type: x.type.value,
+        }
+    })
+}
 
 const schema = z.object({
     iri: z.string().min(1, "IRI is required").url({ message: "Must be a valid IRI" }).describe("a description").meta({
@@ -105,16 +103,16 @@ const schema = z.object({
     }),
     // object array is dynamic adding of a group of inputs
     agentRole: z.object({
-        agent: z.string().min(1, "Agent is required").describe("a description").meta({
+        agent: z.object({
+            iri: z.string(),
+            name: z.string(),
+            type: z.string(),
+        }).describe("a description").meta({
             label: "Agent",
-            type: "select", // select string is single
-            placeholder: "Choose an agent",
-            initial: "",
-            options: [
-                { label: "agent 1", value: "https://example.com/agent/1" },
-                { label: "agent 2", value: "https://example.com/agent/2" },
-                { label: "agent 3", value: "https://example.com/agent/3" },
-            ],
+            type: "search",
+            placeholder: "Search for an agent",
+            initial: {},
+            query: agentSearch,
         }),
         role: z.string().array().min(1, "Role is required").describe("a description").meta({
             label: "Role",
@@ -126,7 +124,7 @@ const schema = z.object({
     }).array().min(1, "Must have an agent and role selected").meta({
         label: "Agents",
         type: "add",
-        initial: [{agent: "", role: []}],
+        initial: [{agent: {}, role: []}],
     }),
 });
 
@@ -226,7 +224,11 @@ const context = {
 const rdfString = ref("");
 
 watch(data, async (newValue) => {
-    const nonempty = removeEmptyValues(newValue);
+    const initialValues = Object.entries(schema.shape).reduce((obj, [k, v]) => {
+        obj[k] = v.getMeta().initial;
+        return obj;
+    }, {});
+    const nonempty = removeEmptyValues(newValue, initialValues);
     const doc = { "@context": context, type: "dcat:Resource", ...nonempty };
     const rdf = await (jsonld.toRDF(doc, { format: "application/n-quads" }) as Promise<string>);
     rdfString.value = rdf;
@@ -239,33 +241,30 @@ watch(data, async (newValue) => {
 }, { deep: true });
 
 watch(rdfString, async (newValue) => {
-    if (data.value.iri) {
-        fair.value = await fairScore(newValue, data.value.iri, "application/n-triples");
-        care.value = await careScore(newValue, data.value.iri, "application/n-triples");
-    }
+    fair.value = await fairScore(newValue, data.value.iri, "application/n-triples");
+    care.value = await careScore(newValue, data.value.iri, "application/n-triples");
 });
 </script>
 
 <template>
+    <div class="flex flex-row gap-4 w-full">
+        <div class="flex-grow max-w-[860px]">
+            <Button @click="data.iri = DEFAULT_IRI">Generate IRI</Button>
+            <FormBuilder :schema="schema" v-model="data" />
+        </div>
+        <div class="flex-grow">
+            <Scores title="FAIR" :scores="fair" />
+            <Scores title="CARE" :scores="care" />
+        </div>
+    </div>
     <div>
-        <Card class="form">
-            <CardContent>
-                <FormBuilder :schema="schema" v-model="data" />
-            </CardContent>
-        </Card>
-        <Card class="scores">
-            <CardContent>
-                <Scores title="FAIR" :scores="fair" />
-                <Scores title="CARE" :scores="care" />
-            </CardContent>
-        </Card>
-        <Card class="rdf">
-            <CardContent>
-                <pre>{{ rdfString }}</pre>
-            </CardContent>
-        </Card>
+        <h2>RDF</h2>
+        <pre>{{ rdfString }}</pre>
     </div>
 </template>
 
 <style lang="scss" scoped>
+pre {
+    white-space: pre-wrap;
+}
 </style>

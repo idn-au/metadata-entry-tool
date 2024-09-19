@@ -8,17 +8,23 @@ const props = defineProps<{
 </script>
 
 <template>
-    <div class="scores">
-        <div class="score-title">
-            <h5>{{ props.title }} Score</h5>
-        </div>
-        <div class="circles" :style="{gridTemplateColumns: `repeat(${Object.keys(props.scores).length}, 1fr)`}">
-            <div v-for="[key, score] in Object.entries(props.scores)" class="circle">
-                <CircleProgress :value="score.value" :max="score.max" tickWhenComplete />
-                <div class="circle-name">{{ key.toUpperCase() }}</div>
+    <Modal>
+        <template #trigger>
+            <div class="scores">
+                <div class="score-title">
+                    <h5>{{ props.title }} Score</h5>
+                </div>
+                <div class="circles" :style="{gridTemplateColumns: `repeat(${Object.keys(props.scores).length}, 1fr)`}">
+                    <div v-for="[key, score] in Object.entries(props.scores)" class="circle">
+                        <CircleProgress :value="score.value" :max="score.max" tickWhenComplete />
+                        <div class="circle-name">{{ key.toUpperCase() }}</div>
+                    </div>
+                </div>
             </div>
-        </div>
-    </div>
+        </template>
+        <template #title>{{ props.title }} Score</template>
+        <ScoreAccordion :scoreObj="scores" />
+    </Modal>
 </template>
 
 <style lang="scss" scoped>

@@ -44,7 +44,7 @@ watch(model, (newValue) => {
     <Popover v-model:open="open">
         <PopoverTrigger as-child>
             <Button variant="outline" role="combobox" :aria-expanded="open"
-                :class="cn(`w-[200px] justify-between ${(props.multiple ? model.length > 0 : model) ? '' : 'text-muted-foreground'}`, props.class)">
+                :class="cn(`w-full max-w-[300px] justify-between ${(props.multiple ? model.length > 0 : model) ? '' : 'text-muted-foreground'}`, props.class)">
                 {{ (props.multiple ? model.length > 0 : model)
                     ? (props.multiple
                         ? model.map(v => props.options.find((option) => option.value === v)?.label).join(", ")
@@ -53,8 +53,8 @@ watch(model, (newValue) => {
                 <ChevronsUpDown class="ml-2 h-4 w-4 shrink-0 opacity-50" />
             </Button>
         </PopoverTrigger>
-        <PopoverContent class="w-[200px] p-0">
-            <Command :filterFunction="filterFunction">
+        <PopoverContent class="w-full max-w-[300px] p-0">
+            <Command>
                 <CommandInput class="h-9" placeholder="Search..." />
                 <CommandEmpty>No results found.</CommandEmpty>
                 <CommandList>

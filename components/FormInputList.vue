@@ -5,7 +5,7 @@ import * as z from "zod";
 register(z);
 
 const props = defineProps<{
-    fieldKey: string;
+    // fieldKey: string;
     field: z.ZodArray<z.AnyZodObject>;
 }>();
 
@@ -23,17 +23,24 @@ function remove(index: number) {
 </script>
 
 <template>
-    <div>
-        <div v-for="(entry, index) in model" :key="index">
-            <FormInput
-                v-for="[k, f] in Object.entries(props.field.element.shape)"
-                :key="index + k"
-                :fieldKey="k + index"
-                :field="(f as z.ZodTypeAny)"
-                v-model="entry[k]"
-            />
-            <Button v-if="index > 0" @click="remove(index)">Remove</Button>
-        </div>
-        <Button @click="add">+ Add</Button>
-    </div>
+    <Card>
+        <CardContent class="flex flex-col gap-4 p-6">
+            <div v-for="(entry, index) in model" :key="index" class="flex flex-row">
+                <FormInputGroup v-model="model[index]" :field="props.field.element" />
+                <!-- <div class="grid grid-cols-2 flex-grow">
+                    <FormInput
+                        v-for="[k, f] in Object.entries(props.field.element.shape)"
+                        :key="k + index"
+                        :fieldKey="k + index"
+                        :field="(f as z.ZodTypeAny)"
+                        v-model="entry[k]"
+                    />
+                </div> -->
+                <div class="w-24">
+                    <Button v-if="index > 0" @click="remove(index)">Remove</Button>
+                </div>
+            </div>
+        </CardContent>
+        <CardFooter><Button @click="add">+ Add</Button></CardFooter>
+    </Card>
 </template>
