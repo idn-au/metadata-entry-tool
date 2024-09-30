@@ -293,72 +293,30 @@ const fairScore = computed(() => {
     setRequirement(computedFair, ["f", "f1"], 0, calcIri.value !== "");
     // ID is URL
     setRequirement(computedFair, ["f", "f1"], 1, calcIri.value !== "");
-    // ID is globally unique, citeable & persistent (is DOI, etc.?)
-    setRequirement(computedFair, ["f", "f1"], 2, [
-        "doi:",
-        "doi.org",
-        "ark:",
-        "purl.org",
-        "linked.data.gov.au",
-        "handle.net",
-        "w3id.org",
-    ].some(x => calcIri.value.includes(x)));
+    // ID is globally unique, citeable & persistent
+    setRequirement(computedFair, ["f", "f1"], 2, calcIri.value !== "");
 
     // F2
     // has title & desc
     setRequirement(computedFair, ["f", "f2"], 0, data.value.title !== "" && data.value.description !== "");
-    // any other dcterms props set
-    setRequirement(computedFair, ["f", "f2"], 1, [
-        data.value.indigeneity.some(i => i !== ""),
-        data.value.created !== "",
-        data.value.modified !== "",
-        data.value.issued !== "",
-        calcLicense.value !== "",
-        data.value.rights !== "",
-        data.value.accessRights !== "",
-        calcGeometry.value !== "",
-        data.value.temporalStart !== "",
-        data.value.temporalEnd !== "",
-    ].some(p => p));
-    // all recommended props are set - title, description, created, modified, type qualifiedAttribution
-    setRequirement(computedFair, ["f", "f2"], 2, [
-        data.value.title !== "",
-        data.value.description !== "",
-        data.value.created !== "",
-        data.value.modified !== "",
-        data.value.agentRoles.length > 0
-    ].every(p => p));
+    // has indigeneity OR theme
+    setRequirement(computedFair, ["f", "f2"], 1, data.value.indigeneity.some(i => i !== "") || data.value.themes.some(i => i !== ""));
+    // has indigeneity AND theme
+    setRequirement(computedFair, ["f", "f2"], 2, data.value.indigeneity.some(i => i !== "") && data.value.themes.some(i => i !== ""));
 
     // F3
-    setRequirement(computedFair, ["f", "f3"], 0, calcIri.value !== "");
+    setRequirement(computedFair, ["f", "f3"], 0, data.value.accessUrl !== "");
 
-    // F4
-    // dcterms:isPartOf? metadata in catalogue? or use dcat:accessURL?
+    // F4 - can't score
     // setRequirement(computedFair, ["f", "f4"], 0, calcIri.value !== "");
     // setRequirement(computedFair, ["f", "f4"], 1, calcIri.value !== "");
 
     // A1
-    setRequirement(computedFair, ["a", "a1"], 0, [
-        `${ACCESS_RIGHTS_VOCAB}/metadata-only`,
-        `${ACCESS_RIGHTS_VOCAB}/conditional`,
-        `${ACCESS_RIGHTS_VOCAB}/embargoed`,
-        `${ACCESS_RIGHTS_VOCAB}/open`
-    ].some(p => data.value.accessRights === p));
-    setRequirement(computedFair, ["a", "a1"], 1, [
-        `${ACCESS_RIGHTS_VOCAB}/conditional`,
-        `${ACCESS_RIGHTS_VOCAB}/embargoed`,
-        `${ACCESS_RIGHTS_VOCAB}/open`
-    ].some(p => data.value.accessRights === p));
-    setRequirement(computedFair, ["a", "a1"], 2, [
-        `${ACCESS_RIGHTS_VOCAB}/embargoed`,
-        `${ACCESS_RIGHTS_VOCAB}/open`
-    ].some(p => data.value.accessRights === p));
-    setRequirement(computedFair, ["a", "a1"], 3, [
-        `${ACCESS_RIGHTS_VOCAB}/open`
-    ].some(p => data.value.accessRights === p));
+    setRequirement(computedFair, ["a", "a1", "a1.1"], 0, calcIri.value !== "" && data.value.accessRights !== "");
+    setRequirement(computedFair, ["a", "a1", "a1.1"], 1, data.value.accessRights === `${ACCESS_RIGHTS_VOCAB}/open`);
+    setRequirement(computedFair, ["a", "a1", "a1.2"], 0, data.value.accessUrl !== "" && data.value.accessRights !== "");
 
-    // A2
-    // record available if data is no longer available - can't test
+    // A2 - MET doesn't support data policy yet
 
     // I1
     // structured, machine-readable - in RDF
@@ -366,35 +324,66 @@ const fairScore = computed(() => {
     setRequirement(computedFair, ["i", "i1"], 1, true);
 
     // I2
-    // data has been described - ?
-    setRequirement(computedFair, ["i", "i2"], 0, true);
-    // uses reference vocabs - true due to the form using vocabs?
-    setRequirement(computedFair, ["i", "i2"], 1, true);
-    // vocab references use global ids - true because rdf vocabs use IRIs?
-    setRequirement(computedFair, ["i", "i2"], 2, true);
+    // F1 & F2 fully scored
+    setRequirement(computedFair, ["i", "i2"], 0, [
+        // F1
+        calcIri.value !== "",
+        // F2
+        data.value.title !== "",
+        data.value.description !== "",
+        data.value.indigeneity.some(i => i !== ""),
+        data.value.themes.some(i => i !== ""),
+    ].every(p => p));
+    // indigeneity and theme and license and access rights
+    setRequirement(computedFair, ["i", "i2"], 1, [
+        data.value.indigeneity.some(i => i !== ""),
+        data.value.themes.some(i => i !== ""),
+        calcLicense.value !== "",
+        data.value.accessRights !== "",
+    ].every(p => p));
+    // any of the above values is an IRI
+    setRequirement(computedFair, ["i", "i2"], 2, [
+        data.value.indigeneity.some(i => i !== ""),
+        data.value.themes.some(i => i !== ""),
+        calcLicense.value !== "",
+        data.value.accessRights !== "",
+    ].some(p => p));
 
     // I3
-    // links to other metadata - ?
-    setRequirement(computedFair, ["i", "i3"], 0, true);
-    // machine-readable - always for rdf
+    // license or spatial or access URL or IDG framework URL
+    setRequirement(computedFair, ["i", "i3"], 0, [
+        calcLicense.value !== "",
+        data.valuespatialIri !== "" && data.value.useSpatialIri,
+        data.value.accessUrl !== "",
+        // can't do IDG yet but can for MET
+        data.value.agentRoles.some(x => x.idg.url !== ""),
+    ].some(p => p));
+    // machine-readable - always for RDF
     setRequirement(computedFair, ["i", "i3"], 1, true);
 
     // R1
     // R1.1
-    // has a license
     setRequirement(computedFair, ["r", "r1", "r1.1"], 0, calcLicense.value !== "");
+    setRequirement(computedFair, ["r", "r1", "r1.1"], 1, data.value.rights !== "");
+    setRequirement(computedFair, ["r", "r1", "r1.1"], 2, data.value.accessRights !== "");
 
     // R1.2
-    // has prov - check prov: props? - prov:startedAtTime, prov:endedAtTime, prov:qualifiedAttribution, prov:agent
-    setRequirement(computedFair, ["r", "r1", "r1.2"], 0, [
-        data.value.temporalStart !== "",
-        data.value.temporalEnd !== "",
-        data.value.agentRoles.length > 0
-    ].some(p => p));
+    // custodian/author/creator
+    setRequirement(computedFair, ["r", "r1", "r1.2"], 0, data.value.agentRoles.some(x => x.role.some(r => [
+        `${ROLES_VOCAB}/author`,
+        `${ROLES_VOCAB}/creator`,
+        `${ROLES_VOCAB}/custodian`,
+    ].includes(r))));
+    setRequirement(computedFair, ["r", "r1", "r1.2"], 1, data.value.created !== "");
+    setRequirement(computedFair, ["r", "r1", "r1.2"], 2, calcLicense.value !== "");
+    setRequirement(computedFair, ["r", "r1", "r1.2"], 3, calcGeometry.value !== "");
+    // contact details not in RDF yet - can score from MET fields
+    setRequirement(computedFair, ["r", "r1", "r1.2"], 4, data.value.contactName !== "" && data.value.contactEmail !== "");
 
     // R1.3
-    // has a data source - dcat:accessURL? or dcterms:source (not used here)?
-    // data source has prov
+    // F3 = 2
+    setRequirement(computedFair, ["r", "r1", "r1.3"], 0, data.value.accessUrl !== "");
+    // data source has prov - can't score yet
 
     calculateScore(computedFair);
     
@@ -409,7 +398,7 @@ const careScore = computed(() => {
     // has an IRI
     setRequirement(computedCare, ["c", "c1"], 0, calcIri.value !== "");
     // indigineity is set
-    setRequirement(computedCare, ["c", "c1"], 1, data.value.indigeneity.length > 0);
+    setRequirement(computedCare, ["c", "c1"], 1, data.value.indigeneity.some(i => i !== ""));
     // access rights set
     setRequirement(computedCare, ["c", "c1"], 2, data.value.accessRights !== "");
     calculateSubScore(computedCare, ["c", "c1"]); // needed if prerequisites depend on this score
@@ -417,17 +406,17 @@ const careScore = computed(() => {
     // C2
     setPrerequisite(computedCare, ["c", "c2"], hasFullScore(computedCare, ["c", "c1"]));
     // IRI resolves
-    setRequirement(computedCare, ["c", "c2"], 0, calcIri.value !== ""); // need to check IRI resolves
+    setRequirement(computedCare, ["c", "c2"], 0, calcIri.value !== ""); // need to check IRI resolves?
     // title exists
     setRequirement(computedCare, ["c", "c2"], 1, data.value.title !== "");
     // description exists
     setRequirement(computedCare, ["c", "c2"], 2, data.value.description !== "");
-    // custodian has indigeneity
-    setRequirement(computedCare, ["c", "c2"], 3, data.value.agentRoles.some(x => x.role.includes(`${ROLES_VOCAB}/custodian`) && [
-        `${ORG_INDIGENEITY_VOCAB}/indigenous-persons-organisation`,
-        `${ORG_INDIGENEITY_VOCAB}/owned-by-indigenous-persons`,
-        `${ORG_INDIGENEITY_VOCAB}/run-by-indigenous-persons`
-    ].includes(x.agent.indigeneity)));
+    // custodian has indigeneity - selecting from agentsDB list only uses IRI string, will need to add in other properties like indigeneity
+    // setRequirement(computedCare, ["c", "c2"], 3, data.value.agentRoles.some(x => x.role.includes(`${ROLES_VOCAB}/custodian`) && [
+    //     `${ORG_INDIGENEITY_VOCAB}/indigenous-persons-organisation`,
+    //     `${ORG_INDIGENEITY_VOCAB}/owned-by-indigenous-persons`,
+    //     `${ORG_INDIGENEITY_VOCAB}/run-by-indigenous-persons`
+    // ].includes(x.agent.indigeneity)));
     calculateSubScore(computedCare, ["c", "c2"]);
 
     // C3
@@ -439,19 +428,19 @@ const careScore = computed(() => {
     calculateSubScore(computedCare, ["c", "c3"]);
 
     // A1
-    // custodian has indigeneity
-    setRequirement(computedCare, ["a", "a1"], 0, data.value.agentRoles.some(x => x.role.includes(`${ROLES_VOCAB}/custodian`) && [
-        `${ORG_INDIGENEITY_VOCAB}/indigenous-persons-organisation`,
-        `${ORG_INDIGENEITY_VOCAB}/owned-by-indigenous-persons`,
-        `${ORG_INDIGENEITY_VOCAB}/run-by-indigenous-persons`
-    ].includes(x.agent.indigeneity)));
+    // custodian has indigeneity - same issue as above
+    // setRequirement(computedCare, ["a", "a1"], 0, data.value.agentRoles.some(x => x.role.includes(`${ROLES_VOCAB}/custodian`) && [
+    //     `${ORG_INDIGENEITY_VOCAB}/indigenous-persons-organisation`,
+    //     `${ORG_INDIGENEITY_VOCAB}/owned-by-indigenous-persons`,
+    //     `${ORG_INDIGENEITY_VOCAB}/run-by-indigenous-persons`
+    // ].includes(x.agent.indigeneity)));
     // has license, rights & agent with role Rights Holder
     setRequirement(computedCare, ["a", "a1"], 1, calcLicense.value !== "" && data.value.rights !== "" && data.value.agentRoles.some(x => x.role.includes(`${ROLES_VOCAB}/rightsHolder`)));
     calculateSubScore(computedCare, ["a", "a1"]);
 
     // A2
     setPrerequisite(computedCare, ["a", "a2"], hasFullScore(computedCare, ["a", "a1"]));
-    // IDG framework exists (on any agent?)
+    // IDG framework exists - not in RDF yet but can score with MET fields
     setRequirement(computedCare, ["a", "a2"], 0, data.value.agentRoles.some(x => x.idg.url !== "" || x.idg.desc !== ""));
     // agent with IDG framework has role Custodian
     setRequirement(computedCare, ["a", "a2"], 1, data.value.agentRoles.some(x => x.idg.exists === "true" && x.role.includes(`${ROLES_VOCAB}/custodian`)));
@@ -468,12 +457,12 @@ const careScore = computed(() => {
     // R1
     // data indigeneity = by indigenous people
     setRequirement(computedCare, ["r", "r1"], 0, data.value.indigeneity !== `${DATA_INDIGENEITY_VOCAB}/by-indigenous-people`);
-    // custodian has indigeneity
-    setRequirement(computedCare, ["r", "r1"], 0, data.value.agentRoles.some(x => x.role.includes(`${ROLES_VOCAB}/custodian`) && [
-        `${ORG_INDIGENEITY_VOCAB}/indigenous-persons-organisation`,
-        `${ORG_INDIGENEITY_VOCAB}/owned-by-indigenous-persons`,
-        `${ORG_INDIGENEITY_VOCAB}/run-by-indigenous-persons`
-    ].includes(x.agent.indigeneity)));
+    // custodian has indigeneity - same as above
+    // setRequirement(computedCare, ["r", "r1"], 0, data.value.agentRoles.some(x => x.role.includes(`${ROLES_VOCAB}/custodian`) && [
+    //     `${ORG_INDIGENEITY_VOCAB}/indigenous-persons-organisation`,
+    //     `${ORG_INDIGENEITY_VOCAB}/owned-by-indigenous-persons`,
+    //     `${ORG_INDIGENEITY_VOCAB}/run-by-indigenous-persons`
+    // ].includes(x.agent.indigeneity)));
     calculateSubScore(computedCare, ["r", "r1"]);
 
     // R2
@@ -486,7 +475,7 @@ const careScore = computed(() => {
     // C3 has scored fully
     setRequirement(computedCare, ["r", "r3"], 0, hasFullScore(computedCare, ["c", "c3"]));
     // custodian has resolvable url for IDG
-    setRequirement(computedCare, ["r", "r3"], 1, data.value.agentRoles.some(x => x.idg.exists === "true" && x.role.includes(`${ROLES_VOCAB}/custodian`)));
+    setRequirement(computedCare, ["r", "r3"], 1, data.value.agentRoles.some(x => x.idg.exists === "true" && x.idn.url !== "" && x.role.includes(`${ROLES_VOCAB}/custodian`)));
     // has spatial
     setRequirement(computedCare, ["r", "r3"], 2, calcGeometry.value !== "");
     // at least 2 themes selected
@@ -504,8 +493,8 @@ const careScore = computed(() => {
     setPrerequisite(computedCare, ["e", "e2"], hasFullScore(computedCare, ["e", "e1"]));
     // A3 has scored fully
     setRequirement(computedCare, ["e", "e2"], 0, hasFullScore(computedCare, ["a", "a3"]));
-    // custodian has indigeneity = indigenous persons organisation
-    setRequirement(computedCare, ["r", "r1"], 0, data.value.agentRoles.some(x => x.role.includes(`${ROLES_VOCAB}/custodian`) && x.agent.indigeneity === `${ORG_INDIGENEITY_VOCAB}/indigenous-persons-organisation`));
+    // custodian has indigeneity = indigenous persons organisation - same issue as above
+    // setRequirement(computedCare, ["r", "r1"], 0, data.value.agentRoles.some(x => x.role.includes(`${ROLES_VOCAB}/custodian`) && x.agent.indigeneity === `${ORG_INDIGENEITY_VOCAB}/indigenous-persons-organisation`));
 
     // E3
     setPrerequisite(computedCare, ["e", "e3"], hasFullScore(computedCare, ["e", "e1"]) && hasFullScore(computedCare, ["r", "r3"]));

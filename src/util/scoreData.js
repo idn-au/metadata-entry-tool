@@ -14,17 +14,17 @@ export const fair = {
                     {
                         value: 1,
                         enabled: false,
-                        desc: "Has an identifier",
+                        desc: "Metadata has an identifier",
                     },
                     {
-                        value: 2,
+                        value: 1,
                         enabled: false,
-                        desc: "Identifier is a URL",
+                        desc: "Metadata identifier is a URL",
                     },
                     {
-                        value: 5,
+                        value: 3,
                         enabled: false,
-                        desc: "Identifier is globally unique, citeable and persistent",
+                        desc: "Metadata identifier is globally unique, citable and persistent",
                     }
                 ]
             },
@@ -37,15 +37,15 @@ export const fair = {
                     {
                         value: 1,
                         enabled: false,
-                        desc: "Title & description included",
+                        desc: "Resource title and description is included",
                     },
                     {
-                        value: 2,
+                        value: 1,
                         enabled: false,
                         desc: "Additional descriptive properties are present",
                     },
                     {
-                        value: 1,
+                        value: 2,
                         enabled: false,
                         desc: "All recommended descriptive properties are present",
                     }
@@ -58,9 +58,9 @@ export const fair = {
                 desc: "Metadata clearly and explicitly include the identifier of the data they describe",
                 requirements: [
                     {
-                        value: 1,
+                        value: 2,
                         enabled: false,
-                        desc: "Identifier included in all metadata records/files describing the data",
+                        desc: "Distribution information is included as a resolvable URL",
                     }
                 ]
             },
@@ -95,82 +95,50 @@ export const fair = {
                 value: 0,
                 max: 0,
                 desc: "(Meta)data are retrievable by their identifier using a standardised communication protocol",
-                // scores: {
-                //     "a1.1": {
-                //         title: "",
-                //         value: 10,
-                //         max: 10,
-                //         desc: "The protocol is open, free and universally implementable",
-                //         requirements: [
-                //             {
-                //                 value: 2,
-                //                 enabled: false,
-                //                 desc: "Access to metadata",
-                //             },
-                //             {
-                //                 value: 2,
-                //                 enabled: false,
-                //                 desc: "Conditional access",
-                //             },
-                //             {
-                //                 value: 2,
-                //                 enabled: false,
-                //                 desc: "Embargoed access",
-                //             },
-                //             {
-                //                 value: 4,
-                //                 enabled: false,
-                //                 desc: "Open access",
-                //             }
-                //         ]
-                //     },
-                //     "a1.2": { // left out of calcuator
-                //         title: "",
-                //         value: 0,
-                //         max: 0,
-                //         desc: "The protocol allows for an authentication and authorisation procedure where necessary",
-                //         // requirements: [
-                //         //     {
-                //         //         value: 0,
-                //         //         enabled: false,
-                //         //         desc: "is a reachable URL",
-                //         //     }
-                //         // ]
-                //     }
-                // }
-                requirements: [
-                    {
-                        value: 2,
-                        enabled: false,
-                        desc: "Access to metadata",
+                scores: {
+                    "a1.1": {
+                        title: "",
+                        value: 0,
+                        max: 0,
+                        desc: "The protocol is open, free and universally implementable",
+                        requirements: [
+                            {
+                                value: 3,
+                                enabled: false,
+                                desc: "F1 >= 2 AND Access Rights exist",
+                            },
+                            {
+                                value: 1,
+                                enabled: false,
+                                desc: "Access Rights are open",
+                            },
+                        ]
                     },
-                    {
-                        value: 2,
-                        enabled: false,
-                        desc: "Conditional access",
-                    },
-                    {
-                        value: 2,
-                        enabled: false,
-                        desc: "Embargoed access",
-                    },
-                    {
-                        value: 4,
-                        enabled: false,
-                        desc: "Open access",
+                    "a1.2": {
+                        title: "",
+                        value: 0,
+                        max: 0,
+                        desc: "The protocol allows for an authentication and authorisation procedure where necessary",
+                        requirements: [
+                            {
+                                value: 3,
+                                enabled: false,
+                                desc: "F3 = 2 AND Access Rights exist",
+                            }
+                        ]
                     }
-                ]
+                }
             },
-            a2: { // left out of calcuator
+            a2: {
                 title: "",
                 value: 0,
                 max: 0,
                 desc: "Metadata should be accessible even when the data is no longer available",
                 requirements: [
                     {
-                        value: 1,
+                        value: 3,
                         enabled: false,
-                        desc: "Record will be available if the data is no longer available",
+                        desc: "Under the archive policy, the metadata record will be available even if the data/resource is no longer available",
                     }
                 ]
             },
@@ -191,12 +159,12 @@ export const fair = {
                     {
                         value: 1,
                         enabled: false,
-                        desc: "Structured, open standard",
+                        desc: "Metadata is structured using an open standard",
                     },
                     {
-                        value: 1,
+                        value: 2,
                         enabled: false,
-                        desc: "Machine-readable",
+                        desc: "Metadata is machine readable",
                     }
                 ]
             },
@@ -207,19 +175,19 @@ export const fair = {
                 desc: "(Meta)data use vocabularies that follow the FAIR principles",
                 requirements: [
                     {
-                        value: 1,
+                        value: 4,
                         enabled: false,
-                        desc: "Data has been described",
+                        desc: "F1 & F2 are scored fully",
+                    },
+                    {
+                        value: 4,
+                        enabled: false,
+                        desc: "Reference vocabularies have been used to describe the data",
                     },
                     {
                         value: 1,
                         enabled: false,
-                        desc: "Reference vocabs",
-                    },
-                    {
-                        value: 1,
-                        enabled: false,
-                        desc: "Vocab references use global identifiers",
+                        desc: "Vocabulary references use global identifiers",
                     }
                 ]
             },
@@ -230,14 +198,14 @@ export const fair = {
                 desc: "(Meta)data include qualified references to other (meta)data",
                 requirements: [
                     {
-                        value: 2,
+                        value: 4,
                         enabled: false,
-                        desc: "Links to other metadata",
+                        desc: "Metadata includes links to other metadata",
                     },
                     {
                         value: 1,
                         enabled: false,
-                        desc: "Machine-readable",
+                        desc: "Metadata is machine readable",
                     }
                 ]
             },
@@ -262,10 +230,20 @@ export const fair = {
                         desc: "(Meta)data are released with a clear and accessible data usage license",
                         requirements: [
                             {
-                                value: 2,
+                                value: 1,
                                 enabled: false,
-                                desc: "Has a license",
-                            }
+                                desc: "Metadata includes license",
+                            },
+                            {
+                                value: 1,
+                                enabled: false,
+                                desc: "Metadata includes rights statement",
+                            },
+                            {
+                                value: 1,
+                                enabled: false,
+                                desc: "Access rights exist",
+                            },
                         ]
                     },
                     "r1.2": {
@@ -275,10 +253,30 @@ export const fair = {
                         desc: "(Meta)data are associated with detailed provenance",
                         requirements: [
                             {
-                                value: 3,
+                                value: 1,
                                 enabled: false,
-                                desc: "Has provenance",
-                            }
+                                desc: "Includes role custodian/author/creator",
+                            },
+                            {
+                                value: 1,
+                                enabled: false,
+                                desc: "Created date included",
+                            },
+                            {
+                                value: 1,
+                                enabled: false,
+                                desc: "License exists",
+                            },
+                            {
+                                value: 2,
+                                enabled: false,
+                                desc: "Spatial exists",
+                            },
+                            {
+                                value: 1,
+                                enabled: false,
+                                desc: "Contact details exist",
+                            },
                         ]
                     },
                     "r1.3": {
@@ -288,14 +286,14 @@ export const fair = {
                         desc: "(Meta)data meet domain-relevant community standards",
                         requirements: [
                             {
-                                value: 1,
+                                value: 2,
                                 enabled: false,
-                                desc: "Has a data source",
+                                desc: "Metadata includes a link to the data source",
                             },
                             {
                                 value: 1,
                                 enabled: false,
-                                desc: "Data source has provenance",
+                                desc: "The data source has provenance",
                             }
                         ]
                     },
@@ -321,7 +319,7 @@ export const care = {
                     {
                         value: 1,
                         enabled: false,
-                        desc: "Metadata is persistently identified (i.e. is assigned an IRI)",
+                        desc: "Metadata is discoverable (persistently identified)",
                     },
                     {
                         value: 1,
@@ -331,7 +329,7 @@ export const care = {
                     {
                         value: 1,
                         enabled: false,
-                        desc: "Data has Access Rights selected",
+                        desc: "Data has Access Rights described",
                     }
                 ],
             },
@@ -380,18 +378,13 @@ export const care = {
                     {
                         value: 2,
                         enabled: false,
-                        desc: "Licence and Rights have been identified AND Agent with role “Rights Holder” has been identified",
+                        desc: "License and Rights have been identified and Agent with role “Rights Holder” has been identified",
                     },
                     {
                         value: 1,
                         enabled: false,
                         desc: "Data distribution information exists",
                     },
-                    // {
-                    //     value: 1,
-                    //     enabled: false,
-                    //     desc: "Equitable outcomes from data are discoverable",
-                    // }
                 ],
             },
         }
@@ -411,12 +404,12 @@ export const care = {
                     {
                         value: 1,
                         enabled: false,
-                        desc: "Custodian (Role) Agent information in database has Indigeneity = “Indigenous Persons Organisation” OR “Owned By Indigenous Persons” OR “Run By Indigenous Persons”",
+                        desc: "Custodian (Role) Agent information in database has indigeneity = “Indigenous Persons Organisation” OR “Owned By Indigenous Persons” OR “Run By Indigenous Persons”",
                     },
                     {
                         value: 2,
                         enabled: false,
-                        desc: "License and Rights have been fully described AND Agent with role “Rights Holder” has been identified",
+                        desc: "License and Rights have been identified and Agent with role “Rights Holder” has been identified",
                     },
                 ],
             },
@@ -486,7 +479,7 @@ export const care = {
                     {
                         value: 2,
                         enabled: false,
-                        desc: "Custodian (Role) Agent information in database has Indigeneity = “Indigenous Persons Organisation” OR “Owned By Indigenous Persons” OR “Run By Indigenous Persons”",
+                        desc: "Custodian (Role) Agent information in database has indigeneity = “Indigenous Persons Organisation” OR “Owned By Indigenous Persons” OR “Run By Indigenous Persons”",
                     },
                 ],
             },
@@ -525,7 +518,7 @@ export const care = {
                     {
                         value: 1,
                         enabled: false,
-                        desc: "Custodian (Role) Agent has identified a resolvable URL link to an Indigenous Data Governance Framework or Indigenous Data Committee in the metadata record",
+                        desc: "Custodian (Role) Agent has identified a resolvable URL link to, OR text description of, an Indigenous Data Governance Framework or Indigenous Data Committee in the metadata record",
                     },
                     {
                         value: 1,
@@ -535,7 +528,7 @@ export const care = {
                     {
                         value: 1,
                         enabled: false,
-                        desc: "At least two themes have been selected ",
+                        desc: "At least two themes have been selected",
                     },
                 ],
             },
