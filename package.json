@@ -20,6 +20,7 @@
         "nuxt": "^3.12.4",
         "oxigraph": "0.4.0-alpha.8",
         "radix-vue": "^1.9.4",
+        "scores-calculator-js": "link:../scores-calculator/js",
         "shadcn-nuxt": "^0.10.4",
         "tailwind-merge": "^2.5.2",
         "tailwindcss-animate": "^1.0.7",

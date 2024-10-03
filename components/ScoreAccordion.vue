@@ -1,4 +1,5 @@
 <script lang="ts" setup>
+import { Square, SquareCheckBig } from "lucide-vue-next";
 import type { ScoreValueObj } from "~/types";
 
 const props = defineProps<{
@@ -24,8 +25,18 @@ const props = defineProps<{
                         <ScoreAccordion :scoreObj="score.scores" class="ml-4" />
                     </CardContent>
                 </Card>
-                <div v-else-if="score.requirements">
-                    {{ score.requirements }}
+                <div v-else-if="score.requirements" class="flex flex-col gap-2">
+                    <div v-if="score.prerequisites" :class="`flex flex-row gap-2 items-start mb-2 ${score.prerequisites.enabled ? '' : 'text-muted-foreground'}`">
+                        <SquareCheckBig v-if="score.prerequisites.enabled" class="h-4 w-4 shrink-0" />
+                        <Square v-else class="h-4 w-4 shrink-0" />
+                        <span>If {{ score.prerequisites.conditions.map(c => c.title).join(' and ') }} then the following scores can be assigned:</span>
+                    </div>
+                    <div v-for="requirement in score.requirements" :class="`flex flex-row gap-2 items-start ${requirement.enabled && (score.prerequisites ? score.prerequisites.enabled : true) ? '' : 'text-muted-foreground'} ${score.prerequisites ? 'ml-3' : ''}`">
+                        <SquareCheckBig v-if="requirement.enabled" class="h-4 w-4 shrink-0" />
+                        <Square v-else class="h-4 w-4 shrink-0" />
+                        <span>{{ requirement.description }}</span>
+                        <span>[{{ requirement.value }}]</span>
+                    </div>
                 </div>
             </AccordionContent>
         </AccordionItem>

@@ -35,6 +35,9 @@ dependencies:
   radix-vue:
     specifier: ^1.9.4
     version: 1.9.5(vue@3.5.6)
+  scores-calculator-js:
+    specifier: link:../scores-calculator/js
+    version: link:../scores-calculator/js
   shadcn-nuxt:
     specifier: ^0.10.4
     version: 0.10.4

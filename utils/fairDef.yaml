@@ -14,7 +14,7 @@ f:
           query: "ASK { #iri# ?p ?o }"
         - value: 3
           description: Metadata identifier is globally unique, citable and persistent
-          query: "ASK { #iri# ?p ?o }"
+          query: "ASK { #iri# ?p ?o }" # ignore - can't query for resolvable URLs in data?
     f2:
       title: F2
       description: Data are described with rich metadata
@@ -42,7 +42,7 @@ f:
       requirements:
         - value: 2
           description: Distribution information is included as a resolvable URL
-          query: |
+          query: | # query can't check for resolvable URLs
             ASK {
                 #iri# dcat:distribution ?dist .
                 ?dist dcat:accessURL ?url .
@@ -53,10 +53,10 @@ f:
       requirements:
         - value: 2
           description: Data is described in a repository
-          query: "ASK { #iri# ?p ?o }"
+          query: "ASK { #iri# ?p ?o }" # ignore
         - value: 2
           description: Data is discoverable through several registries
-          query: "ASK { #iri# ?p ?o }"
+          query: "ASK { #iri# ?p ?o }" # ignore
 a:
   title: Accessible
   description: Once data is found, access information needs to be clearly indicated on the metadata.
@@ -247,4 +247,4 @@ r:
                   value: 2
             - value: 1
               description: The data source has provenance
-              query: "ASK { #iri# ?p ?o }"
+              query: "ASK { #iri# ?p ?o }" # ignore

@@ -19,16 +19,8 @@ const items = [
         to: "/jsonld"
     },
     {
-        label: "MET",
-        to: "/met"
-    },
-    {
         label: "SPARQL",
         to: "/sparql"
-    },
-    {
-        label: "Stepper",
-        to: "/stepper"
     },
 ];
 </script>

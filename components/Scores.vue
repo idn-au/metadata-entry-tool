@@ -14,7 +14,7 @@ const props = defineProps<{
                 <div class="score-title">
                     <h5>{{ props.title }} Score</h5>
                 </div>
-                <div class="circles" :style="{gridTemplateColumns: `repeat(${Object.keys(props.scores).length}, 1fr)`}">
+                <div class="circles" :style="{ gridTemplateColumns: `repeat(${Object.keys(props.scores).length}, 1fr)` }">
                     <div v-for="[key, score] in Object.entries(props.scores)" class="circle">
                         <CircleProgress :value="score.value" :max="score.max" tickWhenComplete />
                         <div class="circle-name">{{ key.toUpperCase() }}</div>

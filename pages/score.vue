@@ -1,4 +1,5 @@
 <script lang="ts" setup>
+import { fairScore, careScore } from "scores-calculator-js";
 import type { ScoreValueObj } from "~/types";
 import metExample from "~/data/metExample";
 
@@ -11,9 +12,9 @@ function handleAdd() {
     store.value.load(metExample);
 }
 
-watch(store, (newValue) => {
-    fair.value = fairScore(newValue.dump(), "https://example.com/example1");
-    care.value = careScore(newValue.dump(), "https://example.com/example1");
+watch(store, async (newValue) => {
+    fair.value = await fairScore(newValue.dump(), "https://example.com/example1");
+    care.value = await careScore(newValue.dump(), "https://example.com/example1");
 }, { deep: true });
 </script>
 
