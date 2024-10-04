@@ -109,7 +109,7 @@ const emptyData = {
     contactPhone: ""
 };
 
-const { store, qname, serialize } = useRdfStore();
+const { store, qname, serialize, clearStore } = useRdfStore();
 
 const { data: agentData, loading: agentLoading, error: agentError, doSparqlGetQuery: agentDoSparqlGetQuery, doSparqlPostQuery: agentDoSparqlPostQuery } = useGetRequest();
 const { data: roleData, loading: roleLoading, error: roleError, doSparqlGetQuery: roleDoSparqlGetQuery, doSparqlPostQuery: roleDoSparqlPostQuery } = useGetRequest();
@@ -127,19 +127,13 @@ const themeOptionsRequested = ref([]);
 const indigeneityOptionsRequested = ref([]);
 const agentIndigeneityOptionsRequested = ref([]);
 
-// const { clicked: savedDraft, startTimeout: startSavedDraftTimeout } = useBtnTimeout();
-// const { clicked: deletedDraft, startTimeout: startDeletedDraftTimeout } = useBtnTimeout();
 const { clicked: clearedData, startTimeout: startClearedDataTimeout } = useBtnTimeout();
-
-const spatialBnode = store.value.createBlankNode(); // _:b0
-const temporalBnode = store.value.createBlankNode(); // _:b1
-const distributionBnode = store.value.createBlankNode(); // _:b2
 
 const showRDF = ref(false);
 const loading = ref({
     accessUrl: false
 });
-// const urlProtocol = ref("");
+
 const data = ref({
     iri: "",
     assignIri: true,
@@ -532,10 +526,10 @@ watch(() => data.value.title, (newValue, oldValue) => {
 });
 
 watch(() => data.value.indigeneity, (newValue, oldValue) => {
-    const indigeneityQuads = store.value.getQuads(namedNode(calcIri.value), namedNode(qname("dcat:theme")), null);
+    const indigeneityQuads = store.value.getQuads(namedNode(calcIri.value), namedNode(qname("dcterms:type")), null);
     store.value.removeQuads(indigeneityQuads);
     if (newValue.length > 0) {
-        newValue.forEach(indigeneity => store.value.addQuad(namedNode(calcIri.value), namedNode(qname("dcat:theme")), namedNode(indigeneity)));
+        newValue.forEach(indigeneity => store.value.addQuad(namedNode(calcIri.value), namedNode(qname("dcterms:type")), namedNode(indigeneity)));
     }
     serializedData.value = serialize();
 });
@@ -580,6 +574,7 @@ watch(calcGeometry, (newValue, oldValue) => {
         updateTriple(newValue, "dcterms:spatial", namedNode(newValue));
     } else {
         if (newValue !== "") {
+            const spatialBnode = store.value.createBlankNode();
             store.value.addQuad(namedNode(calcIri.value), namedNode(qname("dcterms:spatial")), spatialBnode);
             store.value.addQuad(spatialBnode, namedNode(qname("a")), namedNode(qname("geo:Geometry")));
             store.value.addQuad(spatialBnode, namedNode(qname("geo:asWKT")), literal(newValue, namedNode(qname("geo:wktLiteral"))));
@@ -591,13 +586,11 @@ watch(calcGeometry, (newValue, oldValue) => {
 
 watch(() => data.value.temporalStart, (newValue, oldValue) => {
     const temporalQuads = store.value.getQuads(namedNode(calcIri.value), namedNode(qname("dcterms:temporal")), null);
-    if (temporalQuads.length > 0 && temporalQuads[0].object.termType === "BlankNode") {
-        const bnodeQuads1 = store.value.getQuads(temporalQuads[0].object, namedNode(qname("prov:startedAtTime")), null);
+    const temporalBnode = temporalQuads.length > 0 && temporalQuads[0].object.termType === "BlankNode" ? temporalQuads[0].object : undefined;
+    if (temporalBnode) {
+        // remove start time triple
+        const bnodeQuads1 = store.value.getQuads(temporalBnode, namedNode(qname("prov:startedAtTime")), null);
         store.value.removeQuads(bnodeQuads1);
-        const bnodeQuads2 = store.value.getQuads(temporalQuads[0].object, null, null);
-        if (bnodeQuads2.length === 0) {
-            store.value.removeQuads(temporalQuads);
-        }
     }
 
     if (newValue !== "") {
@@ -612,21 +605,32 @@ watch(() => data.value.temporalStart, (newValue, oldValue) => {
             datatype = "xsd:date";
         }
 
-        store.value.addQuad(namedNode(calcIri.value), namedNode(qname("dcterms:temporal")), temporalBnode);
-        store.value.addQuad(temporalBnode, namedNode(qname("prov:startedAtTime")), literal(newValue, namedNode(qname(datatype))));
+        if (temporalBnode) {
+            store.value.addQuad(temporalBnode, namedNode(qname("prov:startedAtTime")), literal(newValue, namedNode(qname(datatype))));
+        } else {
+            const bnode = store.value.createBlankNode();
+            store.value.addQuad(namedNode(calcIri.value), namedNode(qname("dcterms:temporal")), bnode);
+            store.value.addQuad(bnode, namedNode(qname("prov:startedAtTime")), literal(newValue, namedNode(qname(datatype))));
+        }
+    }
+
+    if (temporalBnode && newValue === "") {
+        // if no other temporal triples, remove bnode triple
+        const bnodeQuads2 = store.value.getQuads(temporalBnode, null, null);
+        if (bnodeQuads2.length === 0) {
+            store.value.removeQuads(temporalQuads);
+        }
     }
     serializedData.value = serialize();
 });
 
 watch(() => data.value.temporalEnd, (newValue, oldValue) => {
     const temporalQuads = store.value.getQuads(namedNode(calcIri.value), namedNode(qname("dcterms:temporal")), null);
-    if (temporalQuads.length > 0 && temporalQuads[0].object.termType === "BlankNode") {
-        const bnodeQuads = store.value.getQuads(temporalQuads[0].object, namedNode(qname("prov:endedAtTime")), null);
-        store.value.removeQuads(bnodeQuads);
-        const bnodeQuads2 = store.value.getQuads(temporalQuads[0].object, null, null);
-        if (bnodeQuads2.length === 0) {
-            store.value.removeQuads(temporalQuads);
-        }
+    const temporalBnode = temporalQuads.length > 0 && temporalQuads[0].object.termType === "BlankNode" ? temporalQuads[0].object : undefined;
+    if (temporalBnode) {
+        // remove start time triple
+        const bnodeQuads1 = store.value.getQuads(temporalBnode, namedNode(qname("prov:endedAtTime")), null);
+        store.value.removeQuads(bnodeQuads1);
     }
 
     if (newValue !== "") {
@@ -641,8 +645,21 @@ watch(() => data.value.temporalEnd, (newValue, oldValue) => {
             datatype = "xsd:date";
         }
 
-        store.value.addQuad(namedNode(calcIri.value), namedNode(qname("dcterms:temporal")), temporalBnode);
-        store.value.addQuad(temporalBnode, namedNode(qname("prov:endedAtTime")), literal(newValue, namedNode(qname(datatype))));
+        if (temporalBnode) {
+            store.value.addQuad(temporalBnode, namedNode(qname("prov:endedAtTime")), literal(newValue, namedNode(qname(datatype))));
+        } else {
+            const bnode = store.value.createBlankNode();
+            store.value.addQuad(namedNode(calcIri.value), namedNode(qname("dcterms:temporal")), bnode);
+            store.value.addQuad(bnode, namedNode(qname("prov:endedAtTime")), literal(newValue, namedNode(qname(datatype))));
+        }
+    }
+
+    if (temporalBnode && newValue === "") {
+        // if no other temporal triples, remove bnode triple
+        const bnodeQuads2 = store.value.getQuads(temporalBnode, null, null);
+        if (bnodeQuads2.length === 0) {
+            store.value.removeQuads(temporalQuads);
+        }
     }
     serializedData.value = serialize();
 });
@@ -656,6 +673,7 @@ watch(() => data.value.accessUrl, (newValue, oldValue) => {
     store.value.removeQuads(distQuads);
 
     if (newValue !== "") {
+        const distributionBnode = store.value.createBlankNode();
         store.value.addQuad(namedNode(calcIri.value), namedNode(qname("dcat:distribution")), distributionBnode);
         store.value.addQuad(distributionBnode, namedNode(qname("dcat:accessURL")), literal(newValue, namedNode(qname("xsd:anyURI"))));
     }
@@ -808,139 +826,144 @@ function loadRDF(e) {
     const { format, value } = e;
     const { store: loadedStore, qname: loadedQname, parseIntoStore: loadedParseIntoStore, serialize: loadedSerialize } = useRdfStore();
     clearData();
-    loadedParseIntoStore(value, format);
-    const subject = loadedStore.value.getSubjects(namedNode(qname("a")), namedNode(loadedQname("dcat:Resource")))[0];
-    data.value.iri = subject.id;
-    data.value.assignIri = false;
-    loadedStore.value.forEach(q => { // get preds & objs
-        if (q.predicate.value === loadedQname("dcterms:title")) {
-            data.value.title = q.object.value;
-        } else if (q.predicate.value === loadedQname("dcterms:type")) { //  ???
-            data.value.indigeneity.push(q.object.value);
-        } else if (q.predicate.value === loadedQname("dcterms:description")) {
-            data.value.description = q.object.value;
-        } else if (q.predicate.value === loadedQname("dcterms:created")) {
-            data.value.created = q.object.value;
-        } else if (q.predicate.value === loadedQname("dcterms:modified")) {
-            data.value.modified = q.object.value;
-        } else if (q.predicate.value === loadedQname("dcterms:issued")) {
-            data.value.issued = q.object.value;
-        } else if (q.predicate.value === loadedQname("dcterms:license")) {
-            data.value.license = q.object.value;
-        } else if (q.predicate.value === loadedQname("dcterms:rights")) {
-            data.value.rights = q.object.value;
-        } else if (q.predicate.value === loadedQname("dcterms:accessRights")) {
-            data.value.accessRights = q.object.value;
-        } else if (q.predicate.value === loadedQname("dcterms:spatial")) {
-            if (q.object.termType === "NamedNode") {
-                data.value.spatialIri = q.object.value;
-            } else if (q.object.termType === "BlankNode") {
-                const bnodes = loadedStore.value.getQuads(q.object, namedNode(loadedQname("geo:asWKT")), null);
-                data.value.spatialGeom = bnodes[0].object.value;
-            }
-        } else if (q.predicate.value === loadedQname("dcterms:temporal")) {
-            if (q.object.termType === "BlankNode") {
-                loadedStore.value.forEach(q1 => {
-                    if (q1.predicate.value === loadedQname("prov:startedAtTime")) {
-                        data.value.temporalStart = q1.object.value;
-                    } else if (q1.predicate.value === loadedQname("prov:endedAtTime")) {
-                        data.value.temporalEnd = q1.object.value;
-                    }
-                }, q.object, null, null);
-            }
-        } else if (q.predicate.value === loadedQname("dcat:distribution")) {
-            if (q.object.termType === "BlankNode") {
-                const bnodes = loadedStore.value.getQuads(q.object, namedNode(loadedQname("dcat:accessURL")), null);
-                data.value.accessUrl = bnodes[0].object.value;
-            }
-        } else if (q.predicate.value === loadedQname("dcat:theme")) {
-            data.value.themes.push(q.object.value);
-        } else if (q.predicate.value === loadedQname("prov:qualifiedAttribution")) {
-            if (q.object.termType === "BlankNode") {
-                let agentRole = {
-                    agent: "",
-                    role: [],
-                    useCustomAgent: false,
-                    customAgent: {
-                        iri: "",
-                        isPerson: false,
-                        name: "",
-                        description: "",
-                        url: "",
-                        identifiers: [],
-                        indigeneity: "",
-                        review: false
-                    },
-                    idg: {
-                        exists: "",
-                        public: "",
-                        url: "",
-                        desc: ""
-                    }
-                };
-                loadedStore.value.forEach(q1 => {
-                    if (q1.predicate.value === loadedQname("prov:agent")) {
-                        if (agentOptionsRequested.value.includes(q1.object.value)) { // existing agent
-                            agentRole.agent = q1.object.value;
-                        } else { // custom agent
-                            agentRole.useCustomAgent = true;
-                            agentRole.customAgent.iri = q1.object.value;
-                            loadedStore.value.forEach(q2 => {
-                                if (q2.predicate.value === loadedQname("a")) {
-                                    agentRole.customAgent.isPerson = q2.object.value === loadedQname("sdo:Person");
-                                } else if (q2.predicate.value === loadedQname("sdo:name")) {
-                                    agentRole.customAgent.name = q2.object.value;
-                                } else if (q2.predicate.value === loadedQname("sdo:description")) {
-                                    agentRole.customAgent.description = q2.object.value;
-                                } else if (q2.predicate.value === loadedQname("sdo:identifier")) {
-                                    agentRole.customAgent.identifiers.push({
-                                        value: q2.object.value,
-                                        datatype: q2.object.datatype.value
-                                    });
-                                } else if (q2.predicate.value === loadedQname("sdo:url")) {
-                                    agentRole.customAgent.url = q2.object.value;
-                                } else if (q2.predicate.value === loadedQname("dcterms:type")) {
-                                    agentRole.customAgent.indigeneity = q2.object.value;
-                                }
-                            }, q1.object, null, null);
-                        }
-                    } else if (q1.predicate.value === loadedQname("dcat:hadRole")) {
-                        agentRole.role.push(q1.object.value);
-                    }
-                }, q.object, null, null);
-                if (JSON.stringify(data.value.agentRoles[0]) === JSON.stringify(emptyData.agentRoles[0])) { // first blank agent-role pair, replace
-                    data.value.agentRoles[0] = agentRole;
-                } else {
-                    data.value.agentRoles.push(agentRole);
-                }
-            }
+
+    try {
+        try {
+            loadedParseIntoStore(value, format);
+        } catch (error) {
+            throw SyntaxError("Error loading RDF - Invalid syntax");
         }
-    }, subject, null, null);
+
+        try {
+            const subject = loadedStore.value.getSubjects(namedNode(qname("a")), namedNode(loadedQname("dcat:Resource")))[0];
+            store.value.addQuad(subject, namedNode(qname("a")), namedNode(qname("dcat:Resource")));
+            data.value.iri = subject.id;
+            data.value.assignIri = false;
+            loadedStore.value.forEach(q => { // get preds & objs
+                if (q.predicate.value === loadedQname("dcterms:title")) {
+                    data.value.title = q.object.value;
+                } else if (q.predicate.value === loadedQname("dcterms:type")) {
+                    data.value.indigeneity.push(q.object.value);
+                } else if (q.predicate.value === loadedQname("dcterms:description")) {
+                    data.value.description = q.object.value;
+                } else if (q.predicate.value === loadedQname("dcterms:created")) {
+                    data.value.created = q.object.value;
+                } else if (q.predicate.value === loadedQname("dcterms:modified")) {
+                    data.value.modified = q.object.value;
+                } else if (q.predicate.value === loadedQname("dcterms:issued")) {
+                    data.value.issued = q.object.value;
+                } else if (q.predicate.value === loadedQname("dcterms:license")) {
+                    data.value.license = q.object.value;
+                } else if (q.predicate.value === loadedQname("dcterms:rights")) {
+                    data.value.rights = q.object.value;
+                } else if (q.predicate.value === loadedQname("dcterms:accessRights")) {
+                    data.value.accessRights = q.object.value;
+                } else if (q.predicate.value === loadedQname("dcterms:spatial")) {
+                    if (q.object.termType === "NamedNode") {
+                        data.value.spatialIri = q.object.value;
+                    } else if (q.object.termType === "BlankNode") {
+                        const bnodes = loadedStore.value.getQuads(q.object, namedNode(loadedQname("geo:asWKT")), null);
+                        data.value.spatialGeom = bnodes[0].object.value;
+                    }
+                } else if (q.predicate.value === loadedQname("dcterms:temporal")) {
+                    if (q.object.termType === "BlankNode") {
+                        loadedStore.value.forEach(q1 => {
+                            if (q1.predicate.value === loadedQname("prov:startedAtTime")) {
+                                data.value.temporalStart = q1.object.value;
+                            } else if (q1.predicate.value === loadedQname("prov:endedAtTime")) {
+                                data.value.temporalEnd = q1.object.value;
+                            }
+                        }, q.object, null, null);
+                    }
+                } else if (q.predicate.value === loadedQname("dcat:distribution")) {
+                    if (q.object.termType === "BlankNode") {
+                        const bnodes = loadedStore.value.getQuads(q.object, namedNode(loadedQname("dcat:accessURL")), null);
+                        data.value.accessUrl = bnodes[0].object.value;
+                    }
+                } else if (q.predicate.value === loadedQname("dcat:theme")) {
+                    data.value.themes.push(q.object.value);
+                } else if (q.predicate.value === loadedQname("prov:qualifiedAttribution")) {
+                    if (q.object.termType === "BlankNode") {
+                        let agentRole = {
+                            agent: "",
+                            role: [],
+                            useCustomAgent: false,
+                            customAgent: {
+                                iri: "",
+                                isPerson: false,
+                                name: "",
+                                description: "",
+                                url: "",
+                                identifiers: [],
+                                indigeneity: "",
+                                review: false
+                            },
+                            idg: {
+                                exists: "",
+                                public: "",
+                                url: "",
+                                desc: ""
+                            }
+                        };
+                        loadedStore.value.forEach(q1 => {
+                            if (q1.predicate.value === loadedQname("prov:agent")) {
+                                if (agentOptionsRequested.value.includes(q1.object.value)) { // existing agent
+                                    agentRole.agent = q1.object.value;
+                                } else { // custom agent
+                                    agentRole.useCustomAgent = true;
+                                    agentRole.customAgent.iri = q1.object.value;
+                                    loadedStore.value.forEach(q2 => {
+                                        if (q2.predicate.value === loadedQname("a")) {
+                                            agentRole.customAgent.isPerson = q2.object.value === loadedQname("sdo:Person");
+                                        } else if (q2.predicate.value === loadedQname("sdo:name")) {
+                                            agentRole.customAgent.name = q2.object.value;
+                                        } else if (q2.predicate.value === loadedQname("sdo:description")) {
+                                            agentRole.customAgent.description = q2.object.value;
+                                        } else if (q2.predicate.value === loadedQname("sdo:identifier")) {
+                                            agentRole.customAgent.identifiers.push({
+                                                value: q2.object.value,
+                                                datatype: q2.object.datatype.value
+                                            });
+                                        } else if (q2.predicate.value === loadedQname("sdo:url")) {
+                                            agentRole.customAgent.url = q2.object.value;
+                                        } else if (q2.predicate.value === loadedQname("dcterms:type")) {
+                                            agentRole.customAgent.indigeneity = q2.object.value;
+                                        }
+                                    }, q1.object, null, null);
+                                }
+                            } else if (q1.predicate.value === loadedQname("dcat:hadRole")) {
+                                agentRole.role.push(q1.object.value);
+                            }
+                        }, q.object, null, null);
+                        if (JSON.stringify(data.value.agentRoles[0]) === JSON.stringify(emptyData.agentRoles[0])) { // first blank agent-role pair, replace
+                            data.value.agentRoles[0] = agentRole;
+                        } else {
+                            data.value.agentRoles.push(agentRole);
+                        }
+                    }
+                }
+            }, subject, null, null);
+        } catch (error) {
+            throw TypeError("Error loading RDF - Must contain a dcat:Resource");
+        }
+    } catch (error) {
+        clearData();
+        store.value.addQuad(namedNode(defaultIri), namedNode(qname("a")), namedNode(qname("dcat:Resource")));
+        alert(error);
+    }
 }
 
 function clearData(clicked = false) {
     if (!clicked || confirm("Warning: This will delete all data in the form. Do you wish to continue?")) {
-        data.value = emptyData;
+        clearStore();
+        data.value = structuredClone(emptyData);
         validation.value = {};
         if (clicked) {
+            store.value.addQuad(namedNode(defaultIri), namedNode(qname("a")), namedNode(qname("dcat:Resource")));
             startClearedDataTimeout();
         }
     }
 }
-
-// function saveDraft() {
-//     localStorage.setItem("data", JSON.stringify(data.value));
-//     hasSavedDraft.value = true;
-//     startSavedDraftTimeout();
-// }
-
-// function deleteDraft() {
-//     if (confirm("Warning: While your current form will stay unchanged, this will delete your progress saved to the browser. You will lose progress upon browser refresh. Do you wish to continue?")) {
-//         localStorage.removeItem("data");
-//         hasSavedDraft.value = false;
-//         startDeletedDraftTimeout();
-//     }
-// }
 
 function loadExample(key) {
     if (confirm("Warning: Loading this example will clear your current form. Do you wish to continue?")) {
@@ -1172,12 +1195,12 @@ function getSectionStatus(section) {
 }
 
 onMounted(() => {
+    store.value.addQuad(namedNode(defaultIri), namedNode(qname("a")), namedNode(qname("dcat:Resource")));
     const savedData = localStorage.getItem("data");
     if (savedData) {
         data.value = JSON.parse(savedData);
         hasSavedDraft.value = true;
     } else {
-        store.value.addQuad(namedNode(defaultIri), namedNode(qname("a")), namedNode(qname("dcat:Resource")));
         serializedData.value = serialize();
     }
 
