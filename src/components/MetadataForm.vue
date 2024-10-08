@@ -279,7 +279,7 @@ const usingCustomAgents = computed(() => {
 // TODO: revise score logic & check prerequisites refer to scores that have been precalculated
 // scores
 const fairScore = computed(() => {
-    const computedFair = {...fair};
+    const computedFair = structuredClone(fair);
     calculateScoreMax(computedFair);
     
     // F1
@@ -385,7 +385,7 @@ const fairScore = computed(() => {
 });
 
 const careScore = computed(() => {
-    const computedCare = {...care};
+    const computedCare = structuredClone(care);
     calculateScoreMax(computedCare);
 
     // C1
@@ -469,11 +469,11 @@ const careScore = computed(() => {
     // C3 has scored fully
     setRequirement(computedCare, ["r", "r3"], 0, hasFullScore(computedCare, ["c", "c3"]));
     // custodian has resolvable url for IDG
-    setRequirement(computedCare, ["r", "r3"], 1, data.value.agentRoles.some(x => x.idg.exists === "true" && x.idn.url !== "" && x.role.includes(`${ROLES_VOCAB}/custodian`)));
+    setRequirement(computedCare, ["r", "r3"], 1, data.value.agentRoles.some(x => x.idg.exists === "true" && x.idg.url !== "" && x.role.includes(`${ROLES_VOCAB}/custodian`)));
     // has spatial
     setRequirement(computedCare, ["r", "r3"], 2, calcGeometry.value !== "");
     // at least 2 themes selected
-    setRequirement(computedCare, ["r", "r3"], 3, data.value.themes.length > 1);
+    setRequirement(computedCare, ["r", "r3"], 3, data.value.themes.length >= 2);
     calculateSubScore(computedCare, ["r", "r3"]);
 
     // E1
