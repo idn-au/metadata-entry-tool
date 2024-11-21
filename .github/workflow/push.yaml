@@ -1,4 +1,4 @@
-name: Build & deploy to Swift container
+name: Build & deploy to dev Swift container
 
 on:
   push:
