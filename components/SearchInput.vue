@@ -2,6 +2,7 @@
 import type { HTMLAttributes } from "vue";
 import { Search } from "lucide-vue-next";
 import { useDebounceFn } from "@vueuse/core";
+import { cn } from "@/lib/utils";
 
 const props = defineProps<{
     placeholder?: string;
@@ -66,7 +67,7 @@ watch(model, (newValue) => {
 <template>
     <Dialog v-model:open="open">
         <DialogTrigger as-child>
-            <Button variant="outline" :class="props.class">
+            <Button variant="outline" :class="cn('justify-start', props.class)">
                 <Search class="size-6 text-muted-foreground -ml-2 pr-1" />
                 <span v-if="Object.keys(model).length > 0">{{ displayResult(model) }}</span>
                 <span v-else class="text-muted-foreground">{{ placeholder || "Search" }}</span>

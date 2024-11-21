@@ -1,6 +1,7 @@
 <script lang="ts" setup>
 import { register } from "zod-metadata";
 import * as z from "zod";
+import { Trash } from "lucide-vue-next";
 
 register(z);
 
@@ -25,19 +26,10 @@ function remove(index: number) {
 <template>
     <Card>
         <CardContent class="flex flex-col gap-4 p-6">
-            <div v-for="(entry, index) in model" :key="index" class="flex flex-row">
+            <div v-for="(entry, index) in model" :key="index" class="flex flex-row gap-2">
                 <FormInputGroup v-model="model[index]" :field="props.field.element" />
-                <!-- <div class="grid grid-cols-2 flex-grow">
-                    <FormInput
-                        v-for="[k, f] in Object.entries(props.field.element.shape)"
-                        :key="k + index"
-                        :fieldKey="k + index"
-                        :field="(f as z.ZodTypeAny)"
-                        v-model="entry[k]"
-                    />
-                </div> -->
-                <div class="w-24">
-                    <Button v-if="index > 0" @click="remove(index)">Remove</Button>
+                <div class="w-6 flex">
+                    <Button v-if="index > 0" variant="destructive" size="sm" class="my-auto" @click="remove(index)"><Trash class="w-4 h-4" /></Button>
                 </div>
             </div>
         </CardContent>

@@ -88,7 +88,7 @@ const multiple = computed(() => {
 </script>
 
 <template>
-    <div class="form-input">
+    <div class="form-input flex flex-col gap-1">
         <Label :for="props.fieldKey">{{ label }}<span v-if="meta.required" class="text-destructive"> *</span></Label>
         <component :is="inputComponent"
             :type="['text', 'url'].includes(inputType) ? inputType : undefined"

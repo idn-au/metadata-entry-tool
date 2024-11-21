@@ -406,7 +406,7 @@ onMounted(async () => {
         <div class="grow-[2]">
             <VerticalStepper :steps="steps" v-slot="{ stepObj, stepIndex }">
                 <Card v-show="stepIndex === stepObj.step">
-                    <CardContent class="pt-4">
+                    <CardContent class="pt-4 flex flex-col gap-2">
                         <!-- <Button v-if="stepIndex === 1" @click="data.General.iri = DEFAULT_IRI" size="xs">Generate IRI</Button> -->
                         <FormBuilder :schema="stepObj.schema" v-model="data[stepObj.title]" />
                     </CardContent>
@@ -416,7 +416,7 @@ onMounted(async () => {
         <div class="flex flex-col grow-[1] gap-4 max-w-[400px] min-w-[200px]">
             <Scores title="FAIR" :scores="fair" />
             <Scores title="CARE" :scores="care" />
-            <Collapsible v-model:open="showRDF">
+            <Collapsible v-model:open="showRDF" class="flex flex-col gap-2 items-start">
                 <CollapsibleTrigger as-child>
                     <Button variant="outline">
                         RDF
@@ -424,7 +424,7 @@ onMounted(async () => {
                         <ChevronDown v-else class="h-4 w-4" />
                     </Button>
                 </CollapsibleTrigger>
-                <CollapsibleContent>
+                <CollapsibleContent class="flex flex-col gap-2 items-start">
                     <div class="relative w-full max-w-sm items-center">
                         <pre class="whitespace-pre-wrap text-xs border rounded p-2 overflow-y-auto max-h-[240px]">{{ rdfString }}</pre>
                         <span class="absolute end-0 inset-y-2 flex justify-center px-2">
@@ -442,7 +442,7 @@ onMounted(async () => {
                             </Modal>
                         </span>
                     </div>
-                    <Button variant="outline" size="xs" @click="copyRDF">Copy
+                    <Button variant="outline" size="sm" @click="copyRDF">Copy
                         <Copy class="h-4 w-4" />
                     </Button>
                 </CollapsibleContent>

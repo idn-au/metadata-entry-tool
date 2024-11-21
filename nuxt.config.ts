@@ -17,5 +17,6 @@ export default defineNuxtConfig({
     },
     veeValidate: {
         autoImports: true,
-    }
+    },
+    ssr: false
 });

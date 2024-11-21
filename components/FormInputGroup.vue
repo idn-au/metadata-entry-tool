@@ -15,9 +15,9 @@ const model = defineModel<z.infer<typeof props.field>>({ required: true });
 </script>
 
 <template>
-    <Card>
+    <Card class="grow">
         <CardContent class="p-6">
-            <div class="grid grid-cols-2 flex-grow">
+            <div class="grid grid-cols-2 flex-grow gap-2">
                 <FormInput
                     v-for="[k, f] in Object.entries(props.field.shape)"
                     :key="k"
