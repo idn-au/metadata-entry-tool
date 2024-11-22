@@ -3,7 +3,7 @@ import { register } from "zod-metadata";
 import * as z from "zod";
 import * as jsonld from "jsonld";
 import { ChevronDown, ChevronUp, Copy, Expand } from "lucide-vue-next";
-import { fairScore, careScore } from "scores-calculator-js";
+import { fairScore, careScore } from "@idn-au/scores-calculator-js";
 import type { ScoreValueObj } from "~/types";
 import { schemaCreateEmptyObject, removeEmptyValues, sparqlSelect, sparqlOptions } from "~/utils/form";
 

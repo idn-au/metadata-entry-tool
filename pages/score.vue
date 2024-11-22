@@ -1,5 +1,5 @@
 <script lang="ts" setup>
-import { fairScore, careScore } from "scores-calculator-js";
+import { fairScore, careScore } from "@idn-au/scores-calculator-js";
 import type { ScoreValueObj } from "~/types";
 import metExample from "~/data/metExample";
 
