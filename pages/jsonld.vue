@@ -97,7 +97,10 @@ const frame = {
         },
         "name": "sdo:name",
         "sdoDescription": "sdo:description",
-        "spatial": "dcterms:spatial",
+        "spatial": {
+            "@id": "dcterms:spatial",
+            "@type": "@id",
+        },
         "temporal": "dcterms:temporal",
         "distribution": {
             "@id": "dcat:distribution",

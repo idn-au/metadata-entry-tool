@@ -13,13 +13,23 @@ const props = defineProps<{
 const model = defineModel<z.infer<typeof props.field>>({ required: true });
 const { value, errorMessage, meta, validate, resetField } = useField(props.fieldKey, toTypedSchema(props.field), { syncVModel: true });
 
-const fieldMeta = computed(() => props.field.getMeta() as z.ZodMeta);
+const fieldMeta: z.ZodMeta = props.field._def.typeName === "ZodEffects" ? props.field._def.schema.getMeta() as z.ZodMeta : props.field.getMeta() as z.ZodMeta;
 
-const fieldDef = computed(() => props.field.isOptional() ? props.field._def.innerType._def : props.field._def); // unwrap optionals
+const fieldDef = computed(() => {
+    if (props.field.isOptional()){ 
+        return props.field._def.innerType._def;
+    }
+    
+    if (props.field._def.typeName === "ZodEffects"){ 
+        return props.field._def.schema._def;
+    } 
+     
+    return props.field._def;
+});
 
 const inputType = computed(() => {
-    if (fieldMeta.value && fieldMeta.value.type) {
-        return fieldMeta.value.type as string;
+    if (fieldMeta && fieldMeta.type) {
+        return fieldMeta.type as string;
     }
 
     switch (fieldDef.value.typeName) {
@@ -66,15 +76,15 @@ const inputComponent = computed(() => {
 });
 
 const label = computed(() => {
-    return fieldMeta.value.label as string || props.fieldKey;
+    return fieldMeta.label as string || props.fieldKey;
 });
 
 const placeholder = computed(() => {
-    return fieldMeta.value.placeholder as string || undefined;
+    return fieldMeta.placeholder as string || undefined;
 });
 
 const options = computed(() => {
-    return fieldMeta.value.options as Option[] || undefined;
+    return fieldMeta.options as Option[] || undefined;
 });
 
 const multiple = computed(() => {

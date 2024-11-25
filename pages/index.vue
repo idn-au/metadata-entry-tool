@@ -88,52 +88,57 @@ async function agentSearch(term: string) {
     });
 }
 
-const customDate = z.custom<string>((val) => {
-    if (typeof val !== "string") {
-        return false;
-    }
-    const matches = val.match(/^(\d{4})(-\d{2})?(-\d{2})?$/);
-    if (!matches) {
-        return false;
-    }
-    const [_, year, month, day] = matches.map(m => m !== undefined ? Number(m.replaceAll("-", "")) : undefined);
-    if (day !== undefined && (day < 1 || day > 31)) { // needs to cater per month & leap year
-        return false;
-    }
-    if (month !== undefined && (month < 1 || month > 12)) {
-        return false;
-    }
-    return true;
-}, { message: "Invalid date" });
-
+const customDate = z.object({
+    type: z.string(),
+    value: z.string().refine((val) => {
+        if (typeof val !== "string") {
+            return false;
+        }
+        const matches = val.match(/^(\d{4})(-\d{2})?(-\d{2})?$/);
+        if (!matches) {
+            return false;
+        }
+        const [_, year, month, day] = matches.map(m => m !== undefined ? Number(m.replaceAll("-", "")) : undefined);
+        if (day !== undefined && (day < 1 || day > 31)) { // needs to cater per month & leap year
+            return false;
+        }
+        if (month !== undefined && (month < 1 || month > 12)) {
+            return false;
+        }
+        return true;
+    }, { message: "Invalid date" })
+})
 const steps = [
     {
         step: 1,
         title: "General",
         schema: z.object({
-            iri: z.string().min(1, "IRI is required").url({ message: "Must be a valid IRI" }).describe("a description").meta({
+            iri: z.string().min(1, "IRI is required").url({ message: "Must be a valid IRI" }).describe("Provide an IRI or have an IRI automatically assigned").meta({
                 label: "IRI",
                 type: "url",
                 placeholder: "https://example.com",
                 initial: "",
             }),
-            title: z.string().min(1, "Title is required").describe("a description").meta({
+            title: z.string().min(1, "Title is required").describe("").meta({
                 label: "Title",
                 type: "text",
                 initial: "",
             }),
-            indigeneity: z.string().array().optional().describe("a description").meta({
+            indigeneity: z.string().array().optional().describe("You can add mulitple indigeneity terms").meta({
                 label: "Indigeneity",
                 type: "select", // string array/select array is multiple
                 placeholder: "Select indigeneity",
                 initial: [],
                 options: indigeneityOptions.value,
             }),
-            description: z.string().min(1, "Description is required").describe("a description").meta({
+            description: z.string().min(1, "Description is required").describe("Supports new lines and basic formatting").meta({
                 label: "Description",
                 type: "textarea",
                 initial: "",
+                class: "col-span-full"
             }),
+        }).meta({
+            class: "grid-cols-1 md:grid-cols-2 gap-2"
         })
     },
     {
@@ -145,108 +150,134 @@ const steps = [
                     iri: z.string(),
                     name: z.string(),
                     type: z.string(),
-                }).describe("a description").meta({
+                }).describe("").meta({
                     label: "Agent",
                     type: "search",
                     placeholder: "Search for an agent",
                     initial: {},
                     query: agentSearch,
                 }),
-                role: z.string().array().min(1, "Role is required").describe("a description").meta({
+                role: z.string().array().min(1, "Role is required").describe("").meta({
                     label: "Role",
                     type: "select", // string array/select array is multiple
                     placeholder: "Choose roles",
                     initial: [],
                     options: roleOptions.value,
                 }),
+                // TODO: IDG
             }).array().min(1, "Must have an agent and role selected").meta({
                 label: "Agents",
                 type: "add",
                 initial: [{ agent: {}, role: [] }],
+            }).meta({
+                class: "col-span-full"
             }),
+        }).meta({
+            class: "grid-cols-1 md:grid-cols-2 gap-2"
         })
     },
     {
         step: 3,
         title: "Dates",
         schema: z.object({
-            created: customDate.describe("a description").meta({
+            created: customDate.describe("").meta({
                 label: "Created",
                 type: "customDate",
                 // placeholder: "",
-                initial: "",
+                initial: {
+                    type: "",
+                    value: ""
+                },
             }),
-            modified: customDate.describe("a description").meta({
+            modified: customDate.describe("").meta({
                 label: "Modified",
                 type: "customDate",
                 // placeholder: "",
-                initial: "",
+                initial: {
+                    type: "",
+                    value: ""
+                },
             }),
-            issued: customDate.optional().describe("a description").meta({
+            issued: customDate.optional().describe("Issued indicates when, if ever, this dataset was published").meta({
                 label: "Issued",
                 type: "customDate",
                 // placeholder: "",
-                initial: "",
+                initial: {
+                    type: "",
+                    value: ""
+                },
             }),
+        }).meta({
+            class: "grid-cols-1 md:grid-cols-2 gap-2"
         })
     },
     {
         step: 4,
         title: "Rights",
         schema: z.object({
-            license: z.string().optional().describe("a description").meta({
+            license: z.string().optional().describe("").meta({
                 label: "License",
                 type: "select", // select string is single
                 placeholder: "Select a license",
                 initial: "",
                 options: licenseOptions.value,
             }),
-            rights: z.string().optional().describe("a description").meta({
+            rights: z.string().optional().describe("").meta({
                 label: "Rights",
                 type: "text",
                 initial: "",
             }),
-            accessRights: z.string().optional().describe("a description").meta({
+            accessRights: z.string().optional().describe("").meta({
                 label: "Access Rights",
                 type: "select", // select string is single
                 placeholder: "Select an access right",
                 initial: "",
                 options: accessRightsOptions.value,
             }),
+        }).meta({
+            class: "grid-cols-1 md:grid-cols-2 gap-2"
         })
     },
+    // TODO: spatio/temporal
     {
         step: 5,
         title: "Distribution Info",
         schema: z.object({
             distribution: z.object({
-                accessURL: z.string().url({ message: "Must be a valid URL" }).describe("desc").meta({
+                accessURL: z.string().url({ message: "Must be a valid URL" }).describe("A publicly resolvable URL that gives the user access to the data").meta({
                     label: "Access URL",
                     type: "url",
                     placeholder: "https://example.com",
                     inital: "",
                 })
-            }).describe("a description").meta({
+            }).describe("").meta({
                 label: "Distribution",
                 type: "group",
                 // placeholder: "Choose themes",
                 initial: { accessURL: "" },
+            }).meta({
+                class: "col-span-full"
             }),
+        }).meta({
+            class: "grid-cols-1 md:grid-cols-2 gap-2"
         })
     },
     {
         step: 6,
         title: "Theme",
         schema: z.object({
-            theme: z.string().array().min(2, "Must have at least two themes selected").describe("a description").meta({
+            theme: z.string().array().min(2, "Must have at least two themes selected").describe("You can add more than one Theme term").meta({
                 label: "Theme",
                 type: "select", // string array/select array is multiple
                 placeholder: "Choose themes",
                 initial: [],
                 options: themeOptions.value,
             }),
+        }).meta({
+            class: "grid-cols-1 md:grid-cols-2 gap-2"
         })
     },
+    // TODO: contact details
 ];
 
 const data = ref(steps.reduce((obj, step) => {
@@ -406,15 +437,15 @@ onMounted(async () => {
         <h1 class="bold text-3xl mb-4">Metadata Entry Tool</h1>
         <p>This form is to be completed for submitting metadata to the Indigenous Data Network.</p>
         <p>In order to complete a compliant metadata record for your data, you need to fill out the information required in the form below. You have the option of completing only the minimum required information (indicated by a red asterix) but it is recommended that you include as much information as possible in the form.</p>
-        <p>The more information you are able to provide, the higher the FAIR and CARE scores for your metadata. For now, these scores generate placeholder values.</p>
-        <p>The metadata in RDF format can optionally be viewed on the right of the form. The RDF and scores are updated as you complete the form. More information about the metadata profile can be found here.</p>
-        <p>This form uses the IDN's collection of people and organisations, or "agents", that are related to metadata and datasets in the IDN, called the Agents Database. You can refer to this list of agents or create a custom agent if required.</p>
+        <p>The more information you are able to provide, the higher the <a href="https://force11.org/info/the-fair-data-principles" target="_blank" rel="noopener noreferrer">FAIR</a> and <a href="https://www.gida-global.org/care" target="_blank" rel="noopener noreferrer">CARE</a> scores for your metadata. For now, these scores generate placeholder values.</p>
+        <p>The metadata in RDF format can optionally be viewed on the right of the form. The RDF and scores are updated as you complete the form. More information about the metadata profile can be found <a href="https://data.idnau.org/pid/cp/guide" target="_blank" rel="noopener noreferrer">here</a>.</p>
+        <p>This form uses the IDN's collection of people and organisations, or "agents", that are related to metadata and datasets in the IDN, called the <a href="https://agentsdb.idnau.org" target="_blank" rel="noopener noreferrer">Agents Database</a>. You can refer to this list of agents or create a custom agent if required.</p>
     </div>
     <div class="flex flex-row gap-4">
         <div class="grow-[2]">
             <VerticalStepper :steps="steps" v-slot="{ stepObj, stepIndex }">
                 <Card v-show="stepIndex === stepObj.step">
-                    <CardContent class="pt-4 grid grid-cols-1 md:grid-cols-2 gap-2">
+                    <CardContent class="pt-4">
                         <!-- <Button v-if="stepIndex === 1" @click="data.General.iri = DEFAULT_IRI" size="xs">Generate IRI</Button> -->
                         <FormBuilder :schema="stepObj.schema" v-model="data[stepObj.title]" />
                     </CardContent>
@@ -469,5 +500,9 @@ onMounted(async () => {
 <style lang="scss" scoped>
 p {
     margin-bottom: 0.5rem;
+}
+
+a {
+    color: hsl(var(--primary));
 }
 </style>
