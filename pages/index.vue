@@ -402,11 +402,19 @@ onMounted(async () => {
 </script>
 
 <template>
+    <div class="mb-4">
+        <h1 class="bold text-3xl mb-4">Metadata Entry Tool</h1>
+        <p>This form is to be completed for submitting metadata to the Indigenous Data Network.</p>
+        <p>In order to complete a compliant metadata record for your data, you need to fill out the information required in the form below. You have the option of completing only the minimum required information (indicated by a red asterix) but it is recommended that you include as much information as possible in the form.</p>
+        <p>The more information you are able to provide, the higher the FAIR and CARE scores for your metadata. For now, these scores generate placeholder values.</p>
+        <p>The metadata in RDF format can optionally be viewed on the right of the form. The RDF and scores are updated as you complete the form. More information about the metadata profile can be found here.</p>
+        <p>This form uses the IDN's collection of people and organisations, or "agents", that are related to metadata and datasets in the IDN, called the Agents Database. You can refer to this list of agents or create a custom agent if required.</p>
+    </div>
     <div class="flex flex-row gap-4">
         <div class="grow-[2]">
             <VerticalStepper :steps="steps" v-slot="{ stepObj, stepIndex }">
                 <Card v-show="stepIndex === stepObj.step">
-                    <CardContent class="pt-4 flex flex-col gap-2">
+                    <CardContent class="pt-4 grid grid-cols-1 md:grid-cols-2 gap-2">
                         <!-- <Button v-if="stepIndex === 1" @click="data.General.iri = DEFAULT_IRI" size="xs">Generate IRI</Button> -->
                         <FormBuilder :schema="stepObj.schema" v-model="data[stepObj.title]" />
                     </CardContent>
@@ -419,9 +427,9 @@ onMounted(async () => {
             <Collapsible v-model:open="showRDF" class="flex flex-col gap-2 items-start">
                 <CollapsibleTrigger as-child>
                     <Button variant="outline">
+                        <ChevronUp v-if="showRDF" class="h-4 w-4 mr-2" />
+                        <ChevronDown v-else class="h-4 w-4 mr-2" />
                         RDF
-                        <ChevronUp v-if="showRDF" class="h-4 w-4" />
-                        <ChevronDown v-else class="h-4 w-4" />
                     </Button>
                 </CollapsibleTrigger>
                 <CollapsibleContent class="flex flex-col gap-2 items-start">
@@ -435,15 +443,22 @@ onMounted(async () => {
                                 <template #title>Metadata RDF</template>
                                 <pre class="whitespace-pre-wrap text-xs border rounded p-2 overflow-y-auto">{{ rdfString }}</pre>
                                 <template #footer>
-                                    <Button variant="outline" @click="copyRDF">Copy
-                                        <Copy class="h-4 w-4" />
+                                    <Button variant="outline" @click="copyRDF">
+                                        <Copy class="h-4 w-4 mr-2" />
+                                        Copy
                                     </Button>
+                                    <DialogClose as-child>
+                                        <Button type="button" variant="secondary">
+                                            Close
+                                        </Button>
+                                    </DialogClose>
                                 </template>
                             </Modal>
                         </span>
                     </div>
-                    <Button variant="outline" size="sm" @click="copyRDF">Copy
-                        <Copy class="h-4 w-4" />
+                    <Button variant="outline" size="sm" @click="copyRDF">
+                        <Copy class="h-4 w-4 mr-2" />
+                        Copy
                     </Button>
                 </CollapsibleContent>
             </Collapsible>
@@ -451,4 +466,8 @@ onMounted(async () => {
     </div>
 </template>
 
-<style lang="scss" scoped></style>
+<style lang="scss" scoped>
+p {
+    margin-bottom: 0.5rem;
+}
+</style>

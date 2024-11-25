@@ -1,5 +1,9 @@
 <script lang="ts" setup>
-import { navigationMenuTriggerStyle } from "~/components/ui/navigation-menu";
+import { ConfigProvider } from "radix-vue";
+
+// import { navigationMenuTriggerStyle } from "~/components/ui/navigation-menu";
+
+const useIdFunction = () => useId();
 
 const items = [
     {
@@ -26,26 +30,36 @@ const items = [
 </script>
 
 <template>
-    <header>
-        <NavigationMenu>
-            <NavigationMenuItem v-for="item in items">
-                <NavigationMenuLink :class="navigationMenuTriggerStyle()" as-child>
-                    <NuxtLink :to="item.to">{{ item.label }}</NuxtLink>
-                </NavigationMenuLink>
-            </NavigationMenuItem>
-        </NavigationMenu>
-    </header>
-    <main>
-        <NuxtPage />
-    </main>
+    <ConfigProvider :use-id="useIdFunction">
+        <header class="bg-secondary">
+            <!-- <NavigationMenu>
+                <NavigationMenuItem v-for="item in items">
+                    <NavigationMenuLink :class="navigationMenuTriggerStyle()" as-child>
+                        <NuxtLink :to="item.to">{{ item.label }}</NuxtLink>
+                    </NavigationMenuLink>
+                </NavigationMenuItem>
+            </NavigationMenu> -->
+            <div class="mx-auto p-3 max-w-[1400px]">
+                IDN header
+            </div>
+        </header>
+        <main class="grow">
+            <div class="mx-auto p-3 max-w-[1400px]">
+                <NuxtPage />
+            </div>
+        </main>
+        <footer class="bg-secondary">
+            <div class="mx-auto p-3 max-w-[1400px]">
+                IDN footer
+            </div>
+        </footer>
+    </ConfigProvider>
 </template>
 
-<style lang="scss" scoped>
-li {
-    list-style: none;
-}
-
-main {
-    padding: 1rem;
+<style>
+#__nuxt {
+    height: 100dvh;
+    display: flex;
+    flex-direction: column;
 }
 </style>

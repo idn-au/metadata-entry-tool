@@ -26,7 +26,7 @@ const percentGradient = computed(() => {
 
 <template>
     <div class="circle-progress" :style="{ background: `conic-gradient(${percentGradient} ${percent}%, 0, rgba(80, 80, 80, 0.2) ${100 - percent}%)` }">
-        <div class="circle-overlay">
+        <div class="circle-overlay bg-background">
             <span class="circle-value">
                 <template v-if="props.label">{{ props.label }}</template>
                 <template v-else-if="props.tickWhenComplete && percent === 100">
@@ -49,7 +49,7 @@ const percentGradient = computed(() => {
 
     .circle-overlay {
         border-radius: 50%;
-        background-color: white;
+        // background-color: white;
         display: flex;
         align-items: center;
         justify-content: center;

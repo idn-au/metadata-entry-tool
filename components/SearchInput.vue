@@ -80,7 +80,7 @@ watch(model, (newValue) => {
             </div>
             <div v-if="searchTerm !== ''" class="results flex flex-col gap-1">
                 <span v-if="loading">Loading...</span>
-                <template v-else>
+                <template v-else-if="results">
                     <div v-for="result in results" class="result cursor-pointer p-2 rounded"
                         @click="handleSelect(result)">
                         {{ displayResult(result) }}
