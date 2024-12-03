@@ -1,3 +1,8 @@
+import { register } from "zod-metadata";
+import * as z from "zod";
+
+register(z);
+
 export type Format = "text/turtle"
     | "ttl"
     // | "turtle"
@@ -75,7 +80,27 @@ export type ScoreValueObj = {
     [key: string]: ScoreValue;
 };
 
-export type Option = {
-    label: string;
-    value: string;
-};
+export const optionSchema = z.object({
+    label: z.string().min(1),
+    value: z.string().min(1),
+});
+export interface Option extends z.infer<typeof optionSchema> { };
+export const inputMetaSchema = z.object({
+    type: z.string(),
+    label: z.string(),
+    placeholder: z.string().optional(),
+    options: z.union([optionSchema.array(), z.null()]).optional(),
+    query: z.function().args(z.string()).returns(z.any()).optional(),
+    initial: z.any().optional(),
+    required: z.boolean().optional(),
+    style: z.string().optional(),
+    class: z.string().optional(),
+    tooltip: z.string().optional(),
+});
+export interface InputMeta extends z.infer<typeof inputMetaSchema> { };
+export const sectionMetaSchema = z.object({
+    class: z.string().optional(),
+    style: z.string().optional(),
+});
+export interface SectionMeta extends z.infer<typeof sectionMetaSchema> { };
+

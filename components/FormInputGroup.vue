@@ -11,6 +11,8 @@ const props = defineProps<{
 
 const model = defineModel<z.infer<typeof props.field>>({ required: true });
 
+const shape = props.field.isOptional() ? props.field._def.innerType.shape : props.field.shape;
+
 // const fieldMeta = computed(() => props.field.getMeta() as z.ZodMeta);
 </script>
 
@@ -19,7 +21,7 @@ const model = defineModel<z.infer<typeof props.field>>({ required: true });
         <CardContent class="p-6">
             <div class="grid grid-cols-2 flex-grow gap-2">
                 <FormInput
-                    v-for="[k, f] in Object.entries(props.field.shape)"
+                    v-for="(f, k) in shape"
                     :key="k"
                     :fieldKey="k"
                     :field="(f as z.ZodTypeAny)"

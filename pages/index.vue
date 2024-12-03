@@ -4,8 +4,7 @@ import * as z from "zod";
 import * as jsonld from "jsonld";
 import { ChevronDown, ChevronUp, Copy, Expand } from "lucide-vue-next";
 import { fairScore, careScore } from "@idn-au/scores-calculator-js";
-import type { ScoreValueObj } from "~/types";
-import { schemaCreateEmptyObject, removeEmptyValues, sparqlSelect, sparqlOptions } from "~/utils/form";
+import { schemaCreateEmptyObject, removeEmptyValues, sparqlSelect, sparqlOptions, type SectionMeta } from "~/utils/form";
 
 register(z);
 
@@ -107,80 +106,89 @@ const customDate = z.object({
         }
         return true;
     }, { message: "Invalid date" })
-})
+});
+
 const steps = [
     {
         step: 1,
         title: "General",
+        description: "Basic information about this data.",
         schema: z.object({
-            iri: z.string().min(1, "IRI is required").url({ message: "Must be a valid IRI" }).describe("Provide an IRI or have an IRI automatically assigned").meta({
+            iri: z.string().min(1, "IRI is required").url({ message: "Must be a valid IRI" }).describe("Provide an IRI or have an IRI automatically assigned").meta<InputMeta>({
                 label: "IRI",
                 type: "url",
                 placeholder: "https://example.com",
                 initial: "",
+                tooltip: "An IRI is a standard identifier in the form of a web address (URL). Good IRIs are part of a managed system.",
             }),
-            title: z.string().min(1, "Title is required").describe("").meta({
+            title: z.string().min(1, "Title is required").describe("").meta<InputMeta>({
                 label: "Title",
                 type: "text",
                 initial: "",
+                tooltip: "The name of the data that this metadata is describing.",
             }),
-            indigeneity: z.string().array().optional().describe("You can add mulitple indigeneity terms").meta({
+            indigeneity: z.string().array().optional().describe("You can add mulitple indigeneity terms").meta<InputMeta>({
                 label: "Indigeneity",
                 type: "select", // string array/select array is multiple
                 placeholder: "Select indigeneity",
                 initial: [],
                 options: indigeneityOptions.value,
+                tooltip: "The indigeneity of this dataset."
             }),
-            description: z.string().min(1, "Description is required").describe("Supports new lines and basic formatting").meta({
+            description: z.string().min(1, "Description is required").describe("Supports new lines and basic formatting").meta<InputMeta>({
                 label: "Description",
                 type: "textarea",
                 initial: "",
-                class: "col-span-full"
+                class: "col-span-full",
+                tooltip: "A free-text description of the data. This can include how it was created and its intended purpose.",
             }),
-        }).meta({
+        }).meta<SectionMeta>({
             class: "grid-cols-1 md:grid-cols-2 gap-2"
         })
     },
     {
         step: 2,
         title: "Agent Information",
+        description: "Information about the roles that agents (people and organisations) play with respect to this data. These roles are critical in determining whether this data is managed properly. Each Agent must have a matching Role.",
         schema: z.object({
             agentRole: z.object({
                 agent: z.object({
                     iri: z.string(),
                     name: z.string(),
                     type: z.string(),
-                }).describe("").meta({
+                }).describe("").meta<InputMeta>({
                     label: "Agent",
                     type: "search",
                     placeholder: "Search for an agent",
                     initial: {},
+                    tooltip: "The name of the person, community or business that is providing this data.",
                     query: agentSearch,
                 }),
-                role: z.string().array().min(1, "Role is required").describe("").meta({
+                role: z.string().array().min(1, "Role is required").describe("").meta<InputMeta>({
                     label: "Role",
                     type: "select", // string array/select array is multiple
                     placeholder: "Choose roles",
                     initial: [],
                     options: roleOptions.value,
+                    tooltip: "What role (e.g. custodian) the named person, community or business has with this data.",
                 }),
                 // TODO: IDG
-            }).array().min(1, "Must have an agent and role selected").meta({
+            }).array().min(1, "Must have an agent and role selected").meta<InputMeta>({
                 label: "Agents",
                 type: "add",
                 initial: [{ agent: {}, role: [] }],
-            }).meta({
                 class: "col-span-full"
-            }),
-        }).meta({
+            })
+        }).meta<SectionMeta>({
             class: "grid-cols-1 md:grid-cols-2 gap-2"
         })
     },
     {
         step: 3,
         title: "Dates",
+        description: "Standard dates for the establishment and update times of this dataset. A dataset about early 20th century data might only have been made last year and the created date is then some time last year. 'Issued' indicates when, if ever, this dataset was published.",
         schema: z.object({
-            created: customDate.describe("").meta({
+            created: customDate.describe("").meta<InputMeta>({
                 label: "Created",
                 type: "customDate",
                 // placeholder: "",
@@ -188,8 +196,9 @@ const steps = [
                     type: "",
                     value: ""
                 },
+                tooltip: "This is the date that this dataset was created (NOT the date the data occurred).",
             }),
-            modified: customDate.describe("").meta({
+            modified: customDate.describe("").meta<InputMeta>({
                 label: "Modified",
                 type: "customDate",
                 // placeholder: "",
@@ -197,8 +206,9 @@ const steps = [
                     type: "",
                     value: ""
                 },
+                tooltip: "The most recent date on which the data was modified. It can be the same as the date it was created.",
             }),
-            issued: customDate.optional().describe("Issued indicates when, if ever, this dataset was published").meta({
+            issued: customDate.optional().describe("Issued indicates when, if ever, this dataset was published").meta<InputMeta>({
                 label: "Issued",
                 type: "customDate",
                 // placeholder: "",
@@ -206,78 +216,163 @@ const steps = [
                     type: "",
                     value: ""
                 },
+                tooltip: "This is the date that this dataset was published or distributed.",
             }),
-        }).meta({
+        }).meta<SectionMeta>({
             class: "grid-cols-1 md:grid-cols-2 gap-2"
         })
     },
     {
         step: 4,
         title: "Rights",
+        description: "Ownership and access information of the data. If a license is selected then the rights holder to that license should also be included.",
         schema: z.object({
-            license: z.string().optional().describe("").meta({
+            license: z.string().optional().describe("").meta<InputMeta>({
                 label: "License",
                 type: "select", // select string is single
                 placeholder: "Select a license",
                 initial: "",
                 options: licenseOptions.value,
+                tooltip: "This is the legal information under which the data is made available.",
             }),
-            rights: z.string().optional().describe("").meta({
+            rights: z.string().optional().describe("").meta<InputMeta>({
                 label: "Rights",
                 type: "text",
                 initial: "",
+                tooltip: "This is a statement that provides required details of who holds the license selected previously. e.g. ©University of Melbourne.",
             }),
-            accessRights: z.string().optional().describe("").meta({
+            accessRights: z.string().optional().describe("").meta<InputMeta>({
                 label: "Access Rights",
                 type: "select", // select string is single
                 placeholder: "Select an access right",
                 initial: "",
                 options: accessRightsOptions.value,
+                tooltip: "Data access rights control how users and systems access a data resource. e.g. Metadata access only. Definitions can be found here.",
             }),
-        }).meta({
+        }).meta<SectionMeta>({
             class: "grid-cols-1 md:grid-cols-2 gap-2"
         })
     },
-    // TODO: spatio/temporal
     {
         step: 5,
-        title: "Distribution Info",
+        title: "Spatio/Temporal",
+        description: "The spatial (geographical) and temporal (time period) extent of the data. Temporal information is different from the dates section as, for example, this dataset may have been created recently but is about someone or something long ago.",
         schema: z.object({
-            distribution: z.object({
-                accessURL: z.string().url({ message: "Must be a valid URL" }).describe("A publicly resolvable URL that gives the user access to the data").meta({
-                    label: "Access URL",
-                    type: "url",
-                    placeholder: "https://example.com",
-                    inital: "",
-                })
-            }).describe("").meta({
-                label: "Distribution",
+            // spatial: z.object({
+
+            // }).optional().meta<InputMeta>({
+            //     label: "Spatial",
+            //     type: "group",
+            // }),
+            temporal: z.object({
+                startedAtTime: customDate.optional().describe("").meta<InputMeta>({
+                    label: "Start Time",
+                    type: "customDate",
+                    // placeholder: "",
+                    initial: {
+                        type: "",
+                        value: ""
+                    },
+                }),
+                endedAtTime: customDate.optional().describe("").meta<InputMeta>({
+                    label: "End Time",
+                    type: "customDate",
+                    // placeholder: "",
+                    initial: {
+                        type: "",
+                        value: ""
+                    },
+                }),
+            }).optional().meta<InputMeta>({
+                label: "Temporal",
                 type: "group",
-                // placeholder: "Choose themes",
-                initial: { accessURL: "" },
-            }).meta({
-                class: "col-span-full"
-            }),
-        }).meta({
+                initial: {
+                    startedAtTime: {
+                        type: "",
+                        value: ""
+                    },
+                    endedAtTime: {
+                        type: "",
+                        value: ""
+                    },
+                },
+                class: "col-span-full",
+                tooltip: "This is the interval of time which the data covers at the time of publishing. There must be a start and end date.",
+            })
+        }).meta<SectionMeta>({
             class: "grid-cols-1 md:grid-cols-2 gap-2"
         })
     },
     {
         step: 6,
-        title: "Theme",
+        title: "Distribution Info",
+        description: "This is optional information in the form of a publicly resolvable URL that gives the user access to the data.",
         schema: z.object({
-            theme: z.string().array().min(2, "Must have at least two themes selected").describe("You can add more than one Theme term").meta({
+            distribution: z.object({
+                accessURL: z.string().url({ message: "Must be a valid URL" }).describe("A publicly resolvable URL that gives the user access to the data").meta<InputMeta>({
+                    label: "Access URL",
+                    type: "url",
+                    placeholder: "https://example.com",
+                    initial: "",
+                    tooltip: "A URL is normally in the format https://… . If you are NOT submitting the metadata to the Indigenous Data Network, you could insert any resolvable URL into the metadata.",
+                })
+            }).describe("").meta<InputMeta>({
+                label: "Distribution",
+                type: "group",
+                initial: { accessURL: "" },
+                class: "col-span-full"
+            })
+        }).meta<SectionMeta>({
+            class: "grid-cols-1 md:grid-cols-2 gap-2"
+        })
+    },
+    {
+        step: 7,
+        title: "Theme",
+        description: "Classification or categorisation of this data. We are mostly concerned with indications of 'indigeneity', i.e. how this data is related to indigenous people, however other classifications may also be added. Our primary indigenous classification vocabulary is online at https://data.idnau.org/v/vocab/vcb:idn-th which may be browsed for classification suggestions.",
+        schema: z.object({
+            theme: z.string().array().describe("You can add more than one Theme term").meta<InputMeta>({
                 label: "Theme",
                 type: "select", // string array/select array is multiple
                 placeholder: "Choose themes",
                 initial: [],
                 options: themeOptions.value,
+                tooltip: "Our vocabulary for the primary classification for indigeneity of data being described can be browsed here. This vocabulary contains historical terms which exist in legacy data but are no longer used today. We welcome suggestions and feedback on this vocabulary."
             }),
-        }).meta({
+        }).meta<SectionMeta>({
             class: "grid-cols-1 md:grid-cols-2 gap-2"
         })
     },
-    // TODO: contact details
+    // {
+    //     step: 8,
+    //     title: "Contact Details",
+    //     description: "These details are required if you are submitting this metadata to the IDN. These details are also added as the point of contact for this data unless you've specifically indicated an Agent as the Point of Contact above.",
+    //     schema: z.object({
+    //         name: z.string().describe("").meta<InputMeta>({
+    //             label: "Name",
+    //             type: "text",
+    //             placeholder: "Contact name",
+    //             initial: "",
+    //             // tooltip: ""
+    //         }),
+    //         email: z.string().email().describe("").meta<InputMeta>({
+    //             label: "Email",
+    //             type: "email",
+    //             placeholder: "Contact email",
+    //             initial: "",
+    //             // tooltip: ""
+    //         }),
+    //         phone: z.string().describe("").meta<InputMeta>({
+    //             label: "phone",
+    //             type: "text",
+    //             placeholder: "Contact phone",
+    //             initial: "",
+    //             // tooltip: ""
+    //         }),
+    //     }).meta<SectionMeta>({
+    //         class: "grid-cols-1 md:grid-cols-2 gap-2"
+    //     })
+    // },
 ];
 
 const data = ref(steps.reduce((obj, step) => {
@@ -384,24 +479,17 @@ const dataFlattened = computed(() => {
     }, {});
 });
 
+const schemaFlattened = steps.reduce((obj, curr) => {
+    Object.assign(obj, curr.schema.shape);
+    return obj;
+}, {});
+
 function copyRDF() {
     navigator.clipboard.writeText(rdfString.value);
 }
 
 async function dataToRdf(dataObj: any): Promise<string> {
-    const initialValuesNested = steps.reduce((obj1, step) => {
-        obj1[step.title] = Object.entries(step.schema.shape).reduce((obj2, [k, v]) => {
-            obj2[k] = v.getMeta().initial;
-            return obj2;
-        }, {});
-        return obj1;
-    }, {});
-    const initialValues = Object.values(initialValuesNested).reduce((obj, curr) => {
-        Object.assign(obj, curr);
-        return obj;
-    }, {});
-
-    const nonempty = removeEmptyValues(dataObj, initialValues);
+    const nonempty = removeEmptyValues(dataObj, schemaFlattened);
     const doc = { "@context": context, type: "dcat:Resource", ...nonempty };
     const rdf = await (jsonld.toRDF(doc, { format: "application/n-quads" }) as Promise<string>);
     return rdf;
@@ -423,8 +511,6 @@ watch(rdfString, async (newValue) => {
 });
 
 onMounted(async () => {
-    const matches = "2024-04-24".match(/^(\d{4})(-\d{2})?(-\d{2})?$/)?.map(m => m.replaceAll("-", ""));
-
     data.value.General.iri = DEFAULT_IRI;
     rdfString.value = await dataToRdf(dataFlattened.value);
     fair.value = await fairScore(rdfString.value, dataFlattened.value.iri, "application/n-triples");
@@ -446,6 +532,7 @@ onMounted(async () => {
             <VerticalStepper :steps="steps" v-slot="{ stepObj, stepIndex }">
                 <Card v-show="stepIndex === stepObj.step">
                     <CardContent class="pt-4">
+                        <p>{{ stepObj.description }}</p>
                         <!-- <Button v-if="stepIndex === 1" @click="data.General.iri = DEFAULT_IRI" size="xs">Generate IRI</Button> -->
                         <FormBuilder :schema="stepObj.schema" v-model="data[stepObj.title]" />
                     </CardContent>

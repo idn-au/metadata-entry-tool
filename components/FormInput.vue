@@ -1,7 +1,7 @@
 <script lang="ts" setup>
 import { register } from "zod-metadata";
 import * as z from "zod";
-import type { Option } from "~/types";
+import { CircleHelp } from "lucide-vue-next";
 
 register(z);
 
@@ -13,7 +13,7 @@ const props = defineProps<{
 const model = defineModel<z.infer<typeof props.field>>({ required: true });
 const { value, errorMessage, meta, validate, resetField } = useField(props.fieldKey, toTypedSchema(props.field), { syncVModel: true });
 
-const fieldMeta: z.ZodMeta = props.field._def.typeName === "ZodEffects" ? props.field._def.schema.getMeta() as z.ZodMeta : props.field.getMeta() as z.ZodMeta;
+const fieldMeta: InputMeta = props.field._def.typeName === "ZodEffects" ? props.field._def.schema.getMeta() as InputMeta : props.field.getMeta() as InputMeta;
 
 const fieldDef = computed(() => {
     if (props.field.isOptional()){ 
@@ -29,7 +29,7 @@ const fieldDef = computed(() => {
 
 const inputType = computed(() => {
     if (fieldMeta && fieldMeta.type) {
-        return fieldMeta.type as string;
+        return fieldMeta.type;
     }
 
     switch (fieldDef.value.typeName) {
@@ -57,7 +57,7 @@ const inputComponent = computed(() => {
     switch (inputType.value) {
         case "text":
         case "url":
-            return resolveComponent("Input");
+            return resolveComponent("CustomInput");
         case "textarea":
             return resolveComponent("Textarea");
         case "select":
@@ -71,21 +71,11 @@ const inputComponent = computed(() => {
         case "group":
             return resolveComponent("FormInputGroup");
         default:
-            return resolveComponent("Input");
+            return resolveComponent("CustomInput");
     }
 });
 
-const label = computed(() => {
-    return fieldMeta.label as string || props.fieldKey;
-});
-
-const placeholder = computed(() => {
-    return fieldMeta.placeholder as string || undefined;
-});
-
-const options = computed(() => {
-    return fieldMeta.options as Option[] || undefined;
-});
+const label = fieldMeta.label || props.fieldKey;
 
 const multiple = computed(() => {
     if (fieldDef.value.typeName === "ZodArray") {
@@ -99,18 +89,25 @@ const multiple = computed(() => {
 
 <template>
     <div class="form-input flex flex-col gap-1">
-        <Label :for="props.fieldKey">{{ label }}<span v-if="meta.required" class="text-destructive"> *</span></Label>
+        <div class="flex flex-row gap-1 items-center">
+            <Label :for="props.fieldKey">{{ label }}<span v-if="meta.required" class="text-destructive"> *</span></Label>
+            <CustomTooltip v-if="fieldMeta.tooltip">
+                <template #trigger><CircleHelp class="size-4" /></template>
+                {{ fieldMeta.tooltip }}
+            </CustomTooltip>
+        </div>
         <component :is="inputComponent"
             :type="['text', 'url'].includes(inputType) ? inputType : undefined"
-            :placeholder="placeholder"
+            :placeholder="fieldMeta.placeholder"
             v-model="value"
             :class="errorMessage ? 'border-destructive' : ''"
-            :options="options"
+            :options="fieldMeta.options"
             :multiple="multiple"
             :fieldKey="['add', 'group'].includes(inputType) ? props.fieldKey : undefined"
             :field="['add', 'group'].includes(inputType) ? props.field : undefined"
             :query="fieldMeta.query || undefined"
             @blur="validate"
+            @clear="resetField({ value: fieldMeta.initial })"
         />
         <p v-if="props.field.description" :id="`${props.fieldKey}-desc`" class="text-sm text-muted-foreground">{{ props.field.description }}</p>
         <div v-if="errorMessage" :name="props.fieldKey" class="text-destructive">{{ errorMessage }}</div>
