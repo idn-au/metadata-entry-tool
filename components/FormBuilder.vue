@@ -11,14 +11,23 @@ const props = defineProps<{
 
 const model = defineModel<z.infer<typeof props.schema>>({ required: true });
 
-const formMeta = props.schema.getMeta();
+const formMeta = props.schema.getMeta() as SectionMeta;
+
+// function getFieldMeta(field): InputMeta {
+//     return field._def.typeName === "ZodEffects" ? field._def.schema.getMeta() as InputMeta : field.getMeta() as InputMeta;
+// }
 </script>
 
 <template>
     <div :class="cn('grid', formMeta?.class)" :style="`${formMeta?.style}`">
-        <div v-for="[fieldKey, field] in Object.entries(props.schema.shape)" :key="fieldKey" :class="field.getMeta()?.class"
-            :style="field.getMeta()?.style">
-            <FormInput :fieldKey="fieldKey" :field="(field as z.ZodTypeAny)" v-model="model[fieldKey]" />
-        </div>
+        <template v-for="(field, fieldKey) in props.schema.shape" :key="fieldKey">
+            <div
+                v-if="getZodSchemaMeta(field).type !== 'hidden'"
+                :class="getZodSchemaMeta(field)?.class"
+                :style="getZodSchemaMeta(field)?.style"
+            >
+                <FormInput :fieldKey="fieldKey" :field="(field as z.ZodTypeAny)" v-model="model[fieldKey]" />
+            </div>
+        </template>
     </div>
 </template>

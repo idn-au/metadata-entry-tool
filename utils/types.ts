@@ -87,7 +87,7 @@ export const optionSchema = z.object({
 export interface Option extends z.infer<typeof optionSchema> { };
 export const inputMetaSchema = z.object({
     type: z.string(),
-    label: z.string(),
+    label: z.string().optional(),
     placeholder: z.string().optional(),
     options: z.union([optionSchema.array(), z.null()]).optional(),
     query: z.function().args(z.string()).returns(z.any()).optional(),

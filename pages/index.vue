@@ -66,6 +66,17 @@ const { data: roleOptions } = await useAsyncData("roleOptions", () => sparqlOpti
             skos:prefLabel ?label .
     }`));
 
+const { data: distThemeOptions } = await useAsyncData("distThemeOptions", () => sparqlOptions(SPARQL_URL, `
+    PREFIX skos: <http://www.w3.org/2004/02/skos/core#>
+    SELECT DISTINCT ?value ?label
+    WHERE {
+        BIND(<https://data.idnau.org/pid/vocab/cat-roles> AS ?cs)
+        ?cs a skos:ConceptScheme .
+        ?value a skos:Concept ;
+            skos:inScheme ?cs ;
+            skos:prefLabel ?label .
+    }`));
+
 async function agentSearch(term: string) {
     const r = await sparqlSelect(SPARQL_URL, `PREFIX dcterms: <http://purl.org/dc/terms/>
         PREFIX sdo: <https://schema.org/>
@@ -258,12 +269,42 @@ const steps = [
         title: "Spatio/Temporal",
         description: "The spatial (geographical) and temporal (time period) extent of the data. Temporal information is different from the dates section as, for example, this dataset may have been created recently but is about someone or something long ago.",
         schema: z.object({
-            // spatial: z.object({
-
-            // }).optional().meta<InputMeta>({
-            //     label: "Spatial",
-            //     type: "group",
-            // }),
+            spatial: z.union([z.string().url(), z.object({
+                type: z.literal("geo:Geometry"),
+                asWKT: z.object({
+                    type: z.literal("geo:wktLiteral"),
+                    value: z.string()
+                    // .refine((val) => {
+                    //     if (typeof val !== "string") {
+                    //         return false;
+                    //     }
+                    //     const matches = val.match(/^(POINT|LINESTRING|POLYGON|MULTIPOINT|MULTILINESTRING|MULTIPOLYGON|GEOMETRYCOLLECTION)\s?(\(+(\-?\d+(\.\d+)?,?\s?)+\)+,?\s?)+$/);
+                    //     if (!matches) {
+                    //         return false;
+                    //     }
+                    //     return true;
+                    // }, { message: "Invalid WKT string" }),
+                }).optional(),
+                asGeoJSON: z.object({
+                    type: z.literal("geo:geoJSONLiteral"),
+                    value: z.string()
+                    // .refine((val) => {
+                    //     if (typeof val !== "string") {
+                    //         return false;
+                    //     }
+                    //     const matches = val.match(/^\{.+\}$/);
+                    //     if (!matches) {
+                    //         return false;
+                    //     }
+                    //     return true;
+                    // }, { message: "Invalid GeoJSON" }),
+                }).optional(),
+            })]).optional().describe("Supports an IRI or a WKT/GeoJSON string").meta<InputMeta>({
+                label: "Spatial",
+                type: "spatial",
+                initial: "",
+                // tooltip: "Spatial tooltip"
+            }),
             temporal: z.object({
                 startedAtTime: customDate.optional().describe("").meta<InputMeta>({
                     label: "Start Time",
@@ -309,18 +350,51 @@ const steps = [
         description: "This is optional information in the form of a publicly resolvable URL that gives the user access to the data.",
         schema: z.object({
             distribution: z.object({
+                type: z.literal("dcat:Distribution").meta<InputMeta>({
+                    type: "hidden",
+                    initial: "dcat:Distribution",
+                }),
+                title: z.string().describe("").meta<InputMeta>({
+                    label: "Title",
+                    type: "text",
+                    initial: "",
+                    // tooltip: "",
+                }),
                 accessURL: z.string().url({ message: "Must be a valid URL" }).describe("A publicly resolvable URL that gives the user access to the data").meta<InputMeta>({
                     label: "Access URL",
                     type: "url",
                     placeholder: "https://example.com",
                     initial: "",
                     tooltip: "A URL is normally in the format https://… . If you are NOT submitting the metadata to the Indigenous Data Network, you could insert any resolvable URL into the metadata.",
-                })
-            }).describe("").meta<InputMeta>({
+                }),
+                theme: z.string().array().describe("").meta<InputMeta>({
+                    label: "Theme",
+                    type: "select", // string array/select array is multiple
+                    placeholder: "Choose themes",
+                    initial: [],
+                    options: distThemeOptions.value,
+                    // tooltip: ""
+                }),
+                description: z.string().describe("Supports new lines and basic formatting").meta<InputMeta>({
+                    label: "Description",
+                    type: "textarea",
+                    initial: "",
+                    class: "col-span-full",
+                    // tooltip: "",
+                }),
+            }).array().describe("").meta<InputMeta>({
                 label: "Distribution",
-                type: "group",
-                initial: { accessURL: "" },
-                class: "col-span-full"
+                type: "add",
+                initial: [
+                    {
+                        type: "dcat:Distribution",
+                        theme: [],
+                        title: "",
+                        description: "",
+                        accessURL: ""
+                    }
+                ],
+                class: "grid-cols-1 md:grid-cols-2 gap-2 col-span-full"
             })
         }).meta<SectionMeta>({
             class: "grid-cols-1 md:grid-cols-2 gap-2"
@@ -443,10 +517,14 @@ const context = {
     },
     "name": "sdo:name",
     "sdoDescription": "sdo:description",
-    "spatial": "dcterms:spatial",
+    "spatial": {
+        "@id": "dcterms:spatial",
+        "@type": "@id"
+    },
     "temporal": "dcterms:temporal",
     "distribution": {
         "@id": "dcat:distribution",
+        "@container": "@set",
     },
     "accessURL": {
         "@id": "dcat:accessURL",
@@ -470,6 +548,8 @@ const context = {
         "@id": "sdo:url",
         "@type": "xsd:anyURI",
     },
+    "asWKT": "geo:asWKT",
+    "asGeoJSON": "geo:asGeoJSON",
 };
 
 const dataFlattened = computed(() => {

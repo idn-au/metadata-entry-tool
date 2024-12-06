@@ -13,19 +13,19 @@ const props = defineProps<{
 const model = defineModel<z.infer<typeof props.field>>({ required: true });
 const { value, errorMessage, meta, validate, resetField } = useField(props.fieldKey, toTypedSchema(props.field), { syncVModel: true });
 
-const fieldMeta: InputMeta = props.field._def.typeName === "ZodEffects" ? props.field._def.schema.getMeta() as InputMeta : props.field.getMeta() as InputMeta;
-
 const fieldDef = computed(() => {
-    if (props.field.isOptional()){ 
+    if (props.field.isOptional()) {
         return props.field._def.innerType._def;
     }
     
-    if (props.field._def.typeName === "ZodEffects"){ 
+    if (props.field._def.typeName === "ZodEffects") {
         return props.field._def.schema._def;
     } 
-     
+    
     return props.field._def;
 });
+
+const fieldMeta: InputMeta = props.field._def.typeName === "ZodEffects" ? props.field._def.schema.getMeta() as InputMeta : props.field.getMeta() as InputMeta;
 
 const inputType = computed(() => {
     if (fieldMeta && fieldMeta.type) {
@@ -70,6 +70,8 @@ const inputComponent = computed(() => {
             return resolveComponent("DateInput");
         case "group":
             return resolveComponent("FormInputGroup");
+        case "spatial":
+            return resolveComponent("SpatialInput");
         default:
             return resolveComponent("CustomInput");
     }
@@ -88,7 +90,7 @@ const multiple = computed(() => {
 </script>
 
 <template>
-    <div class="form-input flex flex-col gap-1">
+    <div v-if="fieldMeta.type !== 'hidden'" class="form-input flex flex-col gap-1">
         <div class="flex flex-row gap-1 items-center">
             <Label :for="props.fieldKey">{{ label }}<span v-if="meta.required" class="text-destructive"> *</span></Label>
             <CustomTooltip v-if="fieldMeta.tooltip">

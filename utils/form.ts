@@ -1,5 +1,6 @@
 import { register } from "zod-metadata";
 import * as z from "zod";
+import type { InputMeta } from "./types";
 
 register(z);
 
@@ -21,7 +22,18 @@ export function removeEmptyValues(obj: { [key: string]: any }, schema: { [key: s
                 if (Object.keys(subObj).length > 0) {
                     newObj[key] = subObj;
                 }
-            } else if (JSON.stringify(value) !== JSON.stringify(meta.initial)) {
+            } else if (meta.type === "add") {
+                const initialObj = meta.initial.length === 1 ? meta.initial[0] : {};
+                const newShape = z.object({...field._def.type.shape}).meta<InputMeta>({
+                    label: `temp-${meta.label}`,
+                    type: "group",
+                    initial: initialObj,
+                });
+                const valueArray = value.map(v => removeEmptyValues(v, newShape.shape)).filter(o => Object.keys(o).length > 0);
+                if (valueArray.length > 0) {
+                    newObj[key] = valueArray;
+                }
+            } else if ((JSON.stringify(value) !== JSON.stringify(meta.initial)) || meta.type === "hidden") {
                 newObj[key] = value;
             }
         }
@@ -55,7 +67,7 @@ export async function sparqlOptions(url: string, query: string): Promise<Option[
  */
 export function getZodSchema(field: z.AnyZodObject) {
     let schema = field;
-    if (schema.isOptional()) {
+    if (schema._def.typeName === "ZodOptional") {
         schema = schema._def.innerType;
     }
 
@@ -63,9 +75,9 @@ export function getZodSchema(field: z.AnyZodObject) {
         schema = schema._def.schema;
     }
 
-    // if (schema._def.typeName === "ZodArray") {
-    //     schema = schema._def.schema;
-    // }
+    if (schema._def.typeName === "ZodArray") {
+        // schema = schema._def.schema;
+    }
 
     return schema;
 }
@@ -76,7 +88,7 @@ export function getZodSchema(field: z.AnyZodObject) {
  * @param field 
  * @returns 
  */
-export function getZodSchemaMeta(field: z.AnyZodObject): InputMeta {
+export function getZodSchemaMeta(field: z.ZodTypeAny): InputMeta {
     let schema = field;
     // if (schema.isOptional()) {
     //     schema = schema._def.innerType;

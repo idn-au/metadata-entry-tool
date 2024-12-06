@@ -21,7 +21,7 @@ const emit = defineEmits<{
 </script>
 
 <template>
-    <div :class="cn('relative w-full max-w-sm items-center', props.class)">
+    <div :class="cn('relative w-full items-center', props.class)">
         <Input :id="props.id" :type="props.type" v-model="model" :placeholder="placeholder" class="pr-10" @focus="emit('focus')" @blur="emit('blur')" />
         <span class="absolute end-0 inset-y-0 flex items-center justify-center">
             <Button size="icon" variant="link" class="text-muted-foreground hover:text-foreground" @click="emit('clear')"><X class="size-4" /></Button>
