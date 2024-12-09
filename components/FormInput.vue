@@ -13,26 +13,16 @@ const props = defineProps<{
 const model = defineModel<z.infer<typeof props.field>>({ required: true });
 const { value, errorMessage, meta, validate, resetField } = useField(props.fieldKey, toTypedSchema(props.field), { syncVModel: true });
 
-const fieldDef = computed(() => {
-    if (props.field.isOptional()) {
-        return props.field._def.innerType._def;
-    }
-    
-    if (props.field._def.typeName === "ZodEffects") {
-        return props.field._def.schema._def;
-    } 
-    
-    return props.field._def;
-});
+const fieldDef = getZodSchema(props.field)._def;
 
-const fieldMeta: InputMeta = props.field._def.typeName === "ZodEffects" ? props.field._def.schema.getMeta() as InputMeta : props.field.getMeta() as InputMeta;
+const fieldMeta: InputMeta = props.field.getMeta() as InputMeta;
 
 const inputType = computed(() => {
     if (fieldMeta && fieldMeta.type) {
         return fieldMeta.type;
     }
 
-    switch (fieldDef.value.typeName) {
+    switch (fieldDef.typeName) {
         case "ZodString":
             if ((props.field as z.ZodString).isURL) {
                 return "url";
@@ -40,9 +30,9 @@ const inputType = computed(() => {
                 return "text";
             }
         case "ZodArray":
-            if (fieldDef.value.type._def.typeName === "ZodString") {
+            if (fieldDef.type._def.typeName === "ZodString") {
                 return "select";
-            } else if (fieldDef.value.type._def.typeName === "ZodObject") {
+            } else if (fieldDef.type._def.typeName === "ZodObject") {
                 return "add";
             }
         // case "ZodEffects": // custom schema
@@ -66,6 +56,8 @@ const inputComponent = computed(() => {
             return resolveComponent("FormInputList");
         case "search":
             return resolveComponent("SearchInput");
+        case "agent":
+            return resolveComponent("AgentInput");
         case "customDate":
             return resolveComponent("DateInput");
         case "group":
@@ -80,8 +72,8 @@ const inputComponent = computed(() => {
 const label = fieldMeta.label || props.fieldKey;
 
 const multiple = computed(() => {
-    if (fieldDef.value.typeName === "ZodArray") {
-        if (fieldDef.value.type._def.typeName === "ZodString") {
+    if (fieldDef.typeName === "ZodArray") {
+        if (fieldDef.type._def.typeName === "ZodString") {
             return true;
         }
     }
@@ -107,7 +99,9 @@ const multiple = computed(() => {
             :multiple="multiple"
             :fieldKey="['add', 'group'].includes(inputType) ? props.fieldKey : undefined"
             :field="['add', 'group'].includes(inputType) ? props.field : undefined"
-            :query="fieldMeta.query || undefined"
+            :listQuery="fieldMeta.listQuery || undefined"
+            :getQuery="fieldMeta.getQuery || undefined"
+            :resultLabel="fieldMeta.resultLabel"
             @blur="validate"
             @clear="resetField({ value: fieldMeta.initial })"
         />

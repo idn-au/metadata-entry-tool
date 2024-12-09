@@ -65,42 +65,27 @@ export async function sparqlOptions(url: string, query: string): Promise<Option[
  * @param field 
  * @returns 
  */
-export function getZodSchema(field: z.AnyZodObject) {
+export function getZodSchema(field: z.ZodTypeAny) {
     let schema = field;
+    // optional
     if (schema._def.typeName === "ZodOptional") {
         schema = schema._def.innerType;
     }
 
+    // refine
     if (schema._def.typeName === "ZodEffects") {
         schema = schema._def.schema;
-    }
-
-    if (schema._def.typeName === "ZodArray") {
-        // schema = schema._def.schema;
     }
 
     return schema;
 }
 
 /**
- * Unwraps a zod schema to get the meta object
+ * Gets the meta object for an input field
  * 
  * @param field 
  * @returns 
  */
 export function getZodSchemaMeta(field: z.ZodTypeAny): InputMeta {
-    let schema = field;
-    // if (schema.isOptional()) {
-    //     schema = schema._def.innerType;
-    // }
-
-    // if (schema._def.typeName === "ZodEffects") {
-    //     schema = schema._def.schema;
-    // }
-
-    // if (schema._def.typeName === "ZodArray") {
-    //     schema = schema._def.schema;
-    // }
-
-    return schema.getMeta() as InputMeta;
+    return field.getMeta() as InputMeta;
 }

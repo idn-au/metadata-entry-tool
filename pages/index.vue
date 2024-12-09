@@ -77,10 +77,10 @@ const { data: distThemeOptions } = await useAsyncData("distThemeOptions", () => 
             skos:prefLabel ?label .
     }`));
 
-async function agentSearch(term: string) {
+async function agentSearch(term: string): Promise<Option[]> {
     const r = await sparqlSelect(SPARQL_URL, `PREFIX dcterms: <http://purl.org/dc/terms/>
         PREFIX sdo: <https://schema.org/>
-        SELECT DISTINCT ?iri ?name ?type
+        SELECT DISTINCT ?iri ?name
         WHERE {
             GRAPH <https://data.idnau.org/pid/agentsdb> {
                 VALUES ?type { sdo:Person sdo:Organization }
@@ -91,11 +91,47 @@ async function agentSearch(term: string) {
         } LIMIT 20`);
     return r.map(x => {
         return {
+            value: x.iri.value,
+            label: x.name.value,
+        }
+    });
+}
+
+async function agentGet(iri: string) {
+    const r = await sparqlSelect(SPARQL_URL, `PREFIX dcterms: <http://purl.org/dc/terms/>
+        PREFIX sdo: <https://schema.org/>
+        SELECT DISTINCT ?iri ?name ?type ?url ?desc ?indigeneity ?identifier
+        WHERE {
+            GRAPH <https://data.idnau.org/pid/agentsdb> {
+                VALUES ?type { sdo:Person sdo:Organization }
+                BIND (<${iri}> AS ?iri)
+                ?iri a ?type ;
+                    sdo:name ?name .
+                OPTIONAL {
+                    ?iri sdo:url ?url .
+                }
+                OPTIONAL {
+                    ?iri sdo:description ?desc .
+                }
+                OPTIONAL {
+                    ?iri dcterms:type ?indigeneity .
+                }
+                OPTIONAL {
+                    ?iri sdo:identifier ?identifier .
+                }
+            }
+        } LIMIT 1`);
+    return r.map(x => {
+        return {
             iri: x.iri.value,
             name: x.name.value,
             type: x.type.value,
+            url: x.url?.value,
+            sdoDescription: x.desc?.value,
+            indigeneity: x.indigeneity?.value,
+            identifier: x.identifier?.value,
         }
-    });
+    })[0] || null;
 }
 
 const customDate = z.object({
@@ -167,15 +203,24 @@ const steps = [
                     iri: z.string(),
                     name: z.string(),
                     type: z.string(),
-                }).describe("").meta<InputMeta>({
+                    url: z.string().optional(),
+                    sdoDescription: z.string().optional(),
+                    indigeneity: z.string().optional(),
+                    identifier: z.object({
+                        value: z.string(),
+                        type: z.string().url(),
+                    }).array().optional(),
+                }).describe("You can search for an agent or create your own").meta<InputMeta>({
                     label: "Agent",
-                    type: "search",
+                    type: "agent",
                     placeholder: "Search for an agent",
                     initial: {},
                     tooltip: "The name of the person, community or business that is providing this data.",
-                    query: agentSearch,
+                    listQuery: agentSearch,
+                    getQuery: agentGet,
+                    resultLabel: "name",
                 }),
-                role: z.string().array().min(1, "Role is required").describe("").meta<InputMeta>({
+                role: z.string().array().min(1, "Role is required").describe("You can select multiple roles").meta<InputMeta>({
                     label: "Role",
                     type: "select", // string array/select array is multiple
                     placeholder: "Choose roles",
@@ -188,6 +233,7 @@ const steps = [
                 label: "Agents",
                 type: "add",
                 initial: [{ agent: {}, role: [] }],
+                element: { agent: {}, role: [] },
                 class: "col-span-full"
             })
         }).meta<SectionMeta>({
@@ -382,18 +428,17 @@ const steps = [
                     class: "col-span-full",
                     // tooltip: "",
                 }),
-            }).array().describe("").meta<InputMeta>({
+            }).array().optional().describe("").meta<InputMeta>({
                 label: "Distribution",
                 type: "add",
-                initial: [
-                    {
-                        type: "dcat:Distribution",
-                        theme: [],
-                        title: "",
-                        description: "",
-                        accessURL: ""
-                    }
-                ],
+                initial: [],
+                element: {
+                    type: "dcat:Distribution",
+                    theme: [],
+                    title: "",
+                    description: "",
+                    accessURL: ""
+                },
                 class: "grid-cols-1 md:grid-cols-2 gap-2 col-span-full"
             })
         }).meta<SectionMeta>({

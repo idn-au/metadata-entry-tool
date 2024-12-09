@@ -12,10 +12,10 @@ const props = defineProps<{
 
 const model = defineModel<z.infer<typeof props.field>>({ required: true });
 
-const fieldMeta = computed(() => props.field.getMeta() as z.ZodMeta);
+const fieldMeta = props.field.getMeta() as InputMeta;
 
 function add() {
-    model.value.push(structuredClone(fieldMeta.value.initial[0]));
+    model.value.push(structuredClone(fieldMeta.element));
 }
 
 function remove(index: number) {
@@ -27,9 +27,9 @@ function remove(index: number) {
     <Card>
         <CardContent class="flex flex-col gap-4 p-6">
             <div v-for="(entry, index) in model" :key="index" class="flex flex-row gap-2">
-                <FormInputGroup v-model="model[index]" :field="props.field.element" />
+                <FormInputGroup v-model="model[index]" :field="getZodSchema(props.field).element" />
                 <div class="w-6 flex">
-                    <Button v-if="index > 0" variant="destructive" size="sm" class="my-auto" @click="remove(index)"><Trash class="w-4 h-4" /></Button>
+                    <Button v-if="fieldMeta.initial.length === 0 || index > 0" variant="destructive" size="sm" class="my-auto" @click="remove(index)"><Trash class="w-4 h-4" /></Button>
                 </div>
             </div>
         </CardContent>

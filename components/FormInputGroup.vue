@@ -11,9 +11,7 @@ const props = defineProps<{
 
 const model = defineModel<z.infer<typeof props.field>>({ required: true });
 
-const shape = props.field._def.typeName === "ZodOptional" ? props.field._def.innerType.shape : props.field.shape;
-
-// const fieldMeta = computed(() => props.field.getMeta() as z.ZodMeta);
+const shape = getZodSchema(props.field).shape;
 </script>
 
 <template>

@@ -1,6 +1,6 @@
 <script lang="ts" setup>
 import type { HTMLAttributes } from "vue";
-import { Check, ChevronsUpDown } from "lucide-vue-next";
+import { Check, ChevronsUpDown, X } from "lucide-vue-next";
 import { cn } from "@/lib/utils";
 import type { Option } from "~/types";
 
@@ -26,6 +26,7 @@ function filterFunction(list: Option[], searchTerm: string): Option[] {
 const emits = defineEmits<{
     focus: [];
     blur: [];
+    clear: [];
     input: [value: string | string[]];
     change: [value: string | string[]];
 }>();
@@ -42,17 +43,22 @@ watch(model, (newValue) => {
 
 <template>
     <Popover v-model:open="open">
-        <PopoverTrigger as-child>
-            <Button variant="outline" role="combobox" :aria-expanded="open"
-                :class="cn(`w-full justify-between ${(props.multiple ? model.length > 0 : model) ? '' : 'text-muted-foreground'}`, props.class)">
-                {{ (props.multiple ? model.length > 0 : model)
-                    ? (props.multiple
-                        ? model.map(v => props.options.find((option) => option.value === v)?.label).join(", ")
-                        : props.options.find((option) => option.value === model)?.label)
-                    : props.placeholder }}
-                <ChevronsUpDown class="ml-2 h-4 w-4 shrink-0 opacity-50" />
-            </Button>
-        </PopoverTrigger>
+        <div :class="cn('relative w-full items-center', props.class)">
+            <PopoverTrigger as-child>
+                <Button variant="outline" role="combobox" :aria-expanded="open"
+                    :class="cn(`w-full justify-between pr-10 ${(props.multiple ? model.length > 0 : model) ? '' : 'text-muted-foreground'}`, props.class)">
+                    <span class="overflow-x-hidden">{{ (props.multiple ? model.length > 0 : model)
+                        ? (props.multiple
+                            ? model.map(v => props.options.find((option) => option.value === v)?.label).join(", ")
+                            : props.options.find((option) => option.value === model)?.label)
+                        : props.placeholder }}</span>
+                    <ChevronsUpDown class="ml-2 h-4 w-4 shrink-0 opacity-50" />
+                </Button>
+            </PopoverTrigger>
+            <span class="absolute end-0 inset-y-0 flex items-center justify-center">
+                <Button size="icon" variant="link" class="text-muted-foreground hover:text-foreground" @click="emits('clear')"><X class="size-4" /></Button>
+            </span>
+        </div>
         <PopoverContent class="w-full max-w-[300px] p-0">
             <Command>
                 <CommandInput class="h-9" placeholder="Search..." />

@@ -90,12 +90,15 @@ export const inputMetaSchema = z.object({
     label: z.string().optional(),
     placeholder: z.string().optional(),
     options: z.union([optionSchema.array(), z.null()]).optional(),
-    query: z.function().args(z.string()).returns(z.any()).optional(),
+    listQuery: z.function().args(z.string()).returns(optionSchema.array()).optional(),
+    getQuery: z.function().args(z.string()).returns(z.any()).optional(),
+    resultLabel: z.string().optional(),
     initial: z.any().optional(),
     required: z.boolean().optional(),
     style: z.string().optional(),
     class: z.string().optional(),
     tooltip: z.string().optional(),
+    element: z.any().optional(),
 });
 export interface InputMeta extends z.infer<typeof inputMetaSchema> { };
 export const sectionMetaSchema = z.object({

@@ -1,5 +1,6 @@
 <script lang="ts" setup>
 import type { HTMLAttributes } from "vue";
+import { X } from "lucide-vue-next";
 import { cn } from "@/lib/utils";
 
 const props = defineProps<{
@@ -23,6 +24,7 @@ const yearInputRef = ref<HTMLInputElement | null>(null);
 const emit = defineEmits<{
     // focus: [];
     blur: [];
+    clear: [];
     input: [value: {
         type: string;
         value: string;
@@ -41,18 +43,26 @@ function nextInput(e: Event, next: HTMLInputElement | null) {
 }
 
 watch(model, (newValue) => {
-    const matches = newValue.value.match(/^(\d{4})(-\d{2})?(-\d{2})?$/);
-    if (matches) {
-        const [_, year, month, day] = matches.map(m => m !== undefined ? m.replaceAll("-", "") : undefined);
+    if (newValue.value === "") {
         data.value = {
-            year: year || "",
-            month: month || "",
-            day: day || "",
+            year: "",
+            month: "",
+            day: "",
+        };
+    } else {
+        const matches = newValue.value.match(/^(\d{4})(-\d{2})?(-\d{2})?$/);
+        if (matches) {
+            const [_, year, month, day] = matches.map(m => m !== undefined ? m.replaceAll("-", "") : undefined);
+            data.value = {
+                year: year || "",
+                month: month || "",
+                day: day || "",
+            }
         }
+        emit("input", newValue);
+        emit("change", newValue);
+        emit("blur");
     }
-    emit("input", newValue);
-    emit("change", newValue);
-    emit("blur");
 }, { deep: true });
 
 watch(data, (newValue) => {
@@ -80,14 +90,19 @@ watch(data, (newValue) => {
 </script>
 
 <template>
-    <div :class="cn(
-        'flex flex-row gap-1 rounded-md border border-input px-3 py-2 text-sm bg-background ring-offset-background h-10 w-full placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50',
-        props.class)">
-        <input v-model="data.day" type="text" name="" id="" maxlength="2" placeholder="DD" class="w-6" ref="dayInputRef" @input="nextInput($event, monthInputRef)">
-        <span class="text-muted-foreground">/</span>
-        <input v-model="data.month" type="text" name="" id="" maxlength="2" placeholder="MM" class="w-6" ref="monthInputRef" @input="nextInput($event, yearInputRef)">
-        <span class="text-muted-foreground">/</span>
-        <input v-model="data.year" type="text" name="" id="" maxlength="4" placeholder="YYYY" class="w-10" ref="yearInputRef">
+    <div :class="cn('relative w-full items-center', props.class)">
+        <div :class="cn(
+            'flex flex-row gap-1 rounded-md border border-input px-3 py-2 text-sm bg-background ring-offset-background h-10 w-full placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50',
+            props.class)">
+            <input v-model="data.day" type="text" name="" id="" maxlength="2" placeholder="DD" class="w-6" ref="dayInputRef" @input="nextInput($event, monthInputRef)">
+            <span class="text-muted-foreground">/</span>
+            <input v-model="data.month" type="text" name="" id="" maxlength="2" placeholder="MM" class="w-6" ref="monthInputRef" @input="nextInput($event, yearInputRef)">
+            <span class="text-muted-foreground">/</span>
+            <input v-model="data.year" type="text" name="" id="" maxlength="4" placeholder="YYYY" class="w-10" ref="yearInputRef">
+        </div>
+        <span class="absolute end-0 inset-y-0 flex items-center justify-center">
+            <Button size="icon" variant="link" class="text-muted-foreground hover:text-foreground" @click="emit('clear')"><X class="size-4" /></Button>
+        </span>
     </div>
 </template>
 
