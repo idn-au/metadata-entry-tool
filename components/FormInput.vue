@@ -47,9 +47,15 @@ const inputComponent = computed(() => {
     switch (inputType.value) {
         case "text":
         case "url":
+        case "tel":
+        case "email":
             return resolveComponent("CustomInput");
         case "textarea":
             return resolveComponent("Textarea");
+        case "checkbox":
+            return resolveComponent("Checkbox")
+        case "switch":
+            return resolveComponent("Switch")
         case "select":
             return resolveComponent("ComboSelect");
         case "add":
@@ -69,8 +75,6 @@ const inputComponent = computed(() => {
     }
 });
 
-const label = fieldMeta.label || props.fieldKey;
-
 const multiple = computed(() => {
     if (fieldDef.typeName === "ZodArray") {
         if (fieldDef.type._def.typeName === "ZodString") {
@@ -83,28 +87,34 @@ const multiple = computed(() => {
 
 <template>
     <div v-if="fieldMeta.type !== 'hidden'" class="form-input flex flex-col gap-1">
-        <div class="flex flex-row gap-1 items-center">
-            <Label :for="props.fieldKey">{{ label }}<span v-if="meta.required" class="text-destructive"> *</span></Label>
-            <CustomTooltip v-if="fieldMeta.tooltip">
-                <template #trigger><CircleHelp class="size-4" /></template>
-                {{ fieldMeta.tooltip }}
-            </CustomTooltip>
+        <div :class="`flex gap-1 ${['checkbox', 'switch', 'radio'].includes(fieldMeta.type) ? 'flex-row-reverse items-center justify-end' : 'flex-col'}`">
+            <div class="flex flex-row gap-1 items-center">
+                <Label v-if="fieldMeta.label" :for="props.fieldKey">{{ fieldMeta.label }}<span v-if="meta.required" class="text-destructive"> *</span></Label>
+                <CustomTooltip v-if="fieldMeta.tooltip">
+                    <template #trigger><CircleHelp class="size-4" /></template>
+                    {{ fieldMeta.tooltip }}
+                </CustomTooltip>
+            </div>
+            <component :is="inputComponent"
+                :id="props.fieldKey"
+                :type="['text', 'url', 'tel', 'email'].includes(inputType) ? inputType : undefined"
+                :placeholder="fieldMeta.placeholder"
+                v-model="value"
+                :class="errorMessage ? 'border-destructive' : ''"
+                :options="fieldMeta.options"
+                :multiple="multiple"
+                :fieldKey="['add', 'group'].includes(inputType) ? props.fieldKey : undefined"
+                :field="['add', 'group'].includes(inputType) ? props.field : undefined"
+                :listQuery="fieldMeta.listQuery || undefined"
+                :getQuery="fieldMeta.getQuery || undefined"
+                :resultLabel="fieldMeta.resultLabel"
+                :checked="value === fieldMeta.trueValue"
+                @update:checked="checked => value = checked ? fieldMeta.trueValue : fieldMeta.falseValue"
+                @blur="validate"
+                @clear="resetField({ value: fieldMeta.initial })"
+            />
+            <Label v-if="fieldMeta.type === 'switch' && fieldMeta.falseLabel">{{ fieldMeta.falseLabel }}</Label>
         </div>
-        <component :is="inputComponent"
-            :type="['text', 'url'].includes(inputType) ? inputType : undefined"
-            :placeholder="fieldMeta.placeholder"
-            v-model="value"
-            :class="errorMessage ? 'border-destructive' : ''"
-            :options="fieldMeta.options"
-            :multiple="multiple"
-            :fieldKey="['add', 'group'].includes(inputType) ? props.fieldKey : undefined"
-            :field="['add', 'group'].includes(inputType) ? props.field : undefined"
-            :listQuery="fieldMeta.listQuery || undefined"
-            :getQuery="fieldMeta.getQuery || undefined"
-            :resultLabel="fieldMeta.resultLabel"
-            @blur="validate"
-            @clear="resetField({ value: fieldMeta.initial })"
-        />
         <p v-if="props.field.description" :id="`${props.fieldKey}-desc`" class="text-sm text-muted-foreground">{{ props.field.description }}</p>
         <div v-if="errorMessage" :name="props.fieldKey" class="text-destructive">{{ errorMessage }}</div>
     </div>

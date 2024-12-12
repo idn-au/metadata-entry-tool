@@ -41,6 +41,30 @@ export function removeEmptyValues(obj: { [key: string]: any }, schema: { [key: s
     return newObj;
 }
 
+export function isFormFilled(obj: { [key: string]: any }, schema: { [key: string]: z.AnyZodObject }): boolean {
+    let isFilled = true;
+    Object.entries(obj).forEach(([key, value]) => {
+        const field = getZodSchema(schema[key]);
+        const meta = getZodSchemaMeta(schema[key]);
+        if (meta) {
+            if (meta.type === "group") {
+                isFilled = isFormFilled(value, field.shape);
+            } else if (meta.type === "add") {
+                const initialObj = meta.initial.length === 1 ? meta.initial[0] : {};
+                const newShape = z.object({...field._def.type.shape}).meta<InputMeta>({
+                    label: `temp-${meta.label}`,
+                    type: "group",
+                    initial: initialObj,
+                });
+                isFilled = value.map(v => isFormFilled(v, newShape.shape)).every(x => x)
+            } else if ((JSON.stringify(value) === JSON.stringify(meta.initial))) {
+                isFilled = false;
+            }
+        }
+    });
+    return isFilled;
+}
+
 export async function sparqlSelect(url: string, query: string): Promise<any[]> {
     const r = await fetch(`${url}?query=${encodeURIComponent(query)}`);
     const json = await r.json();

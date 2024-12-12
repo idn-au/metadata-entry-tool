@@ -85,7 +85,6 @@ watch(model, (newValue) => {
 
 <template>
     <div>
-        <pre>{{ model }}</pre>
         <CustomInput type="text" v-model="data" @clear="data = ''; emit('clear')" />
     </div>
 </template>

@@ -2,9 +2,9 @@
 import { register } from "zod-metadata";
 import * as z from "zod";
 import * as jsonld from "jsonld";
-import { ChevronDown, ChevronUp, Copy, Expand } from "lucide-vue-next";
+import { ChevronDown, ChevronUp, Copy, Expand, X } from "lucide-vue-next";
 import { fairScore, careScore } from "@idn-au/scores-calculator-js";
-import { schemaCreateEmptyObject, removeEmptyValues, sparqlSelect, sparqlOptions, type SectionMeta } from "~/utils/form";
+// import { schemaCreateEmptyObject, removeEmptyValues, sparqlSelect, sparqlOptions, isFormFilled } from "~/utils/form";
 
 register(z);
 
@@ -71,6 +71,17 @@ const { data: distThemeOptions } = await useAsyncData("distThemeOptions", () => 
     SELECT DISTINCT ?value ?label
     WHERE {
         BIND(<https://data.idnau.org/pid/vocab/cat-roles> AS ?cs)
+        ?cs a skos:ConceptScheme .
+        ?value a skos:Concept ;
+            skos:inScheme ?cs ;
+            skos:prefLabel ?label .
+    }`));
+
+const { data: policyTypeOptions } = await useAsyncData("policyTypeOptions", () => sparqlOptions(SPARQL_URL, `
+    PREFIX skos: <http://www.w3.org/2004/02/skos/core#>
+    SELECT DISTINCT ?value ?label
+    WHERE {
+        BIND(<https://data.idnau.org/pid/vocab/policy-types> AS ?cs)
         ?cs a skos:ConceptScheme .
         ?value a skos:Concept ;
             skos:inScheme ?cs ;
@@ -152,7 +163,23 @@ const customDate = z.object({
             return false;
         }
         return true;
-    }, { message: "Invalid date" })
+    })
+});
+
+const phoneNumber = z.string().transform((val, ctx) => {
+    if (typeof val !== "string") {
+        return false;
+    }
+    const parsed = val.replaceAll(" ", "");
+    const match = parsed.match(/^(\+[1-9]{1,2})?\d{1,13}$/);
+    if (!match) {
+        ctx.addIssue({
+            code: z.ZodIssueCode.custom,
+            message: "Invalid phone number",
+        });
+        return z.NEVER;
+    }
+    return parsed;
 });
 
 const steps = [
@@ -188,6 +215,49 @@ const steps = [
                 initial: "",
                 class: "col-span-full",
                 tooltip: "A free-text description of the data. This can include how it was created and its intended purpose.",
+            }),
+            hasPolicy: z.object({
+                type: z.literal("odrl:Policy").optional().meta<InputMeta>({
+                    type: "hidden",
+                    initial: "odrl:Policy",
+                }),
+                additionalType: z.string().url().optional().describe("").meta<InputMeta>({
+                    label: "Policy Type",
+                    type: "select",
+                    placeholder: "Select a policy type",
+                    initial: "",
+                    // tooltip: "",
+                    options: policyTypeOptions.value
+                }),
+                url: z.string().url().optional().describe("").meta<InputMeta>({
+                    label: "URL",
+                    type: "url",
+                    placeholder: "https://example.com",
+                    initial: "",
+                    // tooltip: "",
+                }),
+                sdoDescription: z.string().optional().describe("").meta<InputMeta>({
+                    label: "Description",
+                    type: "textarea",
+                    // placeholder: "",
+                    initial: "",
+                    // tooltip: "",
+                    class: "col-span-full",
+                }),
+                duty: z.string().optional().describe("Is metadata & data archiving included in the policy?").meta<InputMeta>({
+                    label: "Archiving included",
+                    type: "checkbox",
+                    initial: "",
+                    tooltip: "tooltip",
+                    trueValue: "http://example.com/duty/archive-data-and-metadata",
+                    falseValue: "",
+                }),
+            }).optional().describe("").meta<InputMeta>({
+                label: "Indigenous Data Governance Policy",
+                type: "group",
+                initial: {},
+                // tooltip: "",
+                class: "col-span-full",
             }),
         }).meta<SectionMeta>({
             class: "grid-cols-1 md:grid-cols-2 gap-2"
@@ -228,7 +298,6 @@ const steps = [
                     options: roleOptions.value,
                     tooltip: "What role (e.g. custodian) the named person, community or business has with this data.",
                 }),
-                // TODO: IDG
             }).array().min(1, "Must have an agent and role selected").meta<InputMeta>({
                 label: "Agents",
                 type: "add",
@@ -324,8 +393,8 @@ const steps = [
                     //     if (typeof val !== "string") {
                     //         return false;
                     //     }
-                    //     const matches = val.match(/^(POINT|LINESTRING|POLYGON|MULTIPOINT|MULTILINESTRING|MULTIPOLYGON|GEOMETRYCOLLECTION)\s?(\(+(\-?\d+(\.\d+)?,?\s?)+\)+,?\s?)+$/);
-                    //     if (!matches) {
+                    //     const match = val.match(/^(POINT|LINESTRING|POLYGON|MULTIPOINT|MULTILINESTRING|MULTIPOLYGON|GEOMETRYCOLLECTION)\s?(\(+(\-?\d+(\.\d+)?,?\s?)+\)+,?\s?)+$/);
+                    //     if (!match) {
                     //         return false;
                     //     }
                     //     return true;
@@ -338,8 +407,8 @@ const steps = [
                     //     if (typeof val !== "string") {
                     //         return false;
                     //     }
-                    //     const matches = val.match(/^\{.+\}$/);
-                    //     if (!matches) {
+                    //     const match = val.match(/^\{.+\}$/);
+                    //     if (!match) {
                     //         return false;
                     //     }
                     //     return true;
@@ -462,37 +531,91 @@ const steps = [
             class: "grid-cols-1 md:grid-cols-2 gap-2"
         })
     },
-    // {
-    //     step: 8,
-    //     title: "Contact Details",
-    //     description: "These details are required if you are submitting this metadata to the IDN. These details are also added as the point of contact for this data unless you've specifically indicated an Agent as the Point of Contact above.",
-    //     schema: z.object({
-    //         name: z.string().describe("").meta<InputMeta>({
-    //             label: "Name",
-    //             type: "text",
-    //             placeholder: "Contact name",
-    //             initial: "",
-    //             // tooltip: ""
-    //         }),
-    //         email: z.string().email().describe("").meta<InputMeta>({
-    //             label: "Email",
-    //             type: "email",
-    //             placeholder: "Contact email",
-    //             initial: "",
-    //             // tooltip: ""
-    //         }),
-    //         phone: z.string().describe("").meta<InputMeta>({
-    //             label: "phone",
-    //             type: "text",
-    //             placeholder: "Contact phone",
-    //             initial: "",
-    //             // tooltip: ""
-    //         }),
-    //     }).meta<SectionMeta>({
-    //         class: "grid-cols-1 md:grid-cols-2 gap-2"
-    //     })
-    // },
+    {
+        step: 8,
+        title: "Contact Details",
+        description: "These details are required if you are submitting this metadata to the IDN. These details are also added as the point of contact for this data unless you've specifically indicated an Agent as the Point of Contact above.",
+        schema: z.object({
+            contact: z.object({
+                agent: z.object({
+                    iri: z.literal("https://data.idnau.org/pid/person/6cf32191-8d20-4a43-99ba-1a7727615ad9").meta<InputMeta>({
+                        type: "hidden",
+                        initial: "https://data.idnau.org/pid/person/6cf32191-8d20-4a43-99ba-1a7727615ad9"
+                    }),
+                    type: z.literal("sdo:Person").meta<InputMeta>({
+                        type: "hidden",
+                        initial: "sdo:Person"
+                    }),
+                    name: z.string().describe("").meta<InputMeta>({
+                        label: "Name",
+                        type: "text",
+                        placeholder: "Contact name",
+                        initial: "",
+                        // tooltip: ""
+                    }),
+                    email: z.string().email().describe("").meta<InputMeta>({
+                        label: "Email",
+                        type: "email",
+                        placeholder: "Contact email",
+                        initial: "",
+                        // tooltip: ""
+                    }),
+                    telephone: phoneNumber.describe("").meta<InputMeta>({
+                        label: "Phone",
+                        type: "tel",
+                        placeholder: "Contact phone",
+                        initial: "",
+                        // tooltip: ""
+                    }),
+                }).meta<InputMeta>({
+                    type: "group",
+                    initial: {
+                        iri: "https://data.idnau.org/pid/person/6cf32191-8d20-4a43-99ba-1a7727615ad9",
+                        type: "sdo:Person",
+                        name: "",
+                        email: "",
+                        telephone: ""
+                    },
+                    class: "col-span-full",
+                }),
+                role: z.literal("https://linked.data.gov.au/def/data-roles/pointOfContact").array().length(1).meta<InputMeta>({
+                    type: "hidden",
+                    initial: ["https://linked.data.gov.au/def/data-roles/pointOfContact"]
+                }),
+            }).array().length(1).describe("").meta<InputMeta>({
+                label: "Contact Details",
+                type: "add",
+                initial: [{
+                    agent: {
+                        iri: "https://data.idnau.org/pid/person/6cf32191-8d20-4a43-99ba-1a7727615ad9",
+                        type: "sdo:Person",
+                        name: "",
+                        email: "",
+                        telephone: ""
+                    },
+                    role: ["https://linked.data.gov.au/def/data-roles/pointOfContact"],
+                }],
+                element: {
+                    agent: {},
+                    role: ["https://linked.data.gov.au/def/data-roles/pointOfContact"],
+                },
+                class: "col-span-full",
+            }),
+        }).meta<SectionMeta>({
+            class: "grid-cols-1 md:grid-cols-2 gap-2"
+        })
+    },
 ];
+
+// const isValid = computed<(boolean | "partial")[]>(() => steps.map(s => {
+//     const res = s.schema.safeParse(data.value[s.title]);
+//     console.log(res)
+//     if (res.success) {
+//         return isFormFilled(data.value[s.title], s.schema.shape) || "partial";
+//     } else {
+//         return false;
+//     }
+// }));
 
 const data = ref(steps.reduce((obj, step) => {
     obj[step.title] = schemaCreateEmptyObject(step.schema);
@@ -509,6 +632,7 @@ const context = {
     "dcat": "http://www.w3.org/ns/dcat#",
     "dcterms": "http://purl.org/dc/terms/",
     "geo": "http://www.opengis.net/ont/geosparql#",
+    "odrl": "http://www.w3.org/ns/odrl/2/",
     "prov": "http://www.w3.org/ns/prov#",
     "sdo": "https://schema.org/",
     "xsd": "http://www.w3.org/2001/XMLSchema#",
@@ -595,6 +719,20 @@ const context = {
     },
     "asWKT": "geo:asWKT",
     "asGeoJSON": "geo:asGeoJSON",
+    "hasPolicy": {
+        "@id": "odrl:hasPolicy",
+        "@type": "@id",
+    },
+    "duty": {
+        "@id": "odrl:duty",
+        "@type": "@id",
+    },
+    "contact": "prov:qualifiedAttribution",
+    "email": {
+        "@id": "sdo:email",
+        "@type": "xsd:anyURI",
+    },
+    "telephone": "sdo:telephone",
 };
 
 const dataFlattened = computed(() => {
@@ -647,13 +785,25 @@ onMounted(async () => {
     <div class="mb-4">
         <h1 class="bold text-3xl mb-4">Metadata Entry Tool</h1>
         <p>This form is to be completed for submitting metadata to the Indigenous Data Network.</p>
-        <p>In order to complete a compliant metadata record for your data, you need to fill out the information required in the form below. You have the option of completing only the minimum required information (indicated by a red asterix) but it is recommended that you include as much information as possible in the form.</p>
-        <p>The more information you are able to provide, the higher the <a href="https://force11.org/info/the-fair-data-principles" target="_blank" rel="noopener noreferrer">FAIR</a> and <a href="https://www.gida-global.org/care" target="_blank" rel="noopener noreferrer">CARE</a> scores for your metadata. For now, these scores generate placeholder values.</p>
-        <p>The metadata in RDF format can optionally be viewed on the right of the form. The RDF and scores are updated as you complete the form. More information about the metadata profile can be found <a href="https://data.idnau.org/pid/cp/guide" target="_blank" rel="noopener noreferrer">here</a>.</p>
-        <p>This form uses the IDN's collection of people and organisations, or "agents", that are related to metadata and datasets in the IDN, called the <a href="https://agentsdb.idnau.org" target="_blank" rel="noopener noreferrer">Agents Database</a>. You can refer to this list of agents or create a custom agent if required.</p>
+        <p>In order to complete a compliant metadata record for your data, you need to fill out the information required
+            in the form below. You have the option of completing only the minimum required information (indicated by a
+            red asterix) but it is recommended that you include as much information as possible in the form.</p>
+        <p>The more information you are able to provide, the higher the <a
+                href="https://force11.org/info/the-fair-data-principles" target="_blank"
+                rel="noopener noreferrer">FAIR</a> and <a href="https://www.gida-global.org/care" target="_blank"
+                rel="noopener noreferrer">CARE</a> scores for your metadata. For now, these scores generate placeholder
+            values.</p>
+        <p>The metadata in RDF format can optionally be viewed on the right of the form. The RDF and scores are updated
+            as you complete the form. More information about the metadata profile can be found <a
+                href="https://data.idnau.org/pid/cp/guide" target="_blank" rel="noopener noreferrer">here</a>.</p>
+        <p>This form uses the IDN's collection of people and organisations, or "agents", that are related to metadata
+            and datasets in the IDN, called the <a href="https://agentsdb.idnau.org" target="_blank"
+                rel="noopener noreferrer">Agents Database</a>. You can refer to this list of agents or create a custom
+            agent if required.</p>
     </div>
-    <div class="flex flex-row gap-4">
-        <div class="grow-[2]">
+    <!-- <pre>{{ isValid }}</pre> -->
+    <div class="grid grid-cols-[75%_25%] gap-4">
+        <div>
             <VerticalStepper :steps="steps" v-slot="{ stepObj, stepIndex }">
                 <Card v-show="stepIndex === stepObj.step">
                     <CardContent class="pt-4">
@@ -664,7 +814,7 @@ onMounted(async () => {
                 </Card>
             </VerticalStepper>
         </div>
-        <div class="flex flex-col grow-[1] gap-4 max-w-[400px] min-w-[200px]">
+        <div class="flex flex-col gap-4">
             <Scores title="FAIR" :scores="fair" />
             <Scores title="CARE" :scores="care" />
             <Collapsible v-model:open="showRDF" class="flex flex-col gap-2 items-start">
@@ -677,14 +827,18 @@ onMounted(async () => {
                 </CollapsibleTrigger>
                 <CollapsibleContent class="flex flex-col gap-2 items-start">
                     <div class="relative w-full max-w-sm items-center">
-                        <pre class="whitespace-pre-wrap text-xs border rounded p-2 overflow-y-auto max-h-[240px]">{{ rdfString }}</pre>
+                        <pre
+                            class="whitespace-pre-wrap text-xs border rounded p-2 overflow-y-auto max-h-[240px]">{{ rdfString }}</pre>
                         <span class="absolute end-0 inset-y-2 flex justify-center px-2">
                             <Modal>
                                 <template #trigger>
-                                    <Button variant="outline" size="xs" title="Expand"><Expand class="h-4 w-4" /></Button>
+                                    <Button variant="outline" size="xs" title="Expand">
+                                        <Expand class="h-4 w-4" />
+                                    </Button>
                                 </template>
                                 <template #title>Metadata RDF</template>
-                                <pre class="whitespace-pre-wrap text-xs border rounded p-2 overflow-y-auto">{{ rdfString }}</pre>
+                                <pre
+                                    class="whitespace-pre-wrap text-xs border rounded p-2 overflow-y-auto">{{ rdfString }}</pre>
                                 <template #footer>
                                     <Button variant="outline" @click="copyRDF">
                                         <Copy class="h-4 w-4 mr-2" />

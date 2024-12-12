@@ -99,6 +99,9 @@ export const inputMetaSchema = z.object({
     class: z.string().optional(),
     tooltip: z.string().optional(),
     element: z.any().optional(),
+    trueValue: z.any().optional(),
+    falseValue: z.any().optional(),
+    falseLabel: z.string().optional(),
 });
 export interface InputMeta extends z.infer<typeof inputMetaSchema> { };
 export const sectionMetaSchema = z.object({
