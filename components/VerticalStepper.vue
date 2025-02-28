@@ -39,10 +39,10 @@ const stepIndex = ref(1);
             </div>
 
         </StepperItem>
-        <div class="flex items-center justify-between mt-4">
+        <div class="flex items-center justify-between mt-4 sticky bottom-0 bg-background p-2 z-50 border-t">
             <div>
                 <Button v-if="!isFirstStep" variant="outline" size="sm" @click="prevStep()">
-                    Back
+                    Prev
                 </Button>
             </div>
             <div>

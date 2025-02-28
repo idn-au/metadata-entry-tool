@@ -802,7 +802,7 @@ onMounted(async () => {
             agent if required.</p>
     </div>
     <!-- <pre>{{ isValid }}</pre> -->
-    <div class="grid grid-cols-[75%_25%] gap-4">
+    <div class="grid grid-cols-[75%_25%] gap-4 relative">
         <div>
             <VerticalStepper :steps="steps" v-slot="{ stepObj, stepIndex }">
                 <Card v-show="stepIndex === stepObj.step">
@@ -814,61 +814,59 @@ onMounted(async () => {
                 </Card>
             </VerticalStepper>
         </div>
-        <div class="flex flex-col gap-4">
-            <Scores title="FAIR" :scores="fair" />
-            <Scores title="CARE" :scores="care" />
-            <Collapsible v-model:open="showRDF" class="flex flex-col gap-2 items-start">
-                <CollapsibleTrigger as-child>
-                    <Button variant="outline">
-                        <ChevronUp v-if="showRDF" class="h-4 w-4 mr-2" />
-                        <ChevronDown v-else class="h-4 w-4 mr-2" />
-                        RDF
-                    </Button>
-                </CollapsibleTrigger>
-                <CollapsibleContent class="flex flex-col gap-2 items-start">
-                    <div class="relative w-full max-w-sm items-center">
-                        <pre
-                            class="whitespace-pre-wrap text-xs border rounded p-2 overflow-y-auto max-h-[240px]">{{ rdfString }}</pre>
-                        <span class="absolute end-0 inset-y-2 flex justify-center px-2">
-                            <Modal>
-                                <template #trigger>
-                                    <Button variant="outline" size="xs" title="Expand">
-                                        <Expand class="h-4 w-4" />
-                                    </Button>
-                                </template>
-                                <template #title>Metadata RDF</template>
-                                <pre
-                                    class="whitespace-pre-wrap text-xs border rounded p-2 overflow-y-auto">{{ rdfString }}</pre>
-                                <template #footer>
-                                    <Button variant="outline" @click="copyRDF">
-                                        <Copy class="h-4 w-4 mr-2" />
-                                        Copy
-                                    </Button>
-                                    <DialogClose as-child>
-                                        <Button type="button" variant="secondary">
-                                            Close
+        <div>
+            <div class="flex flex-col gap-4 sticky top-0">
+                <Scores title="FAIR" :scores="fair" />
+                <Scores title="CARE" :scores="care" />
+                <Collapsible v-model:open="showRDF" class="flex flex-col gap-2 items-start">
+                    <CollapsibleTrigger as-child>
+                        <Button variant="outline">
+                            <ChevronUp v-if="showRDF" class="h-4 w-4 mr-2" />
+                            <ChevronDown v-else class="h-4 w-4 mr-2" />
+                            RDF
+                        </Button>
+                    </CollapsibleTrigger>
+                    <CollapsibleContent class="flex flex-col gap-2 items-start">
+                        <div class="relative w-full max-w-sm items-center">
+                            <pre
+                                class="whitespace-pre-wrap text-xs border rounded p-2 overflow-y-auto max-h-[240px]">{{ rdfString }}</pre>
+                            <span class="absolute end-0 inset-y-2 flex justify-center px-2">
+                                <Modal>
+                                    <template #trigger>
+                                        <Button variant="outline" size="xs" title="Expand">
+                                            <Expand class="h-4 w-4" />
                                         </Button>
-                                    </DialogClose>
-                                </template>
-                            </Modal>
-                        </span>
-                    </div>
-                    <Button variant="outline" size="sm" @click="copyRDF">
-                        <Copy class="h-4 w-4 mr-2" />
-                        Copy
-                    </Button>
-                </CollapsibleContent>
-            </Collapsible>
+                                    </template>
+                                    <template #title>Metadata RDF</template>
+                                    <pre
+                                        class="whitespace-pre-wrap text-xs border rounded p-2 overflow-y-auto">{{ rdfString }}</pre>
+                                    <template #footer>
+                                        <Button variant="outline" @click="copyRDF">
+                                            <Copy class="h-4 w-4 mr-2" />
+                                            Copy
+                                        </Button>
+                                        <DialogClose as-child>
+                                            <Button type="button" variant="secondary">
+                                                Close
+                                            </Button>
+                                        </DialogClose>
+                                    </template>
+                                </Modal>
+                            </span>
+                        </div>
+                        <Button variant="outline" size="sm" @click="copyRDF">
+                            <Copy class="h-4 w-4 mr-2" />
+                            Copy
+                        </Button>
+                    </CollapsibleContent>
+                </Collapsible>
+            </div>
         </div>
     </div>
 </template>
 
-<style lang="scss" scoped>
+<style>
 p {
     margin-bottom: 0.5rem;
-}
-
-a {
-    color: hsl(var(--primary));
 }
 </style>

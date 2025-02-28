@@ -5,6 +5,7 @@ export default defineNuxtConfig({
     compatibilityDate: "2024-04-03",
     devtools: { enabled: true },
     modules: ["@vee-validate/nuxt", "@nuxtjs/tailwindcss", "shadcn-nuxt", "@nuxtjs/color-mode"],
+    css: ["assets/css/style.css"],
     app: {
         head: {
             link: [
@@ -37,4 +38,9 @@ export default defineNuxtConfig({
     //     classPrefix: "",
     //     classSuffix: "",
     // },
+    nitro: {
+        prerender: {
+            autoSubfolderIndex: false,
+        },
+    }
 });
