@@ -15,7 +15,7 @@ export default defineNuxtConfig({
         }
     },
     vite: {
-        plugins: [ViteYaml()],
+        // plugins: [ViteYaml()],
         css: {
             preprocessorOptions: {
                 scss: {

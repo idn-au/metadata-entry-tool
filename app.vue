@@ -11,20 +11,8 @@ const items = [
         to: "/"
     },
     {
-        label: "Form",
-        to: "/form"
-    },
-    {
-        label: "Scoring",
-        to: "/score"
-    },
-    {
-        label: "JSON-LD",
-        to: "/jsonld"
-    },
-    {
-        label: "SPARQL",
-        to: "/sparql"
+        label: "Help",
+        to: "/help"
     },
 ];
 
@@ -66,6 +54,11 @@ const navLinks: { label: string; url: string }[] = [
         </header>
         <main class="grow">
             <div class="mx-auto p-3 max-w-[1400px]">
+                <nav>
+                    <Button v-for="link in items" variant="ghost" class="rounded-none" as-child>
+                        <NuxtLink :to="link.to">{{ link.label }}</NuxtLink>
+                    </Button>
+                </nav>
                 <NuxtPage />
             </div>
         </main>

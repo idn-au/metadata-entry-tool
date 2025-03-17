@@ -1,5 +1,4 @@
 import init, * as oxigraph from "oxigraph/web";
-import type { Format } from "~/types";
 
 export interface OxiStore {
     _store: oxigraph.Store;

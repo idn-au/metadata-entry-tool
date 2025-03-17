@@ -1,5 +1,5 @@
 <script lang="ts" setup>
-import { Check, Circle, Dot, X } from "lucide-vue-next";
+import { Check, Circle, Dot, ChevronLeft, ChevronRight } from "lucide-vue-next";
 
 const props = defineProps<{
     steps: {
@@ -40,14 +40,20 @@ const stepIndex = ref(1);
 
         </StepperItem>
         <div class="flex items-center justify-between mt-4 sticky bottom-0 bg-background p-2 z-50 border-t">
-            <div>
-                <Button v-if="!isFirstStep" variant="outline" size="sm" @click="prevStep()">
-                    Prev
+            <div class="flex flex-row gap-2 items-center">
+                <Button variant="outline" size="sm" @click="prevStep()" :disabled="isFirstStep">
+                    <ChevronLeft class="size-4 mr-2" /> Prev
                 </Button>
+                <slot v-if="isFirstStep" name="left-buttons-first" />
+                <slot name="left-buttons" />
             </div>
-            <div>
-                <Button v-if="!isLastStep" size="sm" @click="nextStep()">
-                    Next
+            <div class="flex flex-row gap-2 items-center">
+                <slot name="right-buttons" />
+                <template v-if="isLastStep">
+                    <slot name="right-buttons-last" />
+                </template>
+                <Button v-else variant="outline" size="sm" @click="nextStep()">
+                    Next <ChevronRight class="size-4 ml-2" />
                 </Button>
             </div>
         </div>

@@ -20,7 +20,7 @@
         "jsonld": "^8.3.2",
         "lucide-vue-next": "^0.460.0",
         "nuxt": "^3.14.1592",
-        "oxigraph": "0.4.4",
+        "oxigraph": "0.4.8",
         "radix-vue": "^1.9.10",
         "shadcn-nuxt": "^0.11.3",
         "tailwind-merge": "^2.5.5",

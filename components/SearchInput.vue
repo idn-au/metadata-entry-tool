@@ -18,6 +18,7 @@ const open = ref(false);
 const searchTerm = ref("");
 const results = ref<Option[]>([]);
 const loading = ref(false);
+const selectedItem = ref<any | null>(null);
 
 const emits = defineEmits<{
     focus: [];
@@ -45,20 +46,27 @@ async function handleSelect(result: Option) {
     if (!!props.getQuery) {
         const item = await props.getQuery(result.value);
         model.value = item;
+        selectedItem.value = item;
     } else {
         model.value = result.value;
+        selectedItem.value = result;
     }
     open.value = false;
     searchTerm.value = "";
     results.value = [];
 }
 
-function displayResult(result: Option): string {
+function displayResult(result: Option | any): string {
     if (props.resultLabel) {
         return result[props.resultLabel] || result.label || result.value;
     } else {
         return result.label || result.value;
     }
+}
+
+function handleClear() {
+    selectedItem.value = null;
+    emits("clear");
 }
 
 watch(open, (newValue) => {
@@ -81,14 +89,14 @@ watch(model, (newValue) => {
             <DialogTrigger as-child>
                 <Button variant="outline" :class="cn('justify-start w-full pr-10', props.class)">
                     <Search class="size-6 text-muted-foreground -ml-2 pr-1" />
-                    <span :class="`overflow-x-hidden ${Object.keys(model).length === 0 ? 'text-muted-foreground' : ''}`">
-                        <template v-if="Object.keys(model).length > 0">{{ displayResult(model) }}</template>
+                    <span :class="`overflow-x-hidden ${selectedItem === null ? 'text-muted-foreground' : ''}`">
+                        <template v-if="selectedItem !== null">{{ displayResult(selectedItem) }}</template>
                         <template v-else>{{ placeholder || "Search" }}</template>
                     </span>
                 </Button>
             </DialogTrigger>
             <span class="absolute end-0 inset-y-0 flex items-center justify-center">
-                <Button size="icon" variant="link" class="text-muted-foreground hover:text-foreground" @click="emits('clear')"><X class="size-4" /></Button>
+                <Button size="icon" variant="link" class="text-muted-foreground hover:text-foreground" @click="handleClear"><X class="size-4" /></Button>
             </span>
         </div>
         <DialogContent>

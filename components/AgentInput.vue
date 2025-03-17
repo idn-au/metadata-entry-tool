@@ -28,6 +28,37 @@ const { data: indigeneityOptions } = await useAsyncData("agentIndigeneityOptions
             skos:prefLabel ?label .
     }`));
 
+const { data: aaRoleOptions } = await useAsyncData("aaRoleOptions", () => sparqlOptions(SPARQL_URL, `
+    PREFIX skos: <http://www.w3.org/2004/02/skos/core#>
+    SELECT DISTINCT ?value ?label
+    WHERE {
+        BIND(<https://data.idnau.org/pid/vocab/aarr> AS ?cs)
+        ?cs a skos:ConceptScheme .
+        ?value a skos:Concept ;
+            skos:inScheme ?cs ;
+            skos:prefLabel ?label .
+    }`));
+
+async function agentSearch(term: string): Promise<Option[]> {
+    const r = await sparqlSelect(SPARQL_URL, `PREFIX dcterms: <http://purl.org/dc/terms/>
+        PREFIX sdo: <https://schema.org/>
+        SELECT DISTINCT ?iri ?name
+        WHERE {
+            GRAPH <https://data.idnau.org/pid/agentsdb> {
+                VALUES ?type { sdo:Person sdo:Organization }
+                ?iri a ?type ;
+                    sdo:name ?name .
+                FILTER regex(?name, "${term}", "i")
+            }
+        } LIMIT 20`);
+    return r.map(x => {
+        return {
+            value: x.iri.value,
+            label: x.name.value,
+        }
+    });
+}
+
 const schema = z.object({
     iri: z.string().url({ message: "Must be a valid IRI" }).describe("Provide an IRI or have an IRI automatically assigned").meta<InputMeta>({
         label: "IRI",
@@ -98,6 +129,29 @@ const schema = z.object({
             type: "",
         },
         class: "col-span-full grid-cols-1 md:grid-cols-2 gap-2"
+    }),
+    relation: z.object({
+        agent: z.string().meta<InputMeta>({
+            label: "Agent",
+            type: "search",
+            placeholder: "Search for an agent",
+            initial: "",
+            listQuery: agentSearch,
+        }),
+        role: z.string().describe("").meta<InputMeta>({
+            label: "Role",
+            type: "select",
+            placeholder: "Select role",
+            initial: "",
+            options: aaRoleOptions.value,
+            tooltip: "The role of the relation to this agent."
+        }),
+    }).array().optional().meta<InputMeta>({
+        label: "Relations",
+        type: "add",
+        initial: [{ agent: "", role: "" }],
+        element: { agent: "", role: "" },
+        class: "col-span-full"
     }),
 }).meta<SectionMeta>({
     class: "grid-cols-1 md:grid-cols-2 gap-2"

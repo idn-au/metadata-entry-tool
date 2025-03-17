@@ -2,7 +2,8 @@
 import { register } from "zod-metadata";
 import * as z from "zod";
 import * as jsonld from "jsonld";
-import { ChevronDown, ChevronUp, Copy, Expand, X } from "lucide-vue-next";
+import { type ContextDefinition } from "jsonld";
+import { ChevronDown, ChevronUp, Copy, Expand, Upload, Download, Trash2, Send } from "lucide-vue-next";
 import { fairScore, careScore } from "@idn-au/scores-calculator-js";
 // import { schemaCreateEmptyObject, removeEmptyValues, sparqlSelect, sparqlOptions, isFormFilled } from "~/utils/form";
 
@@ -10,6 +11,20 @@ register(z);
 
 const SPARQL_URL = "https://api.idnau.org/sparql";
 const DEFAULT_IRI = "https://data.idnau.org/pid/resource/d23405b4-fc04-47e2-9e7a-9c5735ae3780";
+
+const EXAMPLES = [
+    {
+        label: "Example 1",
+    },
+    {
+        label: "Example 2",
+    },
+    {
+        label: "Example 3",
+    },
+];
+
+const { store } = useOxiStore();
 
 const { data: indigeneityOptions } = await useAsyncData("indigeneityOptions", () => sparqlOptions(SPARQL_URL, `
     PREFIX skos: <http://www.w3.org/2004/02/skos/core#>
@@ -279,6 +294,10 @@ const steps = [
                     identifier: z.object({
                         value: z.string(),
                         type: z.string().url(),
+                    }).array().optional(),
+                    relation: z.object({
+                        agent: z.string().url(),
+                        role: z.string().url(),
                     }).array().optional(),
                 }).describe("You can search for an agent or create your own").meta<InputMeta>({
                     label: "Agent",
@@ -617,17 +636,26 @@ const steps = [
 //     }
 // }));
 
-const data = ref(steps.reduce((obj, step) => {
-    obj[step.title] = schemaCreateEmptyObject(step.schema);
-    return obj;
-}, {}));
+function createEmptyData() {
+    return steps.reduce((obj, step) => {
+        obj[step.title] = schemaCreateEmptyObject(step.schema);
+        return obj;
+    }, {});
+}
+
+function clear() {
+    data.value = createEmptyData();
+    data.value.General.iri = DEFAULT_IRI;
+}
+
+const data = ref(createEmptyData());
 const rdfString = ref("");
 const showRDF = ref(false);
 const fair = ref({} as ScoreValueObj);
 const care = ref({} as ScoreValueObj);
 
-const context = {
-    "@version": 1.1,
+const context: ContextDefinition = {
+    // "@version": "1.1",
     // prefixes
     "dcat": "http://www.w3.org/ns/dcat#",
     "dcterms": "http://purl.org/dc/terms/",
@@ -686,6 +714,10 @@ const context = {
     },
     "name": "sdo:name",
     "sdoDescription": "sdo:description",
+    "relation": {
+        "@id": "dcat:relation",
+        "@container": "@set"
+    },
     "spatial": {
         "@id": "dcterms:spatial",
         "@type": "@id"
@@ -751,6 +783,19 @@ function copyRDF() {
     navigator.clipboard.writeText(rdfString.value);
 }
 
+function loadFile(file): { rdf: string, format: Format } {
+
+}
+
+async function rdfToData(rdf: string, format: Format) {
+    store.value.update("DROP ALL");
+    store.value.load(rdf, format);
+    // TODO: do query to check for valid data
+    const nquads = store.value.dump("application/n-quads");
+    const jsonldObj = await jsonld.fromRDF(nquads, { format: "application/n-quads" });
+    const framedObj = await jsonld.frame(jsonldObj, { "@context": context, type: "dcat:Resource" });
+}
+
 async function dataToRdf(dataObj: any): Promise<string> {
     const nonempty = removeEmptyValues(dataObj, schemaFlattened);
     const doc = { "@context": context, type: "dcat:Resource", ...nonempty };
@@ -773,8 +818,17 @@ watch(rdfString, async (newValue) => {
     care.value = await careScore(newValue, dataFlattened.value.iri, "application/n-triples");
 });
 
+watch(data, (newValue) => {
+    localStorage.setItem("data", JSON.stringify(newValue));
+}, { deep: true });
+
 onMounted(async () => {
-    data.value.General.iri = DEFAULT_IRI;
+    const savedData = localStorage.getItem("data");
+    if (savedData) {
+        data.value = JSON.parse(savedData);
+    } else {
+        data.value.General.iri = DEFAULT_IRI;
+    }
     rdfString.value = await dataToRdf(dataFlattened.value);
     fair.value = await fairScore(rdfString.value, dataFlattened.value.iri, "application/n-triples");
     care.value = await careScore(rdfString.value, dataFlattened.value.iri, "application/n-triples");
@@ -801,17 +855,42 @@ onMounted(async () => {
                 rel="noopener noreferrer">Agents Database</a>. You can refer to this list of agents or create a custom
             agent if required.</p>
     </div>
-    <!-- <pre>{{ isValid }}</pre> -->
     <div class="grid grid-cols-[75%_25%] gap-4 relative">
         <div>
-            <VerticalStepper :steps="steps" v-slot="{ stepObj, stepIndex }">
-                <Card v-show="stepIndex === stepObj.step">
-                    <CardContent class="pt-4">
-                        <p>{{ stepObj.description }}</p>
-                        <!-- <Button v-if="stepIndex === 1" @click="data.General.iri = DEFAULT_IRI" size="xs">Generate IRI</Button> -->
-                        <FormBuilder :schema="stepObj.schema" v-model="data[stepObj.title]" />
-                    </CardContent>
-                </Card>
+            <div class="flex flex-row gap-2 items-start mb-6">
+                <Button variant="outline" class="mr-auto" disabled>Tutorial</Button>
+                <div class="flex flex-col max-w-min">
+                    <Button variant="secondary" disabled>Upload File <Upload class="size-4 ml-2" /></Button>
+                    <span class="text-muted-foreground text-xs">Supports .ttl, .trig, .nt, .nq, .n3 & .rdf</span>
+                </div>
+                <DropdownMenu>
+                    <DropdownMenuTrigger as-child disabled>
+                        <Button variant="secondary">Load Example <ChevronDown class="size-4 ml-2" /></Button>
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent>
+                        <DropdownMenuItem v-for="example in EXAMPLES" class="cursor-pointer">{{ example.label }}</DropdownMenuItem>
+                    </DropdownMenuContent>
+                </DropdownMenu>
+            </div>
+            <VerticalStepper :steps="steps">
+                <template #default="{ stepObj, stepIndex }">
+                    <Card v-show="stepIndex === stepObj.step">
+                        <CardContent class="pt-4">
+                            <p>{{ stepObj.description }}</p>
+                            <!-- <Button v-if="stepIndex === 1" @click="data.General.iri = DEFAULT_IRI" size="xs">Generate IRI</Button> -->
+                            <FormBuilder :schema="stepObj.schema" v-model="data[stepObj.title]" />
+                        </CardContent>
+                    </Card>
+                </template>
+                <template #left-buttons>
+                    <Button variant="destructive" size="sm" @click="clear">Clear Form <Trash2 class="size-4 ml-2" /></Button>
+                </template>
+                <template #right-buttons>
+                    <Button variant="secondary" size="sm" disabled>Save File <Download class="size-4 ml-2" /></Button>
+                </template>
+                <template #right-buttons-last>
+                    <Button variant="default" size="sm" disabled>Submit <Send class="size-4 ml-2" /></Button>
+                </template>
             </VerticalStepper>
         </div>
         <div>
