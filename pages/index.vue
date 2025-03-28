@@ -52,7 +52,7 @@ const { data: licenseOptions } = await useAsyncData("licenseOptions", () => spar
     PREFIX skos: <http://www.w3.org/2004/02/skos/core#>
     SELECT DISTINCT ?value ?label
     WHERE {
-        BIND(<https://linked.data.gov.au/def/licenses> AS ?cs)
+        BIND(<https://data.idnau.org/pid/licenses> AS ?cs)
         ?cs a skos:ConceptScheme .
         ?value a skos:Concept ;
             skos:inScheme ?cs ;
@@ -154,7 +154,7 @@ async function agentGet(iri: string) {
             type: x.type.value,
             url: x.url?.value,
             sdoDescription: x.desc?.value,
-            indigeneity: x.indigeneity?.value,
+            agentIndigeneity: x.indigeneity?.value,
             identifier: x.identifier?.value,
         }
     })[0] || null;
@@ -216,7 +216,7 @@ const steps = [
                 initial: "",
                 tooltip: "The name of the data that this metadata is describing.",
             }),
-            indigeneity: z.string().array().optional().describe("You can add mulitple indigeneity terms").meta<InputMeta>({
+            dataIndigeneity: z.string().array().optional().describe("You can add mulitple indigeneity terms").meta<InputMeta>({
                 label: "Indigeneity",
                 type: "select", // string array/select array is multiple
                 placeholder: "Select indigeneity",
@@ -290,14 +290,14 @@ const steps = [
                     type: z.string(),
                     url: z.string().optional(),
                     sdoDescription: z.string().optional(),
-                    indigeneity: z.string().optional(),
+                    agentIndigeneity: z.string().optional(),
                     identifier: z.object({
                         value: z.string(),
                         type: z.string().url(),
                     }).array().optional(),
                     relation: z.object({
                         agent: z.string().url(),
-                        role: z.string().url(),
+                        relationRole: z.string().url(),
                     }).array().optional(),
                 }).describe("You can search for an agent or create your own").meta<InputMeta>({
                     label: "Agent",
@@ -654,6 +654,19 @@ const showRDF = ref(false);
 const fair = ref({} as ScoreValueObj);
 const care = ref({} as ScoreValueObj);
 
+const keyMap = (() => {
+    const emptyData = createEmptyData();
+    const kMap: {[key: string]: string} = {};
+    
+    Object.keys(emptyData).forEach(key => {
+        Object.keys(emptyData[key]).forEach(k => {
+            kMap[k] = key;
+        });
+    });
+
+    return kMap;
+})();
+
 const context: ContextDefinition = {
     // "@version": "1.1",
     // prefixes
@@ -699,18 +712,29 @@ const context: ContextDefinition = {
     },
     "role": {
         "@id": "dcat:hadRole",
-        "@type": "@id"
+        "@type": "@id",
+        "@container": "@set",
+    },
+    "relationRole": {
+        "@id": "dcat:hadRole",
+        "@type": "@id",
     },
     "agent": {
         "@id": "prov:agent",
         "@type": "@id"
     },
-    "indigeneity": {
+    "dataIndigeneity": {
         "@id": "dcterms:type",
-        "@type": "@id"
+        "@type": "@id",
+        "@container": "@set",
+    },
+    "agentIndigeneity": {
+        "@id": "dcterms:type",
+        "@type": "@id",
     },
     "identifier": {
         "@id": "sdo:identifier",
+        "@container": "@set",
     },
     "name": "sdo:name",
     "sdoDescription": "sdo:description",
@@ -783,17 +807,41 @@ function copyRDF() {
     navigator.clipboard.writeText(rdfString.value);
 }
 
-function loadFile(file): { rdf: string, format: Format } {
+const rdfFormats: {[key: string]: Format} = {
+    "ttl": "text/turtle",
+    "trig": "application/trig",
+    "nt": "application/n-triples",
+    "n3": "text/n3",
+    "nq": "application/n-quads",
+    "rdf": "application/rdf+xml",
+};
 
+function loadFile(event: InputEvent) {
+    const file = (event.target as HTMLInputElement).files?.[0];
+    if (!file) {
+        return;
+    }
+    var reader = new FileReader();
+    reader.onload = function(e) {
+        const extension = file.name.split(".")[1];
+        rdfToData(e.target.result, rdfFormats[extension]);
+    };
+    reader.readAsText(file);
 }
 
 async function rdfToData(rdf: string, format: Format) {
+    data.value = createEmptyData();
     store.value.update("DROP ALL");
     store.value.load(rdf, format);
     // TODO: do query to check for valid data
     const nquads = store.value.dump("application/n-quads");
     const jsonldObj = await jsonld.fromRDF(nquads, { format: "application/n-quads" });
     const framedObj = await jsonld.frame(jsonldObj, { "@context": context, type: "dcat:Resource" });
+    Object.keys(framedObj).forEach(key => {
+        if (Object.keys(keyMap).includes(key)) {
+            data.value[keyMap[key]][key] = framedObj[key];
+        }
+    });
 }
 
 async function dataToRdf(dataObj: any): Promise<string> {
@@ -863,6 +911,10 @@ onMounted(async () => {
                     <Button variant="secondary" disabled>Upload File <Upload class="size-4 ml-2" /></Button>
                     <span class="text-muted-foreground text-xs">Supports .ttl, .trig, .nt, .nq, .n3 & .rdf</span>
                 </div>
+                <!-- <div class="grid w-full max-w-sm items-center gap-1.5">
+                    <Label for="file">Upload File</Label>
+                    <Input id="file" type="file" accept=".ttl, .nq, .n3, .nt, .trig, .rdf" @change="loadFile" />
+                </div> -->
                 <DropdownMenu>
                     <DropdownMenuTrigger as-child disabled>
                         <Button variant="secondary">Load Example <ChevronDown class="size-4 ml-2" /></Button>

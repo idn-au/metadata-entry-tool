@@ -96,7 +96,7 @@ const schema = z.object({
         class: "col-span-full",
         // tooltip: "A free-text description of the data. This can include how it was created and its intended purpose.",
     }),
-    indigeneity: z.string().optional().describe("").meta<InputMeta>({
+    agentIndigeneity: z.string().optional().describe("").meta<InputMeta>({
         label: "Indigeneity",
         type: "select",
         // placeholder: "Select a type",
@@ -138,7 +138,7 @@ const schema = z.object({
             initial: "",
             listQuery: agentSearch,
         }),
-        role: z.string().describe("").meta<InputMeta>({
+        relationRole: z.string().describe("").meta<InputMeta>({
             label: "Role",
             type: "select",
             placeholder: "Select role",
@@ -149,8 +149,8 @@ const schema = z.object({
     }).array().optional().meta<InputMeta>({
         label: "Relations",
         type: "add",
-        initial: [{ agent: "", role: "" }],
-        element: { agent: "", role: "" },
+        initial: [{ agent: "", relationRole: "" }],
+        element: { agent: "", relationRole: "" },
         class: "col-span-full"
     }),
 }).meta<SectionMeta>({

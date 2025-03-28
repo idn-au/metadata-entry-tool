@@ -28,15 +28,18 @@ const emits = defineEmits<{
     change: [value: string | string[]];
 }>();
 
-const debouncedRequest = useDebounceFn(async () => {
-    return await props.listQuery(searchTerm.value);
+const debouncedRequest = useDebounceFn(async (term: string) => {
+    const result = await props.listQuery(term);
+    loading.value = false;
+    return result;
 }, 200);
 
-async function runListQuery() {
-    if (searchTerm.value !== "") {
+async function runListQuery(e: InputEvent) {
+    const term = (e.target as HTMLInputElement).value;
+    if (term !== "") {
         loading.value = true;
-        results.value = await debouncedRequest();
-        loading.value = false;
+        // @ts-ignore - nested Promise?
+        results.value = await debouncedRequest(term);
     } else {
         results.value = [];
     }
@@ -78,6 +81,9 @@ watch(open, (newValue) => {
 });
 
 watch(model, (newValue) => {
+    if (!!props.getQuery) {
+        selectedItem.value = newValue;
+    }
     emits("input", newValue);
     emits("change", newValue);
 });
@@ -88,7 +94,7 @@ watch(model, (newValue) => {
         <div :class="cn('relative w-full items-center', props.class)">
             <DialogTrigger as-child>
                 <Button variant="outline" :class="cn('justify-start w-full pr-10', props.class)">
-                    <Search class="size-6 text-muted-foreground -ml-2 pr-1" />
+                    <Search class="size-4 text-muted-foreground mr-2" />
                     <span :class="`overflow-x-hidden ${selectedItem === null ? 'text-muted-foreground' : ''}`">
                         <template v-if="selectedItem !== null">{{ displayResult(selectedItem) }}</template>
                         <template v-else>{{ placeholder || "Search" }}</template>

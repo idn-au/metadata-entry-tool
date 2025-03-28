@@ -15,7 +15,11 @@ const model = defineModel<z.infer<typeof props.field>>({ required: true });
 const fieldMeta = props.field.getMeta() as InputMeta;
 
 function add() {
-    model.value.push(structuredClone(fieldMeta.element));
+    if (model.value === undefined) {
+        model.value = [structuredClone(fieldMeta.element)]
+    } else {
+        model.value.push(structuredClone(fieldMeta.element));
+    }
 }
 
 function remove(index: number) {
@@ -33,6 +37,8 @@ function remove(index: number) {
                 </div>
             </div>
         </CardContent>
-        <CardFooter v-if="!props.field._def.exactLength || (props.field._def.maxLength && model.length < props.field._def.maxLength.value)"><Button @click="add">+ Add</Button></CardFooter>
+        <CardFooter v-if="!props.field._def.exactLength || (props.field._def.maxLength && model.length < props.field._def.maxLength.value)">
+            <Button @click="add">+ Add</Button>
+        </CardFooter>
     </Card>
 </template>
