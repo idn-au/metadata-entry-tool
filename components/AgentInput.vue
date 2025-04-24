@@ -3,6 +3,7 @@ import type { HTMLAttributes } from "vue";
 import { Pencil } from "lucide-vue-next";
 import { register } from "zod-metadata";
 import * as z from "zod";
+import { formField, useVtForm, FormBuilder } from "@vulptech/vt-form";
 import { cn } from "@/lib/utils";
 
 register(z);
@@ -60,85 +61,78 @@ async function agentSearch(term: string): Promise<Option[]> {
 }
 
 const schema = z.object({
-    iri: z.string().url({ message: "Must be a valid IRI" }).describe("Provide an IRI or have an IRI automatically assigned").meta<InputMeta>({
+    iri: formField(z.string().url({ message: "Must be a valid IRI" }).describe("Provide an IRI or have an IRI automatically assigned"), {
         label: "IRI",
         type: "url",
         placeholder: "https://example.com",
         initial: "",
         tooltip: "An IRI is a standard identifier in the form of a web address (URL). Good IRIs are part of a managed system.",
     }),
-    name: z.string().describe("").meta<InputMeta>({
+    name: formField(z.string().describe(""), {
         label: "Name",
         type: "text",
-        // placeholder: "",
         initial: "",
         tooltip: "The name of the person or organization",
     }),
-    type: z.string().describe("").meta<InputMeta>({
+    type: formField(z.string().describe(""), {
         label: "Type",
         type: "select",
         placeholder: "Select a type",
         initial: "",
-        // tooltip: "The name of the person or organization",
         options: [{label: "Person", value: "https://schema.org/Person"}, {label: "Organization", value: "https://schema.org/Organization"}]
     }),
-    url: z.string().url().optional().describe("").meta<InputMeta>({
+    url: formField(z.string().url().optional().describe(""), {
         label: "URL",
         type: "url",
         placeholder: "https://example.com",
         initial: "",
         tooltip: "A website",
     }),
-    sdoDescription: z.string().optional().describe("Supports new lines and basic formatting").meta<InputMeta>({
+    sdoDescription: formField(z.string().optional().describe("Supports new lines and basic formatting"), {
         label: "Description",
         type: "textarea",
         initial: "",
         class: "col-span-full",
-        // tooltip: "A free-text description of the data. This can include how it was created and its intended purpose.",
     }),
-    agentIndigeneity: z.string().optional().describe("").meta<InputMeta>({
+    agentIndigeneity: formField(z.string().optional().describe(""), {
         label: "Indigeneity",
         type: "select",
-        // placeholder: "Select a type",
         initial: "",
-        // tooltip: "The name of the person or organization",
         options: indigeneityOptions.value,
     }),
-    identifier: z.object({
-        value: z.string().describe("").meta<InputMeta>({
+    identifier: formField(z.object({
+        value: formField(z.string().describe(""), {
             label: "Identifier",
             type: "text",
             initial: "",
         }),
-        type: z.string().url().describe("Must be an IRI").meta<InputMeta>({
+        type: formField(z.string().url().describe("Must be an IRI"), {
             label: "Datatype",
             type: "url",
             initial: "",
         }),
-    }).array().optional().describe("").meta<InputMeta>({
+    }).array().optional().describe(""), {
         label: "Identifier",
         type: "add",
-        // placeholder: "",
         initial: [{
             value: "",
             type: "",
         }],
-        // tooltip: "The name of the person or organization",
         element: {
             value: "",
             type: "",
         },
         class: "col-span-full grid-cols-1 md:grid-cols-2 gap-2"
     }),
-    relation: z.object({
-        agent: z.string().meta<InputMeta>({
+    relation: formField(z.object({
+        agent: formField(z.string(), {
             label: "Agent",
             type: "search",
             placeholder: "Search for an agent",
             initial: "",
             listQuery: agentSearch,
         }),
-        relationRole: z.string().describe("").meta<InputMeta>({
+        relationRole: formField(z.string().describe(""), {
             label: "Role",
             type: "select",
             placeholder: "Select role",
@@ -146,20 +140,18 @@ const schema = z.object({
             options: aaRoleOptions.value,
             tooltip: "The role of the relation to this agent."
         }),
-    }).array().optional().meta<InputMeta>({
+    }).array().optional(), {
         label: "Relations",
         type: "add",
         initial: [{ agent: "", relationRole: "" }],
         element: { agent: "", relationRole: "" },
         class: "col-span-full"
     }),
-}).meta<SectionMeta>({
-    class: "grid-cols-1 md:grid-cols-2 gap-2"
 });
 
 const model = defineModel<z.infer<typeof schema>>({ required: true });
 
-const data = ref(schemaCreateEmptyObject(schema));
+const { formData: data, resetValues } = useVtForm(schema);
 
 const open = ref(false);
 
@@ -184,7 +176,8 @@ watch(open, (newValue) => {
             data.value = model.value;
         }
     } else {
-        data.value = {};
+        // data.value = {};
+        resetValues();
     }
 });
 </script>
@@ -211,12 +204,12 @@ watch(open, (newValue) => {
                     </DialogDescription>
                 </DialogHeader>
                 <div class="overflow-y-auto max-h-[70dvh]">
-                    <FormBuilder :schema="schema" v-model="data" />
+                    <FormBuilder :schema="schema" v-model="data" class="grid grid-cols-2 gap-3" />
                 </div>
                 <DialogFooter class="">
                     <Button variant="secondary" class="mr-auto" @click="open = false;">Cancel</Button>
                     <div class="flex flex-row gap-2 items-center">
-                        <Button variant="destructive" @click="data = {}">Clear</Button>
+                        <Button variant="destructive" @click="resetValues">Clear</Button>
                         <Button @click="handleSave">Save</Button>
                     </div>
                 </DialogFooter>

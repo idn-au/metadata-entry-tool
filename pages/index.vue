@@ -5,7 +5,10 @@ import * as jsonld from "jsonld";
 import { type ContextDefinition } from "jsonld";
 import { ChevronDown, ChevronUp, Copy, Expand, Upload, Download, Trash2, Send } from "lucide-vue-next";
 import { fairScore, careScore } from "@idn-au/scores-calculator-js";
-// import { schemaCreateEmptyObject, removeEmptyValues, sparqlSelect, sparqlOptions, isFormFilled } from "~/utils/form";
+import { formField, useVtForm, FormBuilder, type Registry } from "@vulptech/vt-form";
+import AgentInput from "~/components/AgentInput.vue";
+import DateInput from "~/components/DateInput.vue";
+import SpatialInput from "~/components/SpatialInput.vue";
 
 register(z);
 
@@ -203,79 +206,76 @@ const steps = [
         title: "General",
         description: "Basic information about this data.",
         schema: z.object({
-            iri: z.string().min(1, "IRI is required").url({ message: "Must be a valid IRI" }).describe("Provide an IRI or have an IRI automatically assigned").meta<InputMeta>({
+            iri: formField(z.string().min(1, "IRI is required").url({ message: "Must be a valid IRI" }), {
                 label: "IRI",
                 type: "url",
                 placeholder: "https://example.com",
                 initial: "",
+                description: "Provide an IRI or have an IRI automatically assigned",
                 tooltip: "An IRI is a standard identifier in the form of a web address (URL). Good IRIs are part of a managed system.",
             }),
-            title: z.string().min(1, "Title is required").describe("").meta<InputMeta>({
+            title: formField(z.string().min(1, "Title is required"), {
                 label: "Title",
                 type: "text",
                 initial: "",
                 tooltip: "The name of the data that this metadata is describing.",
             }),
-            dataIndigeneity: z.string().array().optional().describe("You can add mulitple indigeneity terms").meta<InputMeta>({
+            dataIndigeneity: formField(z.string().array().optional(), {
                 label: "Indigeneity",
-                type: "select", // string array/select array is multiple
+                type: "select",
+                multiple: true,
                 placeholder: "Select indigeneity",
                 initial: [],
                 options: indigeneityOptions.value,
+                description: "You can add mulitple indigeneity terms",
                 tooltip: "The indigeneity of this dataset."
             }),
-            description: z.string().min(1, "Description is required").describe("Supports new lines and basic formatting").meta<InputMeta>({
+            description: formField(z.string().min(1, "Description is required"), {
                 label: "Description",
                 type: "textarea",
                 initial: "",
-                class: "col-span-full",
+                description: "Supports new lines and basic formatting",
                 tooltip: "A free-text description of the data. This can include how it was created and its intended purpose.",
+                class: "col-span-full",
             }),
-            hasPolicy: z.object({
-                type: z.literal("odrl:Policy").optional().meta<InputMeta>({
+            hasPolicy: formField(z.object({
+                type: formField(z.literal("odrl:Policy").optional(), {
                     type: "hidden",
                     initial: "odrl:Policy",
                 }),
-                additionalType: z.string().url().optional().describe("").meta<InputMeta>({
+                additionalType: formField(z.string().url().optional(), {
                     label: "Policy Type",
                     type: "select",
                     placeholder: "Select a policy type",
                     initial: "",
-                    // tooltip: "",
                     options: policyTypeOptions.value
                 }),
-                url: z.string().url().optional().describe("").meta<InputMeta>({
+                url: formField(z.string().url().optional(), {
                     label: "URL",
                     type: "url",
                     placeholder: "https://example.com",
                     initial: "",
-                    // tooltip: "",
                 }),
-                sdoDescription: z.string().optional().describe("").meta<InputMeta>({
+                sdoDescription: formField(z.string().optional(), {
                     label: "Description",
                     type: "textarea",
-                    // placeholder: "",
                     initial: "",
-                    // tooltip: "",
                     class: "col-span-full",
                 }),
-                duty: z.string().optional().describe("Is metadata & data archiving included in the policy?").meta<InputMeta>({
+                duty: formField(z.string().optional(), {
                     label: "Archiving included",
                     type: "checkbox",
                     initial: "",
-                    tooltip: "tooltip",
+                    description: "Is metadata & data archiving included in the policy?",
                     trueValue: "http://example.com/duty/archive-data-and-metadata",
                     falseValue: "",
                 }),
-            }).optional().describe("").meta<InputMeta>({
+            }).optional(), {
                 label: "Indigenous Data Governance Policy",
                 type: "group",
                 initial: {},
-                // tooltip: "",
                 class: "col-span-full",
             }),
-        }).meta<SectionMeta>({
-            class: "grid-cols-1 md:grid-cols-2 gap-2"
         })
     },
     {
@@ -283,8 +283,8 @@ const steps = [
         title: "Agent Information",
         description: "Information about the roles that agents (people and organisations) play with respect to this data. These roles are critical in determining whether this data is managed properly. Each Agent must have a matching Role.",
         schema: z.object({
-            agentRole: z.object({
-                agent: z.object({
+            agentRole: formField(z.object({
+                agent: formField<z.ZodTypeAny, any>(z.object({
                     iri: z.string(),
                     name: z.string(),
                     type: z.string(),
@@ -299,33 +299,34 @@ const steps = [
                         agent: z.string().url(),
                         relationRole: z.string().url(),
                     }).array().optional(),
-                }).describe("You can search for an agent or create your own").meta<InputMeta>({
+                }), {
                     label: "Agent",
                     type: "agent",
                     placeholder: "Search for an agent",
                     initial: {},
+                    description: "You can search for an agent or create your own",
                     tooltip: "The name of the person, community or business that is providing this data.",
                     listQuery: agentSearch,
                     getQuery: agentGet,
                     resultLabel: "name",
                 }),
-                role: z.string().array().min(1, "Role is required").describe("You can select multiple roles").meta<InputMeta>({
+                role: formField(z.string().array().min(1, "Role is required"), {
                     label: "Role",
-                    type: "select", // string array/select array is multiple
+                    type: "select",
+                    multiple: true,
                     placeholder: "Choose roles",
                     initial: [],
                     options: roleOptions.value,
+                    description: "You can select multiple roles",
                     tooltip: "What role (e.g. custodian) the named person, community or business has with this data.",
                 }),
-            }).array().min(1, "Must have an agent and role selected").meta<InputMeta>({
+            }).array().min(1, "Must have an agent and role selected"), {
                 label: "Agents",
                 type: "add",
                 initial: [{ agent: {}, role: [] }],
                 element: { agent: {}, role: [] },
                 class: "col-span-full"
             })
-        }).meta<SectionMeta>({
-            class: "grid-cols-1 md:grid-cols-2 gap-2"
         })
     },
     {
@@ -333,38 +334,34 @@ const steps = [
         title: "Dates",
         description: "Standard dates for the establishment and update times of this dataset. A dataset about early 20th century data might only have been made last year and the created date is then some time last year. 'Issued' indicates when, if ever, this dataset was published.",
         schema: z.object({
-            created: customDate.describe("").meta<InputMeta>({
+            created: formField<z.ZodTypeAny, any>(customDate, {
                 label: "Created",
                 type: "customDate",
-                // placeholder: "",
                 initial: {
                     type: "",
                     value: ""
                 },
                 tooltip: "This is the date that this dataset was created (NOT the date the data occurred).",
             }),
-            modified: customDate.describe("").meta<InputMeta>({
+            modified: formField<z.ZodTypeAny, any>(customDate, {
                 label: "Modified",
                 type: "customDate",
-                // placeholder: "",
                 initial: {
                     type: "",
                     value: ""
                 },
                 tooltip: "The most recent date on which the data was modified. It can be the same as the date it was created.",
             }),
-            issued: customDate.optional().describe("Issued indicates when, if ever, this dataset was published").meta<InputMeta>({
+            issued: formField<z.ZodTypeAny, any>(customDate.optional(), {
                 label: "Issued",
                 type: "customDate",
-                // placeholder: "",
                 initial: {
                     type: "",
                     value: ""
                 },
+                description: "Issued indicates when, if ever, this dataset was published",
                 tooltip: "This is the date that this dataset was published or distributed.",
             }),
-        }).meta<SectionMeta>({
-            class: "grid-cols-1 md:grid-cols-2 gap-2"
         })
     },
     {
@@ -372,7 +369,7 @@ const steps = [
         title: "Rights",
         description: "Ownership and access information of the data. If a license is selected then the rights holder to that license should also be included.",
         schema: z.object({
-            license: z.string().optional().describe("").meta<InputMeta>({
+            license: formField(z.string().optional(), {
                 label: "License",
                 type: "select", // select string is single
                 placeholder: "Select a license",
@@ -380,13 +377,13 @@ const steps = [
                 options: licenseOptions.value,
                 tooltip: "This is the legal information under which the data is made available.",
             }),
-            rights: z.string().optional().describe("").meta<InputMeta>({
+            rights: formField(z.string().optional(), {
                 label: "Rights",
                 type: "text",
                 initial: "",
                 tooltip: "This is a statement that provides required details of who holds the license selected previously. e.g. ©University of Melbourne.",
             }),
-            accessRights: z.string().optional().describe("").meta<InputMeta>({
+            accessRights: formField(z.string().optional(), {
                 label: "Access Rights",
                 type: "select", // select string is single
                 placeholder: "Select an access right",
@@ -394,8 +391,6 @@ const steps = [
                 options: accessRightsOptions.value,
                 tooltip: "Data access rights control how users and systems access a data resource. e.g. Metadata access only. Definitions can be found here.",
             }),
-        }).meta<SectionMeta>({
-            class: "grid-cols-1 md:grid-cols-2 gap-2"
         })
     },
     {
@@ -403,7 +398,7 @@ const steps = [
         title: "Spatio/Temporal",
         description: "The spatial (geographical) and temporal (time period) extent of the data. Temporal information is different from the dates section as, for example, this dataset may have been created recently but is about someone or something long ago.",
         schema: z.object({
-            spatial: z.union([z.string().url(), z.object({
+            spatial: formField<z.ZodTypeAny, any>(z.union([z.string().url(), z.object({
                 type: z.literal("geo:Geometry"),
                 asWKT: z.object({
                     type: z.literal("geo:wktLiteral"),
@@ -433,32 +428,30 @@ const steps = [
                     //     return true;
                     // }, { message: "Invalid GeoJSON" }),
                 }).optional(),
-            })]).optional().describe("Supports an IRI or a WKT/GeoJSON string").meta<InputMeta>({
+            })]).optional(), {
                 label: "Spatial",
                 type: "spatial",
                 initial: "",
-                // tooltip: "Spatial tooltip"
+                description: "Supports an IRI or a WKT/GeoJSON string",
             }),
-            temporal: z.object({
-                startedAtTime: customDate.optional().describe("").meta<InputMeta>({
+            temporal: formField(z.object({
+                startedAtTime: formField<z.ZodTypeAny, any>(customDate.optional(), {
                     label: "Start Time",
                     type: "customDate",
-                    // placeholder: "",
                     initial: {
                         type: "",
                         value: ""
                     },
                 }),
-                endedAtTime: customDate.optional().describe("").meta<InputMeta>({
+                endedAtTime: formField<z.ZodTypeAny, any>(customDate.optional(), {
                     label: "End Time",
                     type: "customDate",
-                    // placeholder: "",
                     initial: {
                         type: "",
                         value: ""
                     },
                 }),
-            }).optional().meta<InputMeta>({
+            }).optional(), {
                 label: "Temporal",
                 type: "group",
                 initial: {
@@ -474,8 +467,6 @@ const steps = [
                 class: "col-span-full",
                 tooltip: "This is the interval of time which the data covers at the time of publishing. There must be a start and end date.",
             })
-        }).meta<SectionMeta>({
-            class: "grid-cols-1 md:grid-cols-2 gap-2"
         })
     },
     {
@@ -483,40 +474,40 @@ const steps = [
         title: "Distribution Info",
         description: "This is optional information in the form of a publicly resolvable URL that gives the user access to the data.",
         schema: z.object({
-            distribution: z.object({
-                type: z.literal("dcat:Distribution").meta<InputMeta>({
+            distribution: formField(z.object({
+                type: formField(z.literal("dcat:Distribution"), {
                     type: "hidden",
                     initial: "dcat:Distribution",
                 }),
-                title: z.string().describe("").meta<InputMeta>({
+                title: formField(z.string(), {
                     label: "Title",
                     type: "text",
                     initial: "",
-                    // tooltip: "",
                 }),
-                accessURL: z.string().url({ message: "Must be a valid URL" }).describe("A publicly resolvable URL that gives the user access to the data").meta<InputMeta>({
+                accessURL: formField(z.string().url({ message: "Must be a valid URL" }), {
                     label: "Access URL",
                     type: "url",
                     placeholder: "https://example.com",
                     initial: "",
+                    description: "A publicly resolvable URL that gives the user access to the data",
                     tooltip: "A URL is normally in the format https://… . If you are NOT submitting the metadata to the Indigenous Data Network, you could insert any resolvable URL into the metadata.",
                 }),
-                theme: z.string().array().describe("").meta<InputMeta>({
+                theme: formField(z.string().array(), {
                     label: "Theme",
-                    type: "select", // string array/select array is multiple
+                    type: "select",
+                    multiple: true,
                     placeholder: "Choose themes",
                     initial: [],
                     options: distThemeOptions.value,
-                    // tooltip: ""
                 }),
-                description: z.string().describe("Supports new lines and basic formatting").meta<InputMeta>({
+                description: formField(z.string(), {
                     label: "Description",
                     type: "textarea",
                     initial: "",
+                    description: "Supports new lines and basic formatting",
                     class: "col-span-full",
-                    // tooltip: "",
                 }),
-            }).array().optional().describe("").meta<InputMeta>({
+            }).array().optional(), {
                 label: "Distribution",
                 type: "add",
                 initial: [],
@@ -524,13 +515,10 @@ const steps = [
                     type: "dcat:Distribution",
                     theme: [],
                     title: "",
-                    description: "",
                     accessURL: ""
                 },
                 class: "grid-cols-1 md:grid-cols-2 gap-2 col-span-full"
             })
-        }).meta<SectionMeta>({
-            class: "grid-cols-1 md:grid-cols-2 gap-2"
         })
     },
     {
@@ -538,16 +526,15 @@ const steps = [
         title: "Theme",
         description: "Classification or categorisation of this data. We are mostly concerned with indications of 'indigeneity', i.e. how this data is related to indigenous people, however other classifications may also be added. Our primary indigenous classification vocabulary is online at https://data.idnau.org/v/vocab/vcb:idn-th which may be browsed for classification suggestions.",
         schema: z.object({
-            theme: z.string().array().describe("You can add more than one Theme term").meta<InputMeta>({
+            theme: formField(z.string().array(), {
                 label: "Theme",
                 type: "select", // string array/select array is multiple
                 placeholder: "Choose themes",
                 initial: [],
                 options: themeOptions.value,
+                description: "You can add more than one Theme term",
                 tooltip: "Our vocabulary for the primary classification for indigeneity of data being described can be browsed here. This vocabulary contains historical terms which exist in legacy data but are no longer used today. We welcome suggestions and feedback on this vocabulary."
             }),
-        }).meta<SectionMeta>({
-            class: "grid-cols-1 md:grid-cols-2 gap-2"
         })
     },
     {
@@ -555,38 +542,35 @@ const steps = [
         title: "Contact Details",
         description: "These details are required if you are submitting this metadata to the IDN. These details are also added as the point of contact for this data unless you've specifically indicated an Agent as the Point of Contact above.",
         schema: z.object({
-            contact: z.object({
-                agent: z.object({
-                    iri: z.literal("https://data.idnau.org/pid/person/6cf32191-8d20-4a43-99ba-1a7727615ad9").meta<InputMeta>({
+            contact: formField(z.object({
+                agent: formField(z.object({
+                    iri: formField(z.literal("https://data.idnau.org/pid/person/6cf32191-8d20-4a43-99ba-1a7727615ad9"), {
                         type: "hidden",
                         initial: "https://data.idnau.org/pid/person/6cf32191-8d20-4a43-99ba-1a7727615ad9"
                     }),
-                    type: z.literal("sdo:Person").meta<InputMeta>({
+                    type: formField(z.literal("sdo:Person"), {
                         type: "hidden",
                         initial: "sdo:Person"
                     }),
-                    name: z.string().describe("").meta<InputMeta>({
+                    name: formField(z.string(), {
                         label: "Name",
                         type: "text",
                         placeholder: "Contact name",
                         initial: "",
-                        // tooltip: ""
                     }),
-                    email: z.string().email().describe("").meta<InputMeta>({
+                    email: formField(z.string().email(), {
                         label: "Email",
                         type: "email",
                         placeholder: "Contact email",
                         initial: "",
-                        // tooltip: ""
                     }),
-                    telephone: phoneNumber.describe("").meta<InputMeta>({
+                    telephone: formField(phoneNumber, {
                         label: "Phone",
                         type: "tel",
                         placeholder: "Contact phone",
                         initial: "",
-                        // tooltip: ""
                     }),
-                }).meta<InputMeta>({
+                }), {
                     type: "group",
                     initial: {
                         iri: "https://data.idnau.org/pid/person/6cf32191-8d20-4a43-99ba-1a7727615ad9",
@@ -597,11 +581,11 @@ const steps = [
                     },
                     class: "col-span-full",
                 }),
-                role: z.literal("https://linked.data.gov.au/def/data-roles/pointOfContact").array().length(1).meta<InputMeta>({
+                role: formField(z.literal("https://linked.data.gov.au/def/data-roles/pointOfContact").array().length(1), {
                     type: "hidden",
                     initial: ["https://linked.data.gov.au/def/data-roles/pointOfContact"]
                 }),
-            }).array().length(1).describe("").meta<InputMeta>({
+            }).array().length(1), {
                 label: "Contact Details",
                 type: "add",
                 initial: [{
@@ -620,11 +604,28 @@ const steps = [
                 },
                 class: "col-span-full",
             }),
-        }).meta<SectionMeta>({
-            class: "grid-cols-1 md:grid-cols-2 gap-2"
         })
     },
 ];
+
+const registry: Registry = {
+    agent: {
+        component: AgentInput,
+        props: {
+            listQuery: (def, meta, model) => meta.listQuery,
+            getQuery: (def, meta, model) => meta.getQuery || undefined,
+            resultLabel: (def, meta, model) => meta.resultLabel || undefined,
+        },
+    },
+    customDate: {
+        component: DateInput,
+        props: {},
+    },
+    spatial: {
+        component: SpatialInput,
+        props: {},
+    },
+};
 
 // const isValid = computed<(boolean | "partial")[]>(() => steps.map(s => {
 //     const res = s.schema.safeParse(data.value[s.title]);
@@ -638,9 +639,10 @@ const steps = [
 
 function createEmptyData() {
     return steps.reduce((obj, step) => {
-        obj[step.title] = schemaCreateEmptyObject(step.schema);
+        const { formData } = useVtForm(step.schema);
+        obj[step.title] = formData.value;
         return obj;
-    }, {});
+    }, {}  as Record<string, any>);
 }
 
 function clear() {
@@ -845,6 +847,7 @@ async function rdfToData(rdf: string, format: Format) {
 }
 
 async function dataToRdf(dataObj: any): Promise<string> {
+    // console.log(schemaFlattened)
     const nonempty = removeEmptyValues(dataObj, schemaFlattened);
     const doc = { "@context": context, type: "dcat:Resource", ...nonempty };
     const rdf = await (jsonld.toRDF(doc, { format: "application/n-quads" }) as Promise<string>);
@@ -902,6 +905,7 @@ onMounted(async () => {
             and datasets in the IDN, called the <a href="https://agentsdb.idnau.org" target="_blank"
                 rel="noopener noreferrer">Agents Database</a>. You can refer to this list of agents or create a custom
             agent if required.</p>
+        <p>This form saves your progress between reloads. If you're experiencing problems or need to clear your data, either select "Clear Form" below or clear your local storage in your browser.</p>
     </div>
     <div class="grid grid-cols-[75%_25%] gap-4 relative">
         <div>
@@ -930,7 +934,7 @@ onMounted(async () => {
                         <CardContent class="pt-4">
                             <p>{{ stepObj.description }}</p>
                             <!-- <Button v-if="stepIndex === 1" @click="data.General.iri = DEFAULT_IRI" size="xs">Generate IRI</Button> -->
-                            <FormBuilder :schema="stepObj.schema" v-model="data[stepObj.title]" />
+                            <FormBuilder :schema="stepObj.schema" v-model="data[stepObj.title]" :registry="registry" class="grid grid-cols-2 gap-3" />
                         </CardContent>
                     </Card>
                 </template>
