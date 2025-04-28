@@ -1,12 +1,18 @@
 <script lang="ts" setup>
-import type { HTMLAttributes } from "vue";
+import { type HTMLAttributes } from "vue";
 import { Search, X } from "lucide-vue-next";
 import { useDebounceFn } from "@vueuse/core";
+import { type Option } from "@vulptech/vt-form";
 import { cn } from "@/lib/utils";
+
+type SearchOption = Omit<Option, "label"> & {
+    label?: string;
+    [key: string]: any;
+};
 
 const props = defineProps<{
     placeholder?: string;
-    listQuery: (term: string) => Promise<Option>[];
+    listQuery: (term: string) => Promise<SearchOption[]>;
     getQuery?: (value: string) => Promise<any>;
     resultLabel?: string;
     class?: HTMLAttributes["class"];
@@ -16,7 +22,7 @@ const model = defineModel<any>({ required: true });
 
 const open = ref(false);
 const searchTerm = ref("");
-const results = ref<Option[]>([]);
+const results = ref<SearchOption[]>([]);
 const loading = ref(false);
 const selectedItem = ref<any | null>(null);
 
@@ -45,7 +51,7 @@ async function runListQuery(e: InputEvent) {
     }
 }
 
-async function handleSelect(result: Option) {
+async function handleSelect(result: SearchOption) {
     if (!!props.getQuery) {
         const item = await props.getQuery(result.value);
         model.value = item;
@@ -59,7 +65,7 @@ async function handleSelect(result: Option) {
     results.value = [];
 }
 
-function displayResult(result: Option | any): string {
+function displayResult(result: SearchOption): string {
     if (props.resultLabel) {
         return result[props.resultLabel] || result.label || result.value;
     } else {
@@ -95,9 +101,9 @@ watch(model, (newValue) => {
             <DialogTrigger as-child>
                 <Button variant="outline" :class="cn('justify-start w-full pr-10', props.class)">
                     <Search class="size-4 text-muted-foreground mr-2" />
-                    <span :class="`overflow-x-hidden ${selectedItem === null ? 'text-muted-foreground' : ''}`">
-                        <template v-if="selectedItem !== null">{{ displayResult(selectedItem) }}</template>
-                        <template v-else>{{ placeholder || "Search" }}</template>
+                    <span :class="`overflow-x-hidden ${Object.keys(model).length === 0 ? 'text-muted-foreground' : ''}`">
+                        <template v-if="selectedItem">{{ displayResult(selectedItem) }}</template>
+                        <template v-else>{{ props.placeholder || "Search" }}</template>
                     </span>
                 </Button>
             </DialogTrigger>
@@ -106,12 +112,19 @@ watch(model, (newValue) => {
             </span>
         </div>
         <DialogContent>
-            <DialogHeader>Search</DialogHeader>
+            <DialogHeader>
+                <DialogTitle>Search</DialogTitle>
+                <DialogDescription class="hidden"></DialogDescription>
+            </DialogHeader>
             <div>
                 <Input type="search" placeholder="Search..." v-model="searchTerm" @input="runListQuery" autofocus />
             </div>
             <div v-if="searchTerm !== ''" class="flex flex-col gap-1">
-                <span v-if="loading">Loading...</span>
+                <div v-if="loading" class="flex flex-col gap-2">
+                    <Skeleton class="h-4 w-[250px]" />
+                    <Skeleton class="h-4 w-[250px]" />
+                    <Skeleton class="h-4 w-[250px]" />
+                </div>
                 <template v-else-if="results">
                     <div v-for="result in results" class="hover:bg-muted cursor-pointer p-2 rounded"
                         @click="handleSelect(result)">

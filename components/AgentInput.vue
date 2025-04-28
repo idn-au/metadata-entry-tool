@@ -1,12 +1,11 @@
 <script lang="ts" setup>
 import type { HTMLAttributes } from "vue";
 import { Pencil } from "lucide-vue-next";
-import { register } from "zod-metadata";
 import * as z from "zod";
-import { formField, useVtForm, FormBuilder } from "@vulptech/vt-form";
+import { formField, useVtForm, FormBuilder, type Option, schemaCreateEmptyObject } from "@vulptech/vt-form";
 import { cn } from "@/lib/utils";
 
-register(z);
+// TODO: going from searched agent to custom agent breaks
 
 const SPARQL_URL = "https://api.idnau.org/sparql";
 
@@ -61,57 +60,60 @@ async function agentSearch(term: string): Promise<Option[]> {
 }
 
 const schema = z.object({
-    iri: formField(z.string().url({ message: "Must be a valid IRI" }).describe("Provide an IRI or have an IRI automatically assigned"), {
+    iri: formField(z.string().url({ message: "Must be a valid IRI" }), {
         label: "IRI",
         type: "url",
         placeholder: "https://example.com",
         initial: "",
+        description: "Provide an IRI or have an IRI automatically assigned",
         tooltip: "An IRI is a standard identifier in the form of a web address (URL). Good IRIs are part of a managed system.",
     }),
-    name: formField(z.string().describe(""), {
+    name: formField(z.string(), {
         label: "Name",
         type: "text",
         initial: "",
         tooltip: "The name of the person or organization",
     }),
-    type: formField(z.string().describe(""), {
+    type: formField(z.string(), {
         label: "Type",
         type: "select",
         placeholder: "Select a type",
         initial: "",
         options: [{label: "Person", value: "https://schema.org/Person"}, {label: "Organization", value: "https://schema.org/Organization"}]
     }),
-    url: formField(z.string().url().optional().describe(""), {
+    url: formField(z.string().url().optional(), {
         label: "URL",
         type: "url",
         placeholder: "https://example.com",
         initial: "",
         tooltip: "A website",
     }),
-    sdoDescription: formField(z.string().optional().describe("Supports new lines and basic formatting"), {
+    sdoDescription: formField(z.string().optional(), {
         label: "Description",
         type: "textarea",
         initial: "",
+        description: "Supports new lines and basic formatting",
         class: "col-span-full",
     }),
-    agentIndigeneity: formField(z.string().optional().describe(""), {
+    agentIndigeneity: formField(z.string().optional(), {
         label: "Indigeneity",
         type: "select",
         initial: "",
         options: indigeneityOptions.value,
     }),
     identifier: formField(z.object({
-        value: formField(z.string().describe(""), {
+        value: formField(z.string(), {
             label: "Identifier",
             type: "text",
             initial: "",
         }),
-        type: formField(z.string().url().describe("Must be an IRI"), {
+        type: formField(z.string().url(), {
             label: "Datatype",
             type: "url",
             initial: "",
+            description: "Must be an IRI",
         }),
-    }).array().optional().describe(""), {
+    }).array().optional(), {
         label: "Identifier",
         type: "add",
         initial: [{
@@ -132,7 +134,7 @@ const schema = z.object({
             initial: "",
             listQuery: agentSearch,
         }),
-        relationRole: formField(z.string().describe(""), {
+        relationRole: formField(z.string(), {
             label: "Role",
             type: "select",
             placeholder: "Select role",
@@ -170,13 +172,17 @@ function handleSave() {
 
 watch(open, (newValue) => {
     if (newValue) {
+        console.log(model.value)
         if (Object.keys(model.value).length === 0) {
             data.value.iri = "https://data.idnau.org/pid/organization/18d04115-4633-4aed-b164-ac3c209b4307";
         } else {
-            data.value = model.value;
+            // data.value = model.value;
+            data.value = {...data.value, ...removeEmptyValues(model.value, schema.shape)}
         }
+        console.log(data.value)
     } else {
         // data.value = {};
+        console.log(schemaCreateEmptyObject(schema))
         resetValues();
     }
 });
@@ -184,13 +190,13 @@ watch(open, (newValue) => {
 
 <template>
     <div :class="cn('w-full flex flex-row gap-2 items-center', props.class)">
-        <SearchInput
+        <CustomSearchInput
             v-model="model"
             :listQuery="props.listQuery"
             :getQuery="props.getQuery"
             :resultLabel="props.resultLabel"
             :placeholder="props.placeholder"
-            @clear="emits('clear')"
+            @clear="resetValues(); emits('clear')"
         />
         <Dialog v-model:open="open">
             <DialogTrigger as-child>

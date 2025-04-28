@@ -1,16 +1,15 @@
 <script lang="ts" setup>
-import { register } from "zod-metadata";
 import * as z from "zod";
 import * as jsonld from "jsonld";
 import { type ContextDefinition } from "jsonld";
 import { ChevronDown, ChevronUp, Copy, Expand, Upload, Download, Trash2, Send } from "lucide-vue-next";
 import { fairScore, careScore } from "@idn-au/scores-calculator-js";
-import { formField, useVtForm, FormBuilder, type Registry } from "@vulptech/vt-form";
+import { formField, useVtForm, FormBuilder, type Registry, type Option } from "@vulptech/vt-form";
 import AgentInput from "~/components/AgentInput.vue";
 import DateInput from "~/components/DateInput.vue";
 import SpatialInput from "~/components/SpatialInput.vue";
 
-register(z);
+const SAVE_TO_LOCALSTORAGE = true;
 
 const SPARQL_URL = "https://api.idnau.org/sparql";
 const DEFAULT_IRI = "https://data.idnau.org/pid/resource/d23405b4-fc04-47e2-9e7a-9c5735ae3780";
@@ -341,6 +340,7 @@ const steps = [
                     type: "",
                     value: ""
                 },
+                description: "Either of YYYY, MM/YYYY or DD/MM/YYYY are supported",
                 tooltip: "This is the date that this dataset was created (NOT the date the data occurred).",
             }),
             modified: formField<z.ZodTypeAny, any>(customDate, {
@@ -350,6 +350,7 @@ const steps = [
                     type: "",
                     value: ""
                 },
+                description: "Either of YYYY, MM/YYYY or DD/MM/YYYY are supported",
                 tooltip: "The most recent date on which the data was modified. It can be the same as the date it was created.",
             }),
             issued: formField<z.ZodTypeAny, any>(customDate.optional(), {
@@ -359,8 +360,8 @@ const steps = [
                     type: "",
                     value: ""
                 },
-                description: "Issued indicates when, if ever, this dataset was published",
-                tooltip: "This is the date that this dataset was published or distributed.",
+                description: "Either of YYYY, MM/YYYY or DD/MM/YYYY are supported",
+                tooltip: "Issued indicates when, if ever, this dataset was published",
             }),
         })
     },
@@ -442,6 +443,7 @@ const steps = [
                         type: "",
                         value: ""
                     },
+                    description: "Either of YYYY, MM/YYYY or DD/MM/YYYY are supported",
                 }),
                 endedAtTime: formField<z.ZodTypeAny, any>(customDate.optional(), {
                     label: "End Time",
@@ -450,6 +452,7 @@ const steps = [
                         type: "",
                         value: ""
                     },
+                    description: "Either of YYYY, MM/YYYY or DD/MM/YYYY are supported",
                 }),
             }).optional(), {
                 label: "Temporal",
@@ -653,8 +656,8 @@ function clear() {
 const data = ref(createEmptyData());
 const rdfString = ref("");
 const showRDF = ref(false);
-const fair = ref({} as ScoreValueObj);
-const care = ref({} as ScoreValueObj);
+const fair = ref({});
+const care = ref({});
 
 const keyMap = (() => {
     const emptyData = createEmptyData();
@@ -869,20 +872,26 @@ watch(rdfString, async (newValue) => {
     care.value = await careScore(newValue, dataFlattened.value.iri, "application/n-triples");
 });
 
-watch(data, (newValue) => {
-    localStorage.setItem("data", JSON.stringify(newValue));
-}, { deep: true });
+if (SAVE_TO_LOCALSTORAGE) {
+    watch(data, (newValue) => {
+        localStorage.setItem("data", JSON.stringify(newValue));
+    }, { deep: true });
+}
 
 onMounted(async () => {
-    const savedData = localStorage.getItem("data");
-    if (savedData) {
-        data.value = JSON.parse(savedData);
+    if (SAVE_TO_LOCALSTORAGE) {
+        const savedData = localStorage.getItem("data");
+        if (savedData) {
+            data.value = JSON.parse(savedData);
+        } else {
+            data.value.General.iri = DEFAULT_IRI;
+        }
     } else {
         data.value.General.iri = DEFAULT_IRI;
     }
-    rdfString.value = await dataToRdf(dataFlattened.value);
-    fair.value = await fairScore(rdfString.value, dataFlattened.value.iri, "application/n-triples");
-    care.value = await careScore(rdfString.value, dataFlattened.value.iri, "application/n-triples");
+    // rdfString.value = await dataToRdf(dataFlattened.value);
+    // fair.value = await fairScore(rdfString.value, dataFlattened.value.iri, "application/n-triples");
+    // care.value = await careScore(rdfString.value, dataFlattened.value.iri, "application/n-triples");
 });
 </script>
 

@@ -1,5 +1,5 @@
 import * as z from "zod";
-import { getZodSchema, type InputMeta, type Option } from "@vulptech/vt-form";
+import { getZodSchema, formField, type Option } from "@vulptech/vt-form";
 
 export function removeEmptyValues(obj: { [key: string]: any }, schema: { [key: string]: z.AnyZodObject }): { [key: string]: any } {
     const newObj: { [key: string]: any } = {};
@@ -14,12 +14,12 @@ export function removeEmptyValues(obj: { [key: string]: any }, schema: { [key: s
                 }
             } else if (meta.type === "add") {
                 const initialObj = meta.initial.length === 1 ? meta.initial[0] : {};
-                const newShape = z.object({...field._def.type.shape}).meta<InputMeta>({
+                const newShape = formField(z.object({...field._def.type.shape}), {
                     label: `temp-${meta.label}`,
                     type: "group",
                     initial: initialObj,
                 });
-                const valueArray = value.map(v => removeEmptyValues(v, newShape.shape)).filter(o => Object.keys(o).length > 0);
+                const valueArray = value.map(v => removeEmptyValues(v, newShape.unwrap().shape)).filter(o => Object.keys(o).length > 0);
                 if (valueArray.length > 0) {
                     newObj[key] = valueArray;
                 }

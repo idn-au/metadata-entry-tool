@@ -1,4 +1,6 @@
 <script lang="ts" setup>
+import { CustomInput } from "@vulptech/vt-form";
+
 const WKT_TYPES = [
     "POINT",
     "LINESTRING",
