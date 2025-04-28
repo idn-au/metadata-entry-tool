@@ -12,9 +12,6 @@ export default defineNuxtConfig({
             title: "IDN MET v2"
         }
     },
-    veeValidate: {
-        autoImports: true,
-    },
     ssr: false,
     // postcss: {
     //     plugins: {
