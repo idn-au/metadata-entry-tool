@@ -11,7 +11,7 @@ import AgentInput from "~/components/AgentInput.vue";
 import DateInput from "~/components/DateInput.vue";
 import SpatialInput from "~/components/SpatialInput.vue";
 
-const SAVE_TO_LOCALSTORAGE = false;
+const SAVE_TO_LOCALSTORAGE = true;
 
 const SPARQL_URL = "https://api.idnau.org/sparql";
 const DEFAULT_IRI = "https://data.idnau.org/pid/resource/d23405b4-fc04-47e2-9e7a-9c5735ae3780";

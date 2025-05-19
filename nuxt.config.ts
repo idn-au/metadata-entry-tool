@@ -32,9 +32,9 @@ export default defineNuxtConfig({
         componentDir: "./components/ui"
     },
     // locally installing built packages
-    imports: {
-        transform: {
-            exclude: [/\bscore-component-lib\b/]
-        }
-    },
+    // imports: {
+    //     transform: {
+    //         exclude: [/\bscore-component-lib\b/]
+    //     }
+    // },
 });
