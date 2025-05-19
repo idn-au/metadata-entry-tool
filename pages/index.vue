@@ -2,14 +2,16 @@
 import * as z from "zod";
 import * as jsonld from "jsonld";
 import { type ContextDefinition } from "jsonld";
-import { ChevronDown, ChevronUp, Copy, Expand, Upload, Download, Trash2, Send } from "lucide-vue-next";
-import { fairScore, careScore } from "@idn-au/scores-calculator-js";
+import { ChevronDown, ChevronUp, Expand, Upload, Download, Trash2, Send } from "lucide-vue-next";
 import { formField, useVtForm, FormBuilder, type Registry, type Option } from "@vulptech/vt-form";
+import { Scoring, type TopScoreValueObj } from "@idn-au/scores-calculator-js";
+import { Scores } from "@idn-au/score-component-lib";
+import { Editor } from "@kurrawongai/kai-ui";
 import AgentInput from "~/components/AgentInput.vue";
 import DateInput from "~/components/DateInput.vue";
 import SpatialInput from "~/components/SpatialInput.vue";
 
-const SAVE_TO_LOCALSTORAGE = true;
+const SAVE_TO_LOCALSTORAGE = false;
 
 const SPARQL_URL = "https://api.idnau.org/sparql";
 const DEFAULT_IRI = "https://data.idnau.org/pid/resource/d23405b4-fc04-47e2-9e7a-9c5735ae3780";
@@ -26,7 +28,9 @@ const EXAMPLES = [
     },
 ];
 
-const { store } = useOxiStore();
+const colorMode = useColorMode();
+
+// const { store } = useOxiStore();
 
 const { data: indigeneityOptions } = await useAsyncData("indigeneityOptions", () => sparqlOptions(SPARQL_URL, `
     PREFIX skos: <http://www.w3.org/2004/02/skos/core#>
@@ -656,21 +660,21 @@ function clear() {
 const data = ref(createEmptyData());
 const rdfString = ref("");
 const showRDF = ref(false);
-const fair = ref({});
-const care = ref({});
+const fair = ref({} as TopScoreValueObj);
+const care = ref({} as TopScoreValueObj);
 
-const keyMap = (() => {
-    const emptyData = createEmptyData();
-    const kMap: {[key: string]: string} = {};
+// const keyMap = (() => {
+//     const emptyData = createEmptyData();
+//     const kMap: {[key: string]: string} = {};
     
-    Object.keys(emptyData).forEach(key => {
-        Object.keys(emptyData[key]).forEach(k => {
-            kMap[k] = key;
-        });
-    });
+//     Object.keys(emptyData).forEach(key => {
+//         Object.keys(emptyData[key]).forEach(k => {
+//             kMap[k] = key;
+//         });
+//     });
 
-    return kMap;
-})();
+//     return kMap;
+// })();
 
 const context: ContextDefinition = {
     // "@version": "1.1",
@@ -821,33 +825,33 @@ const rdfFormats: {[key: string]: Format} = {
     "rdf": "application/rdf+xml",
 };
 
-function loadFile(event: InputEvent) {
-    const file = (event.target as HTMLInputElement).files?.[0];
-    if (!file) {
-        return;
-    }
-    var reader = new FileReader();
-    reader.onload = function(e) {
-        const extension = file.name.split(".")[1];
-        rdfToData(e.target.result, rdfFormats[extension]);
-    };
-    reader.readAsText(file);
-}
+// function loadFile(event: InputEvent) {
+//     const file = (event.target as HTMLInputElement).files?.[0];
+//     if (!file) {
+//         return;
+//     }
+//     var reader = new FileReader();
+//     reader.onload = function(e) {
+//         const extension = file.name.split(".")[1];
+//         rdfToData(e.target.result, rdfFormats[extension]);
+//     };
+//     reader.readAsText(file);
+// }
 
-async function rdfToData(rdf: string, format: Format) {
-    data.value = createEmptyData();
-    store.value.update("DROP ALL");
-    store.value.load(rdf, format);
-    // TODO: do query to check for valid data
-    const nquads = store.value.dump("application/n-quads");
-    const jsonldObj = await jsonld.fromRDF(nquads, { format: "application/n-quads" });
-    const framedObj = await jsonld.frame(jsonldObj, { "@context": context, type: "dcat:Resource" });
-    Object.keys(framedObj).forEach(key => {
-        if (Object.keys(keyMap).includes(key)) {
-            data.value[keyMap[key]][key] = framedObj[key];
-        }
-    });
-}
+// async function rdfToData(rdf: string, format: Format) {
+//     data.value = createEmptyData();
+//     store.value.update("DROP ALL");
+//     store.value.load(rdf, format);
+//     // TODO: do query to check for valid data
+//     const nquads = store.value.dump("application/n-quads");
+//     const jsonldObj = await jsonld.fromRDF(nquads, { format: "application/n-quads" });
+//     const framedObj = await jsonld.frame(jsonldObj, { "@context": context, type: "dcat:Resource" });
+//     Object.keys(framedObj).forEach(key => {
+//         if (Object.keys(keyMap).includes(key)) {
+//             data.value[keyMap[key]][key] = framedObj[key];
+//         }
+//     });
+// }
 
 async function dataToRdf(dataObj: any): Promise<string> {
     // console.log(schemaFlattened)
@@ -867,9 +871,23 @@ watch(dataFlattened, async (newValue) => {
     // rdfString.value = store.dump({ format: "text/turtle", from_graph_name: oxigraph.defaultGraph() });
 }, { deep: true });
 
+let scoringObj: Scoring;
+
+async function doScoring(scoringObj: Scoring, data: string) {
+    const p = await Promise.all([
+        scoringObj.score(dataFlattened.value.iri, "fair", "json", { value: data, format: "application/n-triples" }) as TopScoreValueObj,
+        scoringObj.score(dataFlattened.value.iri, "care", "json", { value: data, format: "application/n-triples" }) as TopScoreValueObj
+    ]);
+    fair.value = p[0];
+    care.value = p[1];
+}
+
 watch(rdfString, async (newValue) => {
-    fair.value = await fairScore(newValue, dataFlattened.value.iri, "application/n-triples");
-    care.value = await careScore(newValue, dataFlattened.value.iri, "application/n-triples");
+    // fair.value = await fairScore(newValue, dataFlattened.value.iri, "application/n-triples");
+    // care.value = await careScore(newValue, dataFlattened.value.iri, "application/n-triples");
+    if (scoringObj) {
+        await doScoring(scoringObj, newValue);
+    }
 });
 
 if (SAVE_TO_LOCALSTORAGE) {
@@ -883,12 +901,23 @@ onMounted(async () => {
         const savedData = localStorage.getItem("data");
         if (savedData) {
             data.value = JSON.parse(savedData);
+            // const savedDataParsed = JSON.parse(savedData);
+            // const stepMap = steps.reduce((obj, step) => {
+            //     obj[step.title] = step.schema.shape;
+            //     return obj;
+            // }, {});
+            // Object.entries(data.value).forEach(([key, obj]) => {
+            //     data.value[key] = deepmerge(obj, removeEmptyValues(savedDataParsed[key], stepMap[key]));
+            // });
         } else {
             data.value.General.iri = DEFAULT_IRI;
         }
     } else {
         data.value.General.iri = DEFAULT_IRI;
     }
+    scoringObj = await Scoring.init(["fair", "care"], { value: rdfString.value, format: "application/n-triples" });
+    doScoring(scoringObj, rdfString.value);
+
     // rdfString.value = await dataToRdf(dataFlattened.value);
     // fair.value = await fairScore(rdfString.value, dataFlattened.value.iri, "application/n-triples");
     // care.value = await careScore(rdfString.value, dataFlattened.value.iri, "application/n-triples");
@@ -916,7 +945,7 @@ onMounted(async () => {
             agent if required.</p>
         <p>This form saves your progress between reloads. If you're experiencing problems or need to clear your data, either select "Clear Form" below or clear your local storage in your browser.</p>
     </div>
-    <div class="grid grid-cols-[75%_25%] gap-4 relative">
+    <div class="grid grid-cols-[3fr_1fr] gap-4 relative">
         <div>
             <div class="flex flex-row gap-2 items-start mb-6">
                 <Button variant="outline" class="mr-auto" disabled>Tutorial</Button>
@@ -940,7 +969,7 @@ onMounted(async () => {
             <VerticalStepper :steps="steps">
                 <template #default="{ stepObj, stepIndex }">
                     <Card v-show="stepIndex === stepObj.step">
-                        <CardContent class="pt-4">
+                        <CardContent>
                             <p>{{ stepObj.description }}</p>
                             <!-- <Button v-if="stepIndex === 1" @click="data.General.iri = DEFAULT_IRI" size="xs">Generate IRI</Button> -->
                             <FormBuilder :schema="stepObj.schema" v-model="data[stepObj.title]" :registry="registry" class="grid grid-cols-2 gap-3" />
@@ -960,8 +989,8 @@ onMounted(async () => {
         </div>
         <div>
             <div class="flex flex-col gap-4 sticky top-0">
-                <Scores title="FAIR" :scores="fair" />
-                <Scores title="CARE" :scores="care" />
+                <Scores title="FAIR" :score="fair" />
+                <Scores title="CARE" :score="care" />
                 <Collapsible v-model:open="showRDF" class="flex flex-col gap-2 items-start">
                     <CollapsibleTrigger as-child>
                         <Button variant="outline">
@@ -972,36 +1001,37 @@ onMounted(async () => {
                     </CollapsibleTrigger>
                     <CollapsibleContent class="flex flex-col gap-2 items-start">
                         <div class="relative w-full max-w-sm items-center">
-                            <pre
-                                class="whitespace-pre-wrap text-xs border rounded p-2 overflow-y-auto max-h-[240px]">{{ rdfString }}</pre>
-                            <span class="absolute end-0 inset-y-2 flex justify-center px-2">
+                            <Editor
+                                v-model="rdfString"
+                                class="h-[340px] w-full"
+                                language="n-triples"
+                                readonly
+                                hideTheme
+                                hideLanguage
+                                :theme="colorMode.unknown || colorMode.value === 'light' ? 'light-tm' : 'dark-tm'"
+                                :downloadFilename="dataFlattened.title || 'metadata'"
+                            />
+                            <span class="absolute end-0 bottom-0 inset-y-2 flex justify-center px-2">
                                 <Modal>
                                     <template #trigger>
-                                        <Button variant="outline" size="xs" title="Expand">
+                                        <Button variant="outline" size="sm" title="Expand">
                                             <Expand class="h-4 w-4" />
                                         </Button>
                                     </template>
                                     <template #title>Metadata RDF</template>
-                                    <pre
-                                        class="whitespace-pre-wrap text-xs border rounded p-2 overflow-y-auto">{{ rdfString }}</pre>
-                                    <template #footer>
-                                        <Button variant="outline" @click="copyRDF">
-                                            <Copy class="h-4 w-4 mr-2" />
-                                            Copy
-                                        </Button>
-                                        <DialogClose as-child>
-                                            <Button type="button" variant="secondary">
-                                                Close
-                                            </Button>
-                                        </DialogClose>
-                                    </template>
+                                    <Editor
+                                        v-model="rdfString"
+                                        class="h-[600px] w-full"
+                                        language="n-triples"
+                                        readonly
+                                        hideTheme
+                                        hideLanguage
+                                        :theme="colorMode.unknown || colorMode.value === 'light' ? 'light-tm' : 'dark-tm'"
+                                        :downloadFilename="dataFlattened.title || 'metadata'"
+                                    />
                                 </Modal>
                             </span>
                         </div>
-                        <Button variant="outline" size="sm" @click="copyRDF">
-                            <Copy class="h-4 w-4 mr-2" />
-                            Copy
-                        </Button>
                     </CollapsibleContent>
                 </Collapsible>
             </div>

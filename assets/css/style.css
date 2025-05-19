@@ -2,6 +2,6 @@ a:not(header a) {
     color: hsl(var(--link));
 }
 
-a:not(header a):hover {
+a:not(header a):not(.btn):hover {
     text-decoration: underline;
 }

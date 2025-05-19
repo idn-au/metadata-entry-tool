@@ -1,9 +1,11 @@
+import tailwindcss from "@tailwindcss/vite";
+
 // https://nuxt.com/docs/api/configuration/nuxt-config
 export default defineNuxtConfig({
     compatibilityDate: "2024-04-03",
     devtools: { enabled: true },
-    modules: ["@nuxtjs/tailwindcss", "shadcn-nuxt", "@nuxtjs/color-mode"],
-    css: ["@vulptech/vt-form/vt-form.css", "assets/css/tailwind.css", "assets/css/style.css"],
+    modules: ["@nuxtjs/color-mode", "shadcn-nuxt"],
+    css: ["@vulptech/vt-form/vt-form.css", "@idn-au/score-component-lib/score-component-lib.css", "~/assets/css/tailwind.css", "~/assets/css/style.css"],
     app: {
         head: {
             link: [
@@ -12,20 +14,27 @@ export default defineNuxtConfig({
             title: "IDN MET v2"
         }
     },
-    ssr: false,
-    // postcss: {
-    //     plugins: {
-    //         tailwindcss: {},
-    //         autoprefixer: {},
-    //     },
-    // },
-    // colorMode: {
-    //     classPrefix: "",
-    //     classSuffix: "",
-    // },
+    // ssr: false,
+    colorMode: {
+        classPrefix: "",
+        classSuffix: "",
+    },
     nitro: {
         prerender: {
             autoSubfolderIndex: false,
         },
-    }
+    },
+    vite: {
+        plugins: [tailwindcss()],
+    },
+    shadcn: {
+        prefix: "",
+        componentDir: "./components/ui"
+    },
+    // locally installing built packages
+    imports: {
+        transform: {
+            exclude: [/\bscore-component-lib\b/]
+        }
+    },
 });

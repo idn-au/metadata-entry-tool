@@ -27,8 +27,8 @@ export function useOxiStore() {
         size: 0,
     } as OxiStore);
 
-    onBeforeMount(() => {
-        init().then(() => {
+    onMounted(() => {
+        init("https://cdn.jsdelivr.net/npm/oxigraph@0.4.10/web_bg.wasm").then(() => {
             _store = new oxigraph.Store();
 
             function updateStore() {

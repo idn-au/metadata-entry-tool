@@ -202,7 +202,7 @@ watch(open, (newValue) => {
             <DialogTrigger as-child>
                 <Button variant="outline" title="Create a custom agent"><Pencil class="size-4" /></Button>
             </DialogTrigger>
-            <DialogContent class="max-w-[800px] w-[90dvw] max-h-[90dvh] rounded">
+            <DialogContent class="sm:max-w-[800px] w-[90dvw] max-h-[90dvh] rounded">
                 <DialogHeader>
                     <DialogTitle>Custom Agent</DialogTitle>
                     <DialogDescription>

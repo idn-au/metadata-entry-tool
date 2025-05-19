@@ -7,7 +7,7 @@ const model = defineModel<boolean>();
         <DialogTrigger as-child>
             <slot name="trigger" />
         </DialogTrigger>
-        <DialogContent class="w-[90%] max-w-[800px] grid-rows-[auto_minmax(0,1fr)_auto] p-0 max-h-[90dvh]">
+        <DialogContent class="w-[90%] sm:max-w-[1200px] grid-rows-[auto_minmax(0,1fr)_auto] p-0 max-h-[90dvh]">
             <DialogHeader class="p-6 pb-0">
                 <DialogTitle v-if="$slots.title">
                     <slot name="title" />
