@@ -37,12 +37,13 @@ export async function sparqlSelect(url: string, query: string): Promise<any[]> {
     return json.results.bindings;
 }
 
-export async function sparqlOptions(url: string, query: string): Promise<Option[]> {
+export async function sparqlOptions(url: string, query: string): Promise<ConceptOption[]> {
     const results = await sparqlSelect(url, query);
-    const options: Option[] = results.map(result => {
+    const options: ConceptOption[] = results.map(result => {
         return {
             value: result.value.value,
-            label: result.label.value
+            label: result.label.value,
+            desc: result.desc.value,
         };
     });
     options.sort((a, b) => a.label.localeCompare(b.label));

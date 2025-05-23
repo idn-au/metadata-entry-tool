@@ -31,10 +31,6 @@ PREFIX xsd: <http://www.w3.org/2001/XMLSchema#>
     prov:qualifiedAttribution [
         dcat:hadRole <https://linked.data.gov.au/def/data-roles/custodian> ;
         prov:agent <https://example.com/custodianagent> ;
-    ] ,
-    [
-        dcat:hadRole <https://linked.data.gov.au/def/data-roles/pointOfContact> ;
-        prov:agent <https://example.com/contactagent> ;
     ] ;
     prov:wasInfluencedBy _:b1 ,
         _:b2 ;
@@ -46,13 +42,6 @@ PREFIX xsd: <http://www.w3.org/2001/XMLSchema#>
     sdo:identifier "id1"^^xsd:token ;
     sdo:name "Custodian Agent" ;
     prov:contributed _:b1 ;
-.
-
-<https://example.com/contactagent> a sdo:Person ;
-    dcterms:type <https://data.idnau.org/pid/vocab/org-indigeneity/indigeneity-unknown> ;
-    sdo:description "Contact agent description" ;
-    sdo:identifier "id2"^^xsd:token ;
-    sdo:name "Contact Agent" ;
 .
 
 _:b1 a sdo:DigitalDocument ;

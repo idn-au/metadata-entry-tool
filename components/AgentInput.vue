@@ -2,8 +2,11 @@
 import type { HTMLAttributes } from "vue";
 import { Pencil } from "lucide-vue-next";
 import * as z from "zod";
-import { formField, useVtForm, FormBuilder, type Option, schemaCreateEmptyObject } from "@vulptech/vt-form";
+import { formField, useVtForm, FormBuilder, type Option, schemaCreateEmptyObject, type Registry, SearchInput } from "@vulptech/vt-form";
+import { v4 as uuidv4 } from "uuid";
 import { cn } from "@/lib/utils";
+import IRIInput from "~/components/IRIInput.vue";
+import ConceptSelect from "~/components/ConceptSelect.vue";
 
 // TODO: going from searched agent to custom agent breaks
 
@@ -19,24 +22,26 @@ const props = defineProps<{
 
 const { data: indigeneityOptions } = await useAsyncData("agentIndigeneityOptions", () => sparqlOptions(SPARQL_URL, `
     PREFIX skos: <http://www.w3.org/2004/02/skos/core#>
-    SELECT DISTINCT ?value ?label
+    SELECT DISTINCT ?value ?label ?desc
     WHERE {
         BIND(<https://data.idnau.org/pid/vocab/org-indigeneity> AS ?cs)
         ?cs a skos:ConceptScheme .
         ?value a skos:Concept ;
             skos:inScheme ?cs ;
-            skos:prefLabel ?label .
+            skos:prefLabel ?label ;
+            skos:definition ?desc .
     }`));
 
 const { data: aaRoleOptions } = await useAsyncData("aaRoleOptions", () => sparqlOptions(SPARQL_URL, `
     PREFIX skos: <http://www.w3.org/2004/02/skos/core#>
-    SELECT DISTINCT ?value ?label
+    SELECT DISTINCT ?value ?label ?desc
     WHERE {
         BIND(<https://data.idnau.org/pid/vocab/aarr> AS ?cs)
         ?cs a skos:ConceptScheme .
         ?value a skos:Concept ;
             skos:inScheme ?cs ;
-            skos:prefLabel ?label .
+            skos:prefLabel ?label ;
+            skos:definition ?desc .
     }`));
 
 async function agentSearch(term: string): Promise<Option[]> {
@@ -59,10 +64,19 @@ async function agentSearch(term: string): Promise<Option[]> {
     });
 }
 
+function generateAgentIRI(): string {
+    if (data.value && data.value.type && data.value.type === "https://schema.org/Person") {
+        return `https://data.idnau.org/pid/person/${uuidv4()}`;
+    } else {
+        return `https://data.idnau.org/pid/organization/${uuidv4()}`;
+    }
+}
+
 const schema = z.object({
     iri: formField(z.string().url({ message: "Must be a valid IRI" }), {
         label: "IRI",
-        type: "url",
+        type: "iri",
+        generateFn: generateAgentIRI,
         placeholder: "https://example.com",
         initial: "",
         description: "Provide an IRI or have an IRI automatically assigned",
@@ -97,7 +111,8 @@ const schema = z.object({
     }),
     agentIndigeneity: formField(z.string().optional(), {
         label: "Indigeneity",
-        type: "select",
+        type: "concept",
+        vocabURL: "https://data.idnau.org/pid/vocab/org-indigeneity",
         initial: "",
         options: indigeneityOptions.value,
     }),
@@ -136,7 +151,8 @@ const schema = z.object({
         }),
         relationRole: formField(z.string(), {
             label: "Role",
-            type: "select",
+            type: "concept",
+            vocabURL: "https://data.idnau.org/pid/vocab/aarr",
             placeholder: "Select role",
             initial: "",
             options: aaRoleOptions.value,
@@ -152,6 +168,24 @@ const schema = z.object({
 });
 
 const model = defineModel<z.infer<typeof schema>>({ required: true });
+
+const registry: Registry = {
+    iri: {
+        component: IRIInput,
+        props: {
+            generateFn: (def, meta, model) => meta.generateFn,
+        },
+    },
+    concept: {
+        component: ConceptSelect,
+        props: {
+            options: (def, meta, model) => meta.options,
+            vocabURL: (def, meta, model) => meta.vocabURL,
+            placeholder: (def, meta, model) => meta.placeholder,
+            multiple: (def, meta, model) => meta.multiple,
+        },
+    },
+};
 
 const { formData: data, resetValues } = useVtForm(schema);
 
@@ -172,25 +206,28 @@ function handleSave() {
 
 watch(open, (newValue) => {
     if (newValue) {
-        console.log(model.value)
         if (Object.keys(model.value).length === 0) {
-            data.value.iri = "https://data.idnau.org/pid/organization/18d04115-4633-4aed-b164-ac3c209b4307";
+            data.value.iri = `https://data.idnau.org/pid/organization/${uuidv4()}`;
         } else {
             // data.value = model.value;
             data.value = {...data.value, ...removeEmptyValues(model.value, schema.shape)}
         }
-        console.log(data.value)
     } else {
         // data.value = {};
-        console.log(schemaCreateEmptyObject(schema))
         resetValues();
+    }
+});
+
+watch(() => data.value?.type, (newValue, oldValue) => {
+    if (newValue !== oldValue) {
+        data.value.iri = generateAgentIRI();
     }
 });
 </script>
 
 <template>
     <div :class="cn('w-full flex flex-row gap-2 items-center', props.class)">
-        <CustomSearchInput
+        <SearchInput
             v-model="model"
             :listQuery="props.listQuery"
             :getQuery="props.getQuery"
@@ -198,28 +235,20 @@ watch(open, (newValue) => {
             :placeholder="props.placeholder"
             @clear="resetValues(); emits('clear')"
         />
-        <Dialog v-model:open="open">
-            <DialogTrigger as-child>
+        <Modal v-model:open="open" class="sm:max-w-[800px]">
+            <template #trigger>
                 <Button variant="outline" title="Create a custom agent"><Pencil class="size-4" /></Button>
-            </DialogTrigger>
-            <DialogContent class="sm:max-w-[800px] w-[90dvw] max-h-[90dvh] rounded">
-                <DialogHeader>
-                    <DialogTitle>Custom Agent</DialogTitle>
-                    <DialogDescription>
-                        You can create your own agent here if it doesn't exist in the IDN's agents database
-                    </DialogDescription>
-                </DialogHeader>
-                <div class="overflow-y-auto max-h-[70dvh]">
-                    <FormBuilder :schema="schema" v-model="data" class="grid grid-cols-2 gap-3" />
+            </template>
+            <template #title>Custom Agent</template>
+            <template #description>You can create your own agent here if it doesn't exist in the IDN's agents database</template>
+            <FormBuilder :schema="schema" :registry="registry" v-model="data" class="grid grid-cols-2 gap-3" />
+            <template #footer>
+                <Button variant="secondary" class="mr-auto" @click="open = false;">Cancel</Button>
+                <div class="flex flex-row gap-2 items-center">
+                    <Button variant="destructive" @click="resetValues">Clear</Button>
+                    <Button @click="handleSave">Save</Button>
                 </div>
-                <DialogFooter class="">
-                    <Button variant="secondary" class="mr-auto" @click="open = false;">Cancel</Button>
-                    <div class="flex flex-row gap-2 items-center">
-                        <Button variant="destructive" @click="resetValues">Clear</Button>
-                        <Button @click="handleSave">Save</Button>
-                    </div>
-                </DialogFooter>
-            </DialogContent>
-        </Dialog>
+            </template>
+        </Modal>
     </div>
 </template>

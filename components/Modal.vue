@@ -1,5 +1,12 @@
 <script lang="ts" setup>
-const model = defineModel<boolean>();
+import type { HTMLAttributes } from "vue";
+import { cn } from "@/lib/utils";
+
+const props = defineProps<{
+    class?: HTMLAttributes["class"];
+}>();
+
+const model = defineModel<boolean>("open");
 </script>
 
 <template>
@@ -7,7 +14,7 @@ const model = defineModel<boolean>();
         <DialogTrigger as-child>
             <slot name="trigger" />
         </DialogTrigger>
-        <DialogContent class="w-[90%] sm:max-w-[1200px] grid-rows-[auto_minmax(0,1fr)_auto] p-0 max-h-[90dvh]">
+        <DialogContent :class="cn('w-[90dvw] sm:max-w-[1200px] max-h-[90dvh] p-0', props.class)">
             <DialogHeader class="p-6 pb-0">
                 <DialogTitle v-if="$slots.title">
                     <slot name="title" />
@@ -16,7 +23,7 @@ const model = defineModel<boolean>();
                     <slot name="description" />
                 </DialogDescription>
             </DialogHeader>
-            <div class="modal-content py-4 px-6 overflow-y-auto">
+            <div class="modal-content py-4 px-6 max-h-[70dvh] overflow-y-auto">
                 <slot />
             </div>
             <DialogFooter v-if="$slots.footer" class="p-6 pt-0 sm:justify-between">
@@ -25,5 +32,3 @@ const model = defineModel<boolean>();
         </DialogContent>
     </Dialog>
 </template>
-
-<style lang="scss" scoped></style>

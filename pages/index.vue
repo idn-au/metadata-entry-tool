@@ -7,112 +7,108 @@ import { formField, useVtForm, FormBuilder, type Registry, type Option } from "@
 import { Scoring, type TopScoreValueObj } from "@idn-au/scores-calculator-js";
 import { Scores } from "@idn-au/score-component-lib";
 import { Editor } from "@kurrawongai/kai-ui";
+import { v4 as uuidv4 } from "uuid";
+import init, * as oxigraph from "oxigraph/web";
 import AgentInput from "~/components/AgentInput.vue";
 import DateInput from "~/components/DateInput.vue";
 import SpatialInput from "~/components/SpatialInput.vue";
+import IRIInput from "~/components/IRIInput.vue";
+import ConceptSelect from "~/components/ConceptSelect.vue";
 
 const SAVE_TO_LOCALSTORAGE = true;
 
 const SPARQL_URL = "https://api.idnau.org/sparql";
-const DEFAULT_IRI = "https://data.idnau.org/pid/resource/d23405b4-fc04-47e2-9e7a-9c5735ae3780";
-
-const EXAMPLES = [
-    {
-        label: "Example 1",
-    },
-    {
-        label: "Example 2",
-    },
-    {
-        label: "Example 3",
-    },
-];
 
 const colorMode = useColorMode();
 
-// const { store } = useOxiStore();
-
 const { data: indigeneityOptions } = await useAsyncData("indigeneityOptions", () => sparqlOptions(SPARQL_URL, `
     PREFIX skos: <http://www.w3.org/2004/02/skos/core#>
-    SELECT DISTINCT ?value ?label
+    SELECT DISTINCT ?value ?label ?desc
     WHERE {
         BIND(<https://data.idnau.org/pid/vocab/indigeneity> AS ?cs)
         ?cs a skos:ConceptScheme .
         ?value a skos:Concept ;
             skos:inScheme ?cs ;
-            skos:prefLabel ?label .
+            skos:prefLabel ?label ;
+            skos:definition ?desc .
     }`));
 
 const { data: themeOptions } = await useAsyncData("themeOptions", () => sparqlOptions(SPARQL_URL, `
     PREFIX skos: <http://www.w3.org/2004/02/skos/core#>
-    SELECT DISTINCT ?value ?label
+    SELECT DISTINCT ?value ?label ?desc
     WHERE {
         BIND(<https://data.idnau.org/pid/vocab/idn-th> AS ?cs)
         ?cs a skos:ConceptScheme .
         ?value a skos:Concept ;
             skos:inScheme ?cs ;
-            skos:prefLabel ?label .
+            skos:prefLabel ?label ;
+            skos:definition ?desc .
     }`));
 
 const { data: licenseOptions } = await useAsyncData("licenseOptions", () => sparqlOptions(SPARQL_URL, `
     PREFIX skos: <http://www.w3.org/2004/02/skos/core#>
-    SELECT DISTINCT ?value ?label
+    SELECT DISTINCT ?value ?label ?desc
     WHERE {
         BIND(<https://data.idnau.org/pid/licenses> AS ?cs)
         ?cs a skos:ConceptScheme .
         ?value a skos:Concept ;
             skos:inScheme ?cs ;
-            skos:prefLabel ?label .
+            skos:prefLabel ?label ;
+            skos:definition ?desc .
     }`));
 
 const { data: accessRightsOptions } = await useAsyncData("accessRightsOptions", () => sparqlOptions(SPARQL_URL, `
     PREFIX skos: <http://www.w3.org/2004/02/skos/core#>
-    SELECT DISTINCT ?value ?label
+    SELECT DISTINCT ?value ?label ?desc
     WHERE {
         BIND(<https://linked.data.gov.au/def/data-access-rights> AS ?cs)
         ?cs a skos:ConceptScheme .
         ?value a skos:Concept ;
             skos:inScheme ?cs ;
-            skos:prefLabel ?label .
+            skos:prefLabel ?label ;
+            skos:definition ?desc .
     }`));
 
 const { data: roleOptions } = await useAsyncData("roleOptions", () => sparqlOptions(SPARQL_URL, `
     PREFIX skos: <http://www.w3.org/2004/02/skos/core#>
-    SELECT DISTINCT ?value ?label
+    SELECT DISTINCT ?value ?label ?desc
     WHERE {
         BIND(<https://linked.data.gov.au/def/data-roles> AS ?cs)
         ?cs a skos:ConceptScheme .
         ?value a skos:Concept ;
             skos:inScheme ?cs ;
-            skos:prefLabel ?label .
+            skos:prefLabel ?label ;
+            skos:definition ?desc .
     }`));
 
 const { data: distThemeOptions } = await useAsyncData("distThemeOptions", () => sparqlOptions(SPARQL_URL, `
     PREFIX skos: <http://www.w3.org/2004/02/skos/core#>
-    SELECT DISTINCT ?value ?label
+    SELECT DISTINCT ?value ?label ?desc
     WHERE {
         BIND(<https://data.idnau.org/pid/vocab/cat-roles> AS ?cs)
         ?cs a skos:ConceptScheme .
         ?value a skos:Concept ;
             skos:inScheme ?cs ;
-            skos:prefLabel ?label .
+            skos:prefLabel ?label ;
+            skos:definition ?desc .
     }`));
 
 const { data: policyTypeOptions } = await useAsyncData("policyTypeOptions", () => sparqlOptions(SPARQL_URL, `
     PREFIX skos: <http://www.w3.org/2004/02/skos/core#>
-    SELECT DISTINCT ?value ?label
+    SELECT DISTINCT ?value ?label ?desc
     WHERE {
         BIND(<https://data.idnau.org/pid/vocab/policy-types> AS ?cs)
         ?cs a skos:ConceptScheme .
         ?value a skos:Concept ;
             skos:inScheme ?cs ;
-            skos:prefLabel ?label .
+            skos:prefLabel ?label ;
+            skos:definition ?desc .
     }`));
 
 async function agentSearch(term: string): Promise<Option[]> {
     const r = await sparqlSelect(SPARQL_URL, `PREFIX dcterms: <http://purl.org/dc/terms/>
         PREFIX sdo: <https://schema.org/>
-        SELECT DISTINCT ?iri ?name
+        SELECT DISTINCT ?iri ?name ?desc
         WHERE {
             GRAPH <https://data.idnau.org/pid/agentsdb> {
                 VALUES ?type { sdo:Person sdo:Organization }
@@ -166,6 +162,10 @@ async function agentGet(iri: string) {
     })[0] || null;
 }
 
+function generateIRI(): string {
+    return `https://data.idnau.org/pid/resource/${uuidv4()}`;
+}
+
 const customDate = z.object({
     type: z.string(),
     value: z.string().refine((val) => {
@@ -211,7 +211,8 @@ const steps = [
         schema: z.object({
             iri: formField(z.string().min(1, "IRI is required").url({ message: "Must be a valid IRI" }), {
                 label: "IRI",
-                type: "url",
+                type: "iri",
+                generateFn: generateIRI,
                 placeholder: "https://example.com",
                 initial: "",
                 description: "Provide an IRI or have an IRI automatically assigned",
@@ -225,7 +226,8 @@ const steps = [
             }),
             dataIndigeneity: formField(z.string().array().optional(), {
                 label: "Indigeneity",
-                type: "select",
+                type: "concept",
+                vocabURL: "https://data.idnau.org/pid/vocab/indigeneity",
                 multiple: true,
                 placeholder: "Select indigeneity",
                 initial: [],
@@ -248,7 +250,8 @@ const steps = [
                 }),
                 additionalType: formField(z.string().url().optional(), {
                     label: "Policy Type",
-                    type: "select",
+                    type: "concept",
+                    vocabURL: "https://data.idnau.org/pid/vocab/policy-types",
                     placeholder: "Select a policy type",
                     initial: "",
                     options: policyTypeOptions.value
@@ -315,7 +318,8 @@ const steps = [
                 }),
                 role: formField(z.string().array().min(1, "Role is required"), {
                     label: "Role",
-                    type: "select",
+                    type: "concept",
+                    vocabURL: "https://linked.data.gov.au/def/data-roles",
                     multiple: true,
                     placeholder: "Choose roles",
                     initial: [],
@@ -376,7 +380,8 @@ const steps = [
         schema: z.object({
             license: formField(z.string().optional(), {
                 label: "License",
-                type: "select", // select string is single
+                type: "concept",
+                vocabURL: "https://data.idnau.org/pid/licenses",
                 placeholder: "Select a license",
                 initial: "",
                 options: licenseOptions.value,
@@ -390,7 +395,8 @@ const steps = [
             }),
             accessRights: formField(z.string().optional(), {
                 label: "Access Rights",
-                type: "select", // select string is single
+                type: "concept",
+                vocabURL: "https://linked.data.gov.au/def/data-access-rights",
                 placeholder: "Select an access right",
                 initial: "",
                 options: accessRightsOptions.value,
@@ -501,7 +507,8 @@ const steps = [
                 }),
                 theme: formField(z.string().array(), {
                     label: "Theme",
-                    type: "select",
+                    type: "concept",
+                    vocabURL: "https://data.idnau.org/pid/vocab/cat-roles",
                     multiple: true,
                     placeholder: "Choose themes",
                     initial: [],
@@ -535,7 +542,9 @@ const steps = [
         schema: z.object({
             theme: formField(z.string().array(), {
                 label: "Theme",
-                type: "select", // string array/select array is multiple
+                type: "concept",
+                vocabURL: "https://data.idnau.org/pid/vocab/idn-th",
+                multiple: true,
                 placeholder: "Choose themes",
                 initial: [],
                 options: themeOptions.value,
@@ -616,6 +625,21 @@ const steps = [
 ];
 
 const registry: Registry = {
+    iri: {
+        component: IRIInput,
+        props: {
+            generateFn: (def, meta, model) => meta.generateFn,
+        },
+    },
+    concept: {
+        component: ConceptSelect,
+        props: {
+            options: (def, meta, model) => meta.options,
+            vocabURL: (def, meta, model) => meta.vocabURL,
+            placeholder: (def, meta, model) => meta.placeholder,
+            multiple: (def, meta, model) => meta.multiple,
+        },
+    },
     agent: {
         component: AgentInput,
         props: {
@@ -653,8 +677,10 @@ function createEmptyData() {
 }
 
 function clear() {
-    data.value = createEmptyData();
-    data.value.General.iri = DEFAULT_IRI;
+    if (confirm("Are you sure you want to clear the form? You will lose all progress if you have not saved as a file.")) {
+        data.value = createEmptyData();
+        data.value.General.iri = generateIRI(); 
+    }
 }
 
 const data = ref(createEmptyData());
@@ -662,19 +688,7 @@ const rdfString = ref("");
 const showRDF = ref(false);
 const fair = ref({} as TopScoreValueObj);
 const care = ref({} as TopScoreValueObj);
-
-// const keyMap = (() => {
-//     const emptyData = createEmptyData();
-//     const kMap: {[key: string]: string} = {};
-    
-//     Object.keys(emptyData).forEach(key => {
-//         Object.keys(emptyData[key]).forEach(k => {
-//             kMap[k] = key;
-//         });
-//     });
-
-//     return kMap;
-// })();
+const isDownloading = ref(false);
 
 const context: ContextDefinition = {
     // "@version": "1.1",
@@ -812,8 +826,24 @@ const schemaFlattened = steps.reduce((obj, curr) => {
     return obj;
 }, {});
 
-function copyRDF() {
-    navigator.clipboard.writeText(rdfString.value);
+// function copyRDF() {
+//     navigator.clipboard.writeText(rdfString.value);
+// }
+
+function downloadFile() {
+    isDownloading.value = true;
+    const blob = new Blob([rdfString.value || ""], { type: "application/n-triples" });
+    const link = document.createElement("a");
+    link.href = URL.createObjectURL(blob);
+    const filename = data.value.General.title || "metadata";
+    const extension = "nt";
+    link.download = `${filename}.${extension}`;
+    link.click();
+    URL.revokeObjectURL(link.href);
+
+    setTimeout(() => {
+        isDownloading.value = false;
+    }, 1500);
 }
 
 const rdfFormats: {[key: string]: Format} = {
@@ -825,36 +855,62 @@ const rdfFormats: {[key: string]: Format} = {
     "rdf": "application/rdf+xml",
 };
 
-// function loadFile(event: InputEvent) {
-//     const file = (event.target as HTMLInputElement).files?.[0];
-//     if (!file) {
-//         return;
-//     }
-//     var reader = new FileReader();
-//     reader.onload = function(e) {
-//         const extension = file.name.split(".")[1];
-//         rdfToData(e.target.result, rdfFormats[extension]);
-//     };
-//     reader.readAsText(file);
-// }
+function loadExample(example: Example) {
+    if (confirm("Are you sure you want to load an example record? You will lose all progress if you have not saved as a file as this will replace the current data.")) {
+        rdfToData(example.data, example.format);
+    }
+}
 
-// async function rdfToData(rdf: string, format: Format) {
-//     data.value = createEmptyData();
-//     store.value.update("DROP ALL");
-//     store.value.load(rdf, format);
-//     // TODO: do query to check for valid data
-//     const nquads = store.value.dump("application/n-quads");
-//     const jsonldObj = await jsonld.fromRDF(nquads, { format: "application/n-quads" });
-//     const framedObj = await jsonld.frame(jsonldObj, { "@context": context, type: "dcat:Resource" });
-//     Object.keys(framedObj).forEach(key => {
-//         if (Object.keys(keyMap).includes(key)) {
-//             data.value[keyMap[key]][key] = framedObj[key];
-//         }
-//     });
-// }
+async function uploadFile(e: InputEvent) {
+    if (confirm("Are you sure you want to load an example record? You will lose all progress if you have not saved as a file as this will replace the current data.")) {
+        const files = (e.target as HTMLInputElement).files!;
+        const file = files[0];
+        const splitFilename = file.name.split(".")
+        const fileExtension = splitFilename[splitFilename.length - 1];
+        const format = rdfFormats[fileExtension];
+        
+        const rdf = await file.text();
+
+        await rdfToData(rdf, format);
+    }
+}
+
+const keyMap = (() => {
+    const emptyData = createEmptyData();
+    const kMap: {[key: string]: string} = {};
+    
+    Object.keys(emptyData).forEach(key => {
+        Object.keys(emptyData[key]).forEach(k => {
+            kMap[k] = key;
+        });
+    });
+
+    return kMap;
+})();
+
+let initialised = false;
+
+async function rdfToData(rdf: string, format: Format) {
+    // TODO: do query to check for valid data
+
+    data.value = createEmptyData();
+    if (!initialised) {
+        await init("https://cdn.jsdelivr.net/npm/oxigraph@0.4.10/web_bg.wasm");
+        initialised = true;
+    }
+    const store = new oxigraph.Store();
+    store.load(rdf, {format});
+    const nquads = store.dump({format: "application/n-quads", from_graph_name: oxigraph.defaultGraph()});
+    const jsonldObj = await jsonld.fromRDF(nquads, { format: "application/n-quads" });
+    const framedObj = await jsonld.frame(jsonldObj, { "@context": context, type: "dcat:Resource" });
+    Object.keys(framedObj).forEach(key => {
+        if (Object.keys(keyMap).includes(key)) {
+            data.value[keyMap[key]][key] = framedObj[key];
+        }
+    });
+}
 
 async function dataToRdf(dataObj: any): Promise<string> {
-    // console.log(schemaFlattened)
     const nonempty = removeEmptyValues(dataObj, schemaFlattened);
     const doc = { "@context": context, type: "dcat:Resource", ...nonempty };
     const rdf = await (jsonld.toRDF(doc, { format: "application/n-quads" }) as Promise<string>);
@@ -910,10 +966,10 @@ onMounted(async () => {
             //     data.value[key] = deepmerge(obj, removeEmptyValues(savedDataParsed[key], stepMap[key]));
             // });
         } else {
-            data.value.General.iri = DEFAULT_IRI;
+            data.value.General.iri = generateIRI();
         }
     } else {
-        data.value.General.iri = DEFAULT_IRI;
+        data.value.General.iri = generateIRI();
     }
     scoringObj = await Scoring.init(["fair", "care"], { value: rdfString.value, format: "application/n-triples" });
     doScoring(scoringObj, rdfString.value);
@@ -948,21 +1004,25 @@ onMounted(async () => {
     <div class="grid grid-cols-[3fr_1fr] gap-4 relative">
         <div>
             <div class="flex flex-row gap-2 items-start mb-6">
-                <Button variant="outline" class="mr-auto" disabled>Tutorial</Button>
-                <div class="flex flex-col max-w-min">
-                    <Button variant="secondary" disabled>Upload File <Upload class="size-4 ml-2" /></Button>
-                    <span class="text-muted-foreground text-xs">Supports .ttl, .trig, .nt, .nq, .n3 & .rdf</span>
+                <div class="flex flex-col max-w-min mr-auto">
+                    <Button variant="outline" class="mr-auto" disabled>Tutorial</Button>
+                    <span class="text-muted-foreground text-xs">Not yet implemented</span>
                 </div>
-                <!-- <div class="grid w-full max-w-sm items-center gap-1.5">
-                    <Label for="file">Upload File</Label>
-                    <Input id="file" type="file" accept=".ttl, .nq, .n3, .nt, .trig, .rdf" @change="loadFile" />
-                </div> -->
+                <div class="flex flex-col max-w-min">
+                    <Button variant="secondary" as-child>
+                        <Label for="file">Upload File <Upload class="size-4 ml-2" /></Label>
+                        <Input id="file" type="file" :accept="Object.keys(rdfFormats).map(ext => `.${ext}`).join(',')" @change="uploadFile" hidden />
+                    </Button>
+                    <span class="text-muted-foreground text-xs">Supports {{ Object.keys(rdfFormats).map(ext => `.${ext}`).join(', ') }}</span>
+                </div>
                 <DropdownMenu>
-                    <DropdownMenuTrigger as-child disabled>
-                        <Button variant="secondary">Load Example <ChevronDown class="size-4 ml-2" /></Button>
-                    </DropdownMenuTrigger>
+                    <div class="flex flex-col max-w-min">
+                        <DropdownMenuTrigger as-child>
+                            <Button variant="secondary">Load Example <ChevronDown class="size-4 ml-2" /></Button>
+                        </DropdownMenuTrigger>
+                    </div>
                     <DropdownMenuContent>
-                        <DropdownMenuItem v-for="example in EXAMPLES" class="cursor-pointer">{{ example.label }}</DropdownMenuItem>
+                        <DropdownMenuItem v-for="example in exampleData" class="cursor-pointer" @select="loadExample(example)">{{ example.label }}</DropdownMenuItem>
                     </DropdownMenuContent>
                 </DropdownMenu>
             </div>
@@ -971,7 +1031,6 @@ onMounted(async () => {
                     <Card v-show="stepIndex === stepObj.step">
                         <CardContent>
                             <p>{{ stepObj.description }}</p>
-                            <!-- <Button v-if="stepIndex === 1" @click="data.General.iri = DEFAULT_IRI" size="xs">Generate IRI</Button> -->
                             <FormBuilder :schema="stepObj.schema" v-model="data[stepObj.title]" :registry="registry" class="grid grid-cols-2 gap-3" />
                         </CardContent>
                     </Card>
@@ -980,10 +1039,15 @@ onMounted(async () => {
                     <Button variant="destructive" size="sm" @click="clear">Clear Form <Trash2 class="size-4 ml-2" /></Button>
                 </template>
                 <template #right-buttons>
-                    <Button variant="secondary" size="sm" disabled>Save File <Download class="size-4 ml-2" /></Button>
+                    <div class="flex flex-col max-w-min">
+                        <Button variant="secondary" size="sm" @click="downloadFile">Save File <Download class="size-4 ml-2" /></Button>
+                    </div>
                 </template>
                 <template #right-buttons-last>
-                    <Button variant="default" size="sm" disabled>Submit <Send class="size-4 ml-2" /></Button>
+                    <div class="flex flex-col max-w-min">
+                        <Button variant="default" size="sm" disabled>Submit <Send class="size-4 ml-2" /></Button>
+                        <span class="text-muted-foreground text-xs">Not yet implemented</span>
+                    </div>
                 </template>
             </VerticalStepper>
         </div>

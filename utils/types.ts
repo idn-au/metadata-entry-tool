@@ -16,3 +16,15 @@ export type Format = "text/turtle"
     | "application/rdf+xml"
     | "rdf"
 // | "xml";
+
+export type ConceptOption = {
+    value: string;
+    label?: string;
+    desc?: string;
+};
+
+export type Example = {
+    label: string;
+    data: string;
+    format: Format;
+};

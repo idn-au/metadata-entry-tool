@@ -39,15 +39,15 @@ const stepIndex = ref(1);
             </div>
 
         </StepperItem>
-        <div class="flex items-center justify-between mt-4 sticky bottom-0 bg-background p-2 z-50 border-t">
-            <div class="flex flex-row gap-2 items-center">
+        <div class="flex items-start justify-between mt-4 sticky bottom-0 bg-background p-2 z-40 border-t">
+            <div class="flex flex-row gap-2 items-start">
                 <Button variant="outline" size="sm" @click="prevStep()" :disabled="isFirstStep">
                     <ChevronLeft class="size-4 mr-2" /> Prev
                 </Button>
                 <slot v-if="isFirstStep" name="left-buttons-first" />
                 <slot name="left-buttons" />
             </div>
-            <div class="flex flex-row gap-2 items-center">
+            <div class="flex flex-row gap-2 items-start">
                 <slot name="right-buttons" />
                 <template v-if="isLastStep">
                     <slot name="right-buttons-last" />
