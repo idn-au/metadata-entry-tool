@@ -4,16 +4,17 @@ import { Check, ChevronsUpDown, Search, X, ExternalLink } from "lucide-vue-next"
 import { cn } from "@/lib/utils";
 
 const props = defineProps<{
-    options: ConceptOption[];
-    vocabURL: string;
+    vocabIRI: string;
     placeholder?: string;
     multiple?: boolean;
     class?: HTMLAttributes["class"];
 }>();
 
-const model = defineModel<string | string[]>({ required: true });
+const model = defineModel<string | string[]>();
 
 const open = ref(false);
+
+const { data: conceptOptions } = await useLazyAsyncData(props.vocabIRI, () => sparqlOptions(props.vocabIRI));
 
 const emits = defineEmits<{
     focus: [];
@@ -42,8 +43,8 @@ watch(model, (newValue) => {
                         <span class="overflow-hidden">
                             {{ (props.multiple && Array.isArray(model) ? model.length > 0 : model)
                             ? (Array.isArray(model)
-                                ? model.map(v => props.options.find((option) => option.value === v)?.label).join(", ")
-                                : props.options.find((option) => option.value === model)?.label)
+                                ? model.map(v => conceptOptions.find((option) => option.value === v)?.label).join(", ")
+                                : conceptOptions.find((option) => option.value === model)?.label)
                             : props.placeholder || "Select an option" }}
                         </span>
                         <ChevronsUpDown class="ml-2 h-4 w-4 shrink-0 opacity-50" />
@@ -54,7 +55,7 @@ watch(model, (newValue) => {
                 </span>
             </ComboboxAnchor>
 
-            <ComboboxList class="z-[100] w-[--reka-combobox-trigger-width]">
+            <ComboboxList class="z-[100] w-[var(--reka-popper-anchor-width)]">
                 <div class="relative w-full items-center">
                     <ComboboxInput class="focus-visible:ring-0 border-0 border-b rounded-none h-10" placeholder="Search..." />
                     <span class="absolute start-0 inset-y-0 flex items-center justify-center px-3">
@@ -67,7 +68,7 @@ watch(model, (newValue) => {
                 </ComboboxEmpty>
 
                 <ComboboxGroup class="max-h-[260px] overflow-y-auto">
-                    <ComboboxItem v-for="option in props.options" class="cursor-pointer" :key="option.value.toString()" :value="option.value">
+                    <ComboboxItem v-for="option in conceptOptions" class="cursor-pointer" :key="option.value.toString()" :value="option.value">
                         <div class="flex flex-col">
                             <span>{{ option.label || option.value }}</span>
                             <span class="text-muted-foreground text-xs italic">{{ option.desc }}</span>

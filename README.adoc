@@ -24,7 +24,7 @@ pnpm dev
 ----
 
 === Using the Form Builder
-This app uses the `vt-form` package for building dynamic forms, which uses https://zod.dev/[Zod] for defining types & validation. Forms are generated from a top-level Zod schema, which is defined in `index.vue` under `schema` in each step. To define a new field, create a key in the schema object and call `vt-form` 's `formField()` function. For a basic example:
+This app uses the https://www.npmjs.com/package/@vulptech/vt-form[`vt-form`] package for building dynamic forms, which uses https://zod.dev/[Zod] for defining types & validation. Forms are generated from a top-level Zod schema, which is defined in `form.ts`. To define a new field, create a key in the schema object and call `vt-form` 's `formField()` function. For a basic example:
 
 [source,typescript]
 ----
