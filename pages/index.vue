@@ -23,7 +23,7 @@ const registry: Registry = {
 const { formData: data, steps } = useVtForm(FORM_SCHEMA, { steps: STEP_CONFIG });
 
 const rdfString = ref("");
-const showRDF = ref(true);
+const showRDF = ref(false);
 const fair = ref({} as TopScoreValueObj);
 const care = ref({} as TopScoreValueObj);
 const isDownloading = ref(false);
@@ -118,8 +118,8 @@ let scoringObj: Scoring;
 
 async function doScoring(scoringObj: Scoring, rdf: string) {
     const p = await Promise.all([
-        scoringObj.score(data.value.iri, "fair", "json", { value: rdf, format: "text/turtle" }) as TopScoreValueObj,
-        scoringObj.score(data.value.iri, "care", "json", { value: rdf, format: "text/turtle" }) as TopScoreValueObj
+        scoringObj.score(data.value.iri, "fair", "json", { value: rdf, format: "text/turtle" }) as Promise<TopScoreValueObj>,
+        scoringObj.score(data.value.iri, "care", "json", { value: rdf, format: "text/turtle" }) as Promise<TopScoreValueObj>
     ]);
     fair.value = p[0];
     care.value = p[1];

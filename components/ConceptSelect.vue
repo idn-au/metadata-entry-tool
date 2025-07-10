@@ -41,7 +41,7 @@ watch(model, (newValue) => {
                 <ComboboxTrigger as-child>
                     <Button variant="outline" role="combobox" :aria-expanded="open" :class="cn(`grow justify-between !pr-10 ${(props.multiple && Array.isArray(model) ? model.length > 0 : model) ? '' : 'text-muted-foreground'}`, props.class)">
                         <span class="overflow-hidden">
-                            {{ (props.multiple && Array.isArray(model) ? model.length > 0 : model)
+                            {{ (props.multiple && Array.isArray(model) ? model.length > 0 : model) && conceptOptions
                             ? (Array.isArray(model)
                                 ? model.map(v => conceptOptions.find((option) => option.value === v)?.label).join(", ")
                                 : conceptOptions.find((option) => option.value === model)?.label)
