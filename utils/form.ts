@@ -146,13 +146,17 @@ export const FORM_SCHEMA = z.object({
             falseValue: "",
             emptyValue: "",
         }),
-    }).optional(), {
+    }).array().optional(), {
         label: "Indigenous Data Governance Policy",
-        type: "group",
+        type: "add",
         step: "general",
         class: "col-span-full",
     }),
     agentRole: formField(z.object({
+        type: formField(z.literal("prov:Attribution"), {
+            type: "hidden",
+            initial: "prov:Attribution",
+        }),
         agent: formField<z.ZodTypeAny, any>(z.object({
             iri: z.string(),
             name: z.string(),
@@ -346,6 +350,10 @@ export const FORM_SCHEMA = z.object({
         step: "theme",
     }),
     contact: formField(z.object({
+        type: formField(z.literal("prov:Attribution"), {
+            type: "hidden",
+            initial: "prov:Attribution",
+        }),
         agent: formField(z.object({
             iri: formField(z.literal("https://data.idnau.org/pid/person/6cf32191-8d20-4a43-99ba-1a7727615ad9"), {
                 type: "hidden",
@@ -497,8 +505,14 @@ export const AGENT_SCHEMA = z.object({
         }),
         type: formField(z.string().url(), {
             label: "Datatype",
-            type: "url",
-            description: "Must be an IRI",
+            type: "select",
+            options: [
+                { label: "Australian business number (ABN)", value: "http://id.loc.gov/vocabulary/identifiers/ausbn" },
+                { label: "Australian company number (ACN)", value: "http://id.loc.gov/vocabulary/identifiers/auscn" },
+                { label: "Australian registered body number (ABRN)", value: "http://id.loc.gov/vocabulary/identifiers/ausrn" },
+                { label: "Open researcher and contributor identifier (ORCID)", value: "http://id.loc.gov/vocabulary/identifiers/orcid" },
+                { label: "Research Organization Registry (ROR)", value: "http://id.loc.gov/vocabulary/identifiers/ror" },
+            ],
         }),
     }).array().optional(), {
         label: "Identifier",
@@ -506,6 +520,10 @@ export const AGENT_SCHEMA = z.object({
         class: "col-span-full grid-cols-1 md:grid-cols-2 gap-2"
     }),
     relation: formField(z.object({
+        type: formField(z.literal("dcat:Relationship"), {
+            type: "hidden",
+            initial: "dcat:Relationship",
+        }),
         agent: formField(z.string(), {
             label: "Agent",
             type: "search",

@@ -24,13 +24,15 @@ PREFIX xsd: <http://www.w3.org/2001/XMLSchema#>
     ] ;
     dcterms:title "Example 1" ;
     dcat:distribution [
+        a dcat:Distribution ;
         dcat:accessURL "https://example.com/distribution"^^xsd:anyURI ;
     ] ;
     dcat:theme <https://vocabularyserver.com/apais/xml.php?skosTema=181> ,
         <https://vocabularyserver.com/apais/xml.php?skosTema=147> ;
     prov:qualifiedAttribution [
+        a prov:Attribution ;
         dcat:hadRole <https://linked.data.gov.au/def/data-roles/custodian> ;
-        prov:agent <https://example.com/custodianagent> ;
+        sdo:agent <https://example.com/custodianagent> ;
     ] ;
     prov:wasInfluencedBy _:b1 ,
         _:b2 ;

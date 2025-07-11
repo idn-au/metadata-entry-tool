@@ -54,7 +54,7 @@ export const CONTEXT: ContextDefinition = {
         "@type": "@id",
     },
     "agent": {
-        "@id": "prov:agent",
+        "@id": "sdo:agent",
         "@type": "@id"
     },
     "dataIndigeneity": {
@@ -73,7 +73,7 @@ export const CONTEXT: ContextDefinition = {
     "name": "sdo:name",
     "sdoDescription": "sdo:description",
     "relation": {
-        "@id": "dcat:relation",
+        "@id": "dcat:qualifiedRelation",
         "@container": "@set"
     },
     "spatial": {
@@ -112,6 +112,7 @@ export const CONTEXT: ContextDefinition = {
     "hasPolicy": {
         "@id": "odrl:hasPolicy",
         "@type": "@id",
+        "@container": "@set",
     },
     "duty": {
         "@id": "odrl:duty",
