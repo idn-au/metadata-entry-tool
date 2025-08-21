@@ -14,14 +14,9 @@ const items = [
 </script>
 
 <template>
-    <MainNav />
+    <TopHeader />
     <main class="grow">
         <div class="mx-auto p-3 max-w-[1400px]">
-            <nav>
-                <Button v-for="link in items" :variant="route.path === link.to ? 'secondary' : 'ghost'" class="rounded-none" as-child>
-                    <NuxtLink :to="link.to">{{ link.label }}</NuxtLink>
-                </Button>
-            </nav>
             <slot />
         </div>
     </main>

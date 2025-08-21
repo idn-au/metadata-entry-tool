@@ -2,8 +2,20 @@
 import { Sun, Moon, SunMoon } from "lucide-vue-next";
 
 const colorMode = useColorMode();
+const route = useRoute();
 
-const navLinks: { label: string; url: string }[] = [
+const links = [
+    {
+        label: "Home",
+        to: "/"
+    },
+    {
+        label: "Help",
+        to: "/help"
+    },
+];
+
+const extLinks: { label: string; url: string }[] = [
     {
         label: "About Us",
         url: "https://idnau.org/about",
@@ -34,7 +46,11 @@ const navLinks: { label: string; url: string }[] = [
             </div>
         </div>
         <nav class="flex flex-row items-center">
-            <Button v-for="link in navLinks" variant="ghost" class="rounded-none" as-child>
+            <Button v-for="link in links" variant="ghost" :class="`rounded-none border-b-2 ${route.path === link.to ? 'border-b-isu-red' : 'border-b-transparent'}`" as-child>
+                <NuxtLink :to="link.to">{{ link.label }}</NuxtLink>
+            </Button>
+            <span class="mx-4">|</span>
+            <Button v-for="link in extLinks" variant="ghost" class="rounded-none" as-child>
                 <a :href="link.url" target="_blank" rel="noopener noreferrer">{{ link.label }}</a>
             </Button>
             <Button variant="ghost" size="icon" @click="!colorMode.unknown ? colorMode.value === 'dark' ? colorMode.preference = 'light' : colorMode.preference = 'dark' : undefined">

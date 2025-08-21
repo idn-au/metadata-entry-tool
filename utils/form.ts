@@ -11,24 +11,24 @@ export const REGISTRY: Registry = {
     iri: {
         component: IRIInput,
         props: {
-            generateFn: (def, meta, model) => meta.generateFn,
+            generateFn: ({ meta }) => meta.generateFn,
         },
     },
     concept: {
         component: ConceptSelect,
         props: {
-            options: (def, meta, model) => meta.options,
-            vocabIRI: (def, meta, model) => meta.vocabIRI,
-            placeholder: (def, meta, model) => meta.placeholder,
-            multiple: (def, meta, model) => meta.multiple,
+            options: ({ meta }) => meta.options,
+            vocabIRI: ({ meta }) => meta.vocabIRI,
+            placeholder: ({ meta }) => meta.placeholder,
+            multiple: ({ meta }) => meta.multiple,
         },
     },
     agent: {
         component: AgentInput,
         props: {
-            listQuery: (def, meta, model) => meta.listQuery,
-            getQuery: (def, meta, model) => meta.getQuery || undefined,
-            resultLabel: (def, meta, model) => meta.resultLabel || undefined,
+            listQuery: ({ meta }) => meta.listQuery,
+            getQuery: ({ meta }) => meta.getQuery || undefined,
+            resultLabel: ({ meta }) => meta.resultLabel || undefined,
         },
     },
     customDate: {
@@ -145,6 +145,7 @@ export const FORM_SCHEMA = z.object({
             trueValue: "http://example.com/duty/archive-data-and-metadata",
             falseValue: "",
             emptyValue: "",
+            class: "col-span-full"
         }),
     }).array().optional(), {
         label: "Indigenous Data Governance Policy",
@@ -409,49 +410,49 @@ export const STEP_CONFIG: StepConfig = {
             id: "general",
             label: "General",
             description: "Basic information about this data.",
-            class: "grid grid-cols-2 gap-3",
+            class: "grid grid-cols-1 md:grid-cols-2 gap-3",
         },
         {
             id: "agentInfo",
             label: "Agent Information",
             description: "Information about the roles that agents (people and organisations) play with respect to this data. These roles are critical in determining whether this data is managed properly. Each Agent must have a matching Role.",
-            class: "grid grid-cols-2 gap-3",
+            class: "grid grid-cols-1 md:grid-cols-2 gap-3",
         },
         {
             id: "dates",
             label: "Dates",
             description: "Standard dates for the establishment and update times of this dataset. A dataset about early 20th century data might only have been made last year and the created date is then some time last year. 'Issued' indicates when, if ever, this dataset was published.",
-            class: "grid grid-cols-2 gap-3",
+            class: "grid grid-cols-1 md:grid-cols-2 gap-3",
         },
         {
             id: "rights",
             label: "Rights",
             description: "Ownership and access information of the data. If a license is selected then the rights holder to that license should also be included.",
-            class: "grid grid-cols-2 gap-3",
+            class: "grid grid-cols-1 md:grid-cols-2 gap-3",
         },
         {
             id: "spatioTemporal",
             label: "Spatio/Temporal",
             description: "The spatial (geographical) and temporal (time period) extent of the data. Temporal information is different from the dates section as, for example, this dataset may have been created recently but is about someone or something long ago.",
-            class: "grid grid-cols-2 gap-3",
+            class: "grid grid-cols-1 md:grid-cols-2 gap-3",
         },
         {
             id: "distribution",
             label: "Distribution Info",
             description: "This is optional information in the form of a publicly resolvable URL that gives the user access to the data.",
-            class: "grid grid-cols-2 gap-3",
+            class: "grid grid-cols-1 md:grid-cols-2 gap-3",
         },
         {
             id: "theme",
             label: "Theme",
             description: "Classification or categorisation of this data. We are mostly concerned with indications of 'indigeneity', i.e. how this data is related to indigenous people, however other classifications may also be added. Our primary indigenous classification vocabulary is online at https://data.idnau.org/v/vocab/vcb:idn-th which may be browsed for classification suggestions.",
-            class: "grid grid-cols-2 gap-3",
+            class: "grid grid-cols-1 md:grid-cols-2 gap-3",
         },
         {
             id: "contact",
             label: "Contact Details",
             description: "These details are required if you are submitting this metadata to the IDN. These details are also added as the point of contact for this data unless you've specifically indicated an Agent as the Point of Contact above.",
-            class: "grid grid-cols-2 gap-3",
+            class: "grid grid-cols-1 md:grid-cols-2 gap-3",
         },
     ],
 };

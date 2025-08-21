@@ -9,11 +9,11 @@ importers:
   .:
     dependencies:
       '@idn-au/score-component-lib':
-        specifier: ^0.2.0
-        version: 0.2.0(typescript@5.8.3)(vite@6.3.5(@types/node@24.0.10)(jiti@2.4.2)(lightningcss@1.30.1)(terser@5.43.1)(yaml@2.8.0))(vue@3.5.17(typescript@5.8.3))(web-streams-polyfill@3.3.3)
+        specifier: ^0.3.1
+        version: 0.3.1(typescript@5.8.3)(vite@6.3.5(@types/node@24.0.10)(jiti@2.4.2)(lightningcss@1.30.1)(terser@5.43.1)(yaml@2.8.0))(vue@3.5.17(typescript@5.8.3))(web-streams-polyfill@3.3.3)
       '@idn-au/scores-calculator-js':
-        specifier: ^0.3.0
-        version: 0.3.0(web-streams-polyfill@3.3.3)
+        specifier: ^0.3.1
+        version: 0.3.1(web-streams-polyfill@3.3.3)
       '@kurrawongai/kai-ui':
         specifier: ^0.2.4
         version: 0.2.4(tslib@2.8.1)(typescript@5.8.3)(vite@6.3.5(@types/node@24.0.10)(jiti@2.4.2)(lightningcss@1.30.1)(terser@5.43.1)(yaml@2.8.0))(vue@3.5.17(typescript@5.8.3))
@@ -24,11 +24,11 @@ importers:
         specifier: ^4.1.10
         version: 4.1.11(vite@6.3.5(@types/node@24.0.10)(jiti@2.4.2)(lightningcss@1.30.1)(terser@5.43.1)(yaml@2.8.0))
       '@vueuse/core':
-        specifier: ^13.3.0
+        specifier: ^13.5.0
         version: 13.5.0(vue@3.5.17(typescript@5.8.3))
       '@vulptech/vt-form':
-        specifier: ^0.3.0
-        version: 0.3.0(typescript@5.8.3)(vite@6.3.5(@types/node@24.0.10)(jiti@2.4.2)(lightningcss@1.30.1)(terser@5.43.1)(yaml@2.8.0))(vue@3.5.17(typescript@5.8.3))(zod@3.25.74)
+        specifier: ^0.3.1
+        version: 0.3.1(typescript@5.8.3)(vite@6.3.5(@types/node@24.0.10)(jiti@2.4.2)(lightningcss@1.30.1)(terser@5.43.1)(yaml@2.8.0))(vue@3.5.17(typescript@5.8.3))(zod@3.25.74)
       class-variance-authority:
         specifier: ^0.7.1
         version: 0.7.1
@@ -48,7 +48,7 @@ importers:
         specifier: 0.4.11
         version: 0.4.11
       reka-ui:
-        specifier: ^2.3.1
+        specifier: ^2.3.2
         version: 2.3.2(typescript@5.8.3)(vue@3.5.17(typescript@5.8.3))
       shadcn-nuxt:
         specifier: 2.2.0
@@ -410,16 +410,13 @@ packages:
   '@floating-ui/vue@1.1.7':
     resolution: {integrity: sha512-idmAtbAIigGXN2SI5gItiXYBYtNfDTP9yIiObxgu13dgtG7ARCHlNfnR29GxP4LI4o13oiwsJ8wVgghj1lNqcw==}
 
-  '@idn-au/score-component-lib@0.2.0':
-    resolution: {integrity: sha512-HdiDW40SOMgzUoeXymEnTFprMkmUjHfM6Eh+M2PDrTHyBchBRTR0VSwWbG+ZqmmwLmQSt4U2E57m7tPOQ3pnaw==, tarball: https://npm.pkg.github.com/download/@idn-au/score-component-lib/0.2.0/57a5fa0b4ef6c890e6ac55e9c246e7893f033d37}
+  '@idn-au/score-component-lib@0.3.1':
+    resolution: {integrity: sha512-Vy6vdjDEurOdlV/+Snre6u3m/h2tE+KCSAhVNhQGf/7PuEbfDkaqtaaeVFKIPYFtQcpUdv5fnbMZ+5YSurGpIQ==, tarball: https://npm.pkg.github.com/download/@idn-au/score-component-lib/0.3.1/bf4ce71021ac950ad7f34b4d09306769819b098e}
     peerDependencies:
       vue: ^3.0.0
 
-  '@idn-au/scores-calculator-js@0.2.0':
-    resolution: {integrity: sha512-CMjpXm2CPhtr1IjrovJm9Uah0zDx/8DGWR4TeSi+zl9Gp6NAQlfCrKhNeAxekPH+8AGjOOKXtTNuy8/lSRgFSA==, tarball: https://npm.pkg.github.com/download/@idn-au/scores-calculator-js/0.2.0/9a4681b9d431c41852ad990f56c0b6e1c6c7679a}
-
-  '@idn-au/scores-calculator-js@0.3.0':
-    resolution: {integrity: sha512-OYDCIiMaks2pFgetw8nb5iKYAhCIRVBA29nIjRzRGVRxnFzQuocLI+hfu6kgTdIf1DCn4dYQRnqELDktRm0fqg==, tarball: https://npm.pkg.github.com/download/@idn-au/scores-calculator-js/0.3.0/3468a320556705b3411091dc81177ae945b6381c}
+  '@idn-au/scores-calculator-js@0.3.1':
+    resolution: {integrity: sha512-yGPHMXdQtQ84C3WpHKmgk+0/EN9+TW7caH34jVyPKBbVHMQdAJX07EdzCyg/LynCJI6Wkip8bJ7DFrGPEyL2dQ==, tarball: https://npm.pkg.github.com/download/@idn-au/scores-calculator-js/0.3.1/01bde6fddbf2933510980b1149b15e43fc15deef}
 
   '@internationalized/date@3.8.2':
     resolution: {integrity: sha512-/wENk7CbvLbkUvX1tu0mwq49CVkkWpkXubGel6birjRPyo6uQ4nQpnq5xZu823zRCwwn82zgHrvgF1vZyvmVgA==}
@@ -1349,8 +1346,8 @@ packages:
     peerDependencies:
       vue: ^3.5.0
 
-  '@vulptech/vt-form@0.3.0':
-    resolution: {integrity: sha512-/2yTP9F48LbUhDJIjRKlm5p+WLb/71xQH32rq5gyy/JL9BmrfpQT4cQMQON/1FMuTVAgoMhIdOm1PTWPlRf0Uw==}
+  '@vulptech/vt-form@0.3.1':
+    resolution: {integrity: sha512-ejIfRlbB6KaWPq/FKxKCPlU97Wax+1AALMssJcD9qUItjiEB1U9htVn9jKlNWEiBLq9BCuu7CPyeI8I0n5WRSw==}
     peerDependencies:
       vue: ^3.0.0
       zod: ^3.24.1
@@ -4520,9 +4517,9 @@ snapshots:
       - '@vue/composition-api'
       - vue
 
-  '@idn-au/score-component-lib@0.2.0(typescript@5.8.3)(vite@6.3.5(@types/node@24.0.10)(jiti@2.4.2)(lightningcss@1.30.1)(terser@5.43.1)(yaml@2.8.0))(vue@3.5.17(typescript@5.8.3))(web-streams-polyfill@3.3.3)':
+  '@idn-au/score-component-lib@0.3.1(typescript@5.8.3)(vite@6.3.5(@types/node@24.0.10)(jiti@2.4.2)(lightningcss@1.30.1)(terser@5.43.1)(yaml@2.8.0))(vue@3.5.17(typescript@5.8.3))(web-streams-polyfill@3.3.3)':
     dependencies:
-      '@idn-au/scores-calculator-js': 0.2.0(web-streams-polyfill@3.3.3)
+      '@idn-au/scores-calculator-js': 0.3.1(web-streams-polyfill@3.3.3)
       '@tailwindcss/vite': 4.1.11(vite@6.3.5(@types/node@24.0.10)(jiti@2.4.2)(lightningcss@1.30.1)(terser@5.43.1)(yaml@2.8.0))
       class-variance-authority: 0.7.1
       clsx: 2.1.1
@@ -4538,15 +4535,7 @@ snapshots:
       - vite
       - web-streams-polyfill
 
-  '@idn-au/scores-calculator-js@0.2.0(web-streams-polyfill@3.3.3)':
-    dependencies:
-      jsonld: 8.3.3(web-streams-polyfill@3.3.3)
-      oxigraph: 0.4.10
-      yaml: 2.8.0
-    transitivePeerDependencies:
-      - web-streams-polyfill
-
-  '@idn-au/scores-calculator-js@0.3.0(web-streams-polyfill@3.3.3)':
+  '@idn-au/scores-calculator-js@0.3.1(web-streams-polyfill@3.3.3)':
     dependencies:
       jsonld: 8.3.3(web-streams-polyfill@3.3.3)
       oxigraph: 0.4.10
@@ -5682,7 +5671,7 @@ snapshots:
     dependencies:
       vue: 3.5.17(typescript@5.8.3)
 
-  '@vulptech/vt-form@0.3.0(typescript@5.8.3)(vite@6.3.5(@types/node@24.0.10)(jiti@2.4.2)(lightningcss@1.30.1)(terser@5.43.1)(yaml@2.8.0))(vue@3.5.17(typescript@5.8.3))(zod@3.25.74)':
+  '@vulptech/vt-form@0.3.1(typescript@5.8.3)(vite@6.3.5(@types/node@24.0.10)(jiti@2.4.2)(lightningcss@1.30.1)(terser@5.43.1)(yaml@2.8.0))(vue@3.5.17(typescript@5.8.3))(zod@3.25.74)':
     dependencies:
       '@internationalized/date': 3.8.2
       '@tailwindcss/vite': 4.1.11(vite@6.3.5(@types/node@24.0.10)(jiti@2.4.2)(lightningcss@1.30.1)(terser@5.43.1)(yaml@2.8.0))

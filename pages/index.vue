@@ -178,7 +178,7 @@ onMounted(async () => {
             agent if required.</p>
         <p>This form saves your progress between reloads. If you're experiencing problems or need to clear your data, either select "Clear Form" below or clear your local storage in your browser.</p>
     </div>
-    <div class="grid grid-cols-[3fr_1fr] gap-4 relative">
+    <div class="flex flex-col-reverse md:grid md:grid-cols-[3fr_1fr] gap-4 relative">
         <div>
             <div class="flex flex-row gap-2 items-start mb-6">
                 <div class="flex flex-col max-w-min mr-auto">
@@ -187,7 +187,7 @@ onMounted(async () => {
                 </div>
                 <div class="flex flex-col max-w-min">
                     <Button variant="secondary" as-child>
-                        <Label for="file">Upload File <Upload class="size-4 ml-2" /></Label>
+                        <Label for="file">Upload<span class="hidden md:flex"> File</span> <Upload class="size-4 ml-2" /></Label>
                         <Input id="file" type="file" :accept="Object.keys(rdfFormats).map(ext => `.${ext}`).join(',')" @change="uploadFile" hidden />
                     </Button>
                     <span class="text-muted-foreground text-xs">Supports {{ Object.keys(rdfFormats).map(ext => `.${ext}`).join(', ') }}</span>
@@ -205,11 +205,11 @@ onMounted(async () => {
             </div>
             <FormBuilder :schema="FORM_SCHEMA" v-model="data" :steps="steps" :registry="registry" v-model:step="stepIndex" class="">
                 <template #left-buttons>
-                    <Button variant="destructive" size="sm" @click="clearForm">Clear Form <Trash2 class="size-4 ml-2" /></Button>
+                    <Button variant="destructive" size="sm" @click="clearForm">Clear<span class="hidden md:flex"> Form</span> <Trash2 class="size-4 ml-2" /></Button>
                 </template>
                 <template #right-buttons>
                     <div class="flex flex-col max-w-min">
-                        <Button variant="secondary" size="sm" @click="downloadFile">Save File <Download class="size-4 ml-2" /></Button>
+                        <Button variant="secondary" size="sm" @click="downloadFile">Save<span class="hidden md:flex"> File</span> <Download class="size-4 ml-2" /></Button>
                     </div>
                 </template>
                 <template #right-buttons-last>
@@ -220,11 +220,29 @@ onMounted(async () => {
                 </template>
             </FormBuilder>
         </div>
-        <div>
-            <div class="flex flex-col gap-4 sticky top-0">
+        <div class="bg-background sticky top-[72px] md:position-[unset] md:top-[unset] z-40 md:z-[unset]">
+            <div class="flex flex-row items-center md:items-stretch md:flex-col md:min-w-[200px] gap-4 md:sticky md:top-0">
                 <Scores title="FAIR" :score="fair" />
                 <Scores title="CARE" :score="care" />
-                <Collapsible v-model:open="showRDF" class="flex flex-col gap-2 items-start">
+                <Modal>
+                    <template #trigger>
+                        <Button variant="outline" size="sm" title="Show RDF" class="flex md:hidden ml-auto">
+                            RDF <Expand class="h-4 w-4" />
+                        </Button>
+                    </template>
+                    <template #title>Metadata RDF</template>
+                    <Editor
+                        v-model="rdfString"
+                        class="h-[600px] w-full"
+                        language="turtle"
+                        readonly
+                        hideTheme
+                        hideLanguage
+                        :theme="colorMode.unknown || colorMode.value === 'light' ? 'light' : 'dark'"
+                        :downloadFilename="data.title || 'metadata'"
+                    />
+                </Modal>
+                <Collapsible v-model:open="showRDF" class="hidden md:flex flex-col gap-2 items-start">
                     <CollapsibleTrigger as-child>
                         <Button variant="outline">RDF <ChevronsUpDown class="size-4" /></Button>
                     </CollapsibleTrigger>

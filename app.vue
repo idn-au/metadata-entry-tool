@@ -14,7 +14,7 @@ const useIdFunction = () => useId();
 
 <style>
 #__nuxt {
-    height: 100dvh;
+    min-height: 100dvh;
     display: flex;
     flex-direction: column;
 }
