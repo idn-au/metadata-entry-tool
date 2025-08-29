@@ -1,4 +1,4 @@
-name: Build & deploy to dev Swift container
+name: Build & deploy to Swift container
 
 on:
   push:
@@ -71,12 +71,12 @@ jobs:
           path: ./dist
       - name: Clear Swift container
         run: |
-          objectList=$(swift list metv2)
+          objectList=$(swift list met)
           if [ ! -z "$objectList" ]
           then
-          swift delete metv2 $objectList
+          swift delete met $objectList
           fi
       - name: Upload to Swift container
         run: |
           cd dist
-          swift upload metv2 ./*
+          swift upload met ./*
