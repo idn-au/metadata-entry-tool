@@ -11,7 +11,7 @@ export default defineNuxtConfig({
             link: [
                 { rel: "stylesheet", href: "https://fonts.googleapis.com/css2?family=Material+Symbols+Sharp" }
             ],
-            title: "IDN MET v2"
+            title: "IDN Metadata Entry Tool"
         }
     },
     runtimeConfig: {

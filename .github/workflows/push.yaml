@@ -3,7 +3,7 @@ name: Build & deploy to Swift container
 on:
   push:
     branches:
-      - feature/refactor
+      - main
   workflow_dispatch:
 
 permissions:

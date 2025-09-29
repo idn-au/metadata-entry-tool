@@ -19,6 +19,7 @@ PREFIX xsd: <http://www.w3.org/2001/XMLSchema#>
         geo:asWKT "POLYGON ((0 1 2 3 4))"^^geo:wktLiteral ;
     ] ;
     dcterms:temporal [
+        a dcterms:PeriodOfTime ;
         prov:endedAtTime "2024-07"^^xsd:monthYear ;
         prov:startedAtTime "2023"^^xsd:gYear ;
     ] ;

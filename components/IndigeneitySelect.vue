@@ -4,9 +4,11 @@ import { Check, ChevronsUpDown, Search, X, ExternalLink } from "lucide-vue-next"
 import { cn } from "@/lib/utils";
 
 const props = defineProps<{
-    vocabIRI: string;
+    orgVocabIRI: string;
+    personVocabIRI: string;
     placeholder?: string;
     multiple?: boolean;
+    isPerson: boolean;
     class?: HTMLAttributes["class"];
 }>();
 
@@ -14,7 +16,9 @@ const model = defineModel<string | string[]>();
 
 const open = ref(false);
 
-const { data: conceptOptions } = await useLazyAsyncData(props.vocabIRI, () => sparqlOptions(props.vocabIRI));
+const { data: conceptOptions } = await useLazyAsyncData(props.isPerson ? props.personVocabIRI : props.orgVocabIRI, () => sparqlOptions(props.isPerson ? props.personVocabIRI : props.orgVocabIRI), {
+    watch: [() => props.isPerson]
+});
 
 const emits = defineEmits<{
     focus: [];
@@ -81,7 +85,7 @@ watch(model, (newValue) => {
             </ComboboxList>
         </Combobox>
         <Button size="icon" variant="outline" title="Vocab page" as-child>
-            <a :href="props.vocabIRI" target="_blank" rel="noopener noreferrer">
+            <a :href="props.isPerson ? props.personVocabIRI : props.orgVocabIRI" target="_blank" rel="noopener noreferrer">
                 <ExternalLink class="size-4" />
             </a>
         </Button>

@@ -6,6 +6,7 @@ import DateInput from "~/components/DateInput.vue";
 import SpatialInput from "~/components/SpatialInput.vue";
 import IRIInput from "~/components/IRIInput.vue";
 import ConceptSelect from "~/components/ConceptSelect.vue";
+import IndigeneitySelect from "~/components/IndigeneitySelect.vue";
 
 export const REGISTRY: Registry = {
     iri: {
@@ -38,6 +39,16 @@ export const REGISTRY: Registry = {
     spatial: {
         component: SpatialInput,
         props: {},
+    },
+    indigeneitySelect: {
+        component: IndigeneitySelect,
+        props: {
+            orgVocabIRI: ({ meta }) => meta.orgVocabIRI,
+            personVocabIRI: ({ meta }) => meta.personVocabIRI,
+            isPerson: ({ model }) => model?.value.type === "https://schema.org/Person",
+            placeholder: ({ meta }) => meta.placeholder,
+            multiple: ({ meta }) => meta.multiple,
+        },
     },
 };
 
@@ -247,7 +258,10 @@ export const FORM_SCHEMA = z.object({
         step: "rights",
     }),
     spatial: formField<z.ZodTypeAny, any>(z.union([z.string().url(), z.object({
-        type: z.literal("geo:Geometry"),
+        type: formField(z.literal("geo:Geometry"), {
+            type: "hidden",
+            initial: "geo:Geometry",
+        }),
         asWKT: z.object({
             type: z.literal("geo:wktLiteral"),
             value: z.string()
@@ -283,6 +297,10 @@ export const FORM_SCHEMA = z.object({
         step: "spatioTemporal",
     }),
     temporal: formField(z.object({
+        type: formField(z.literal("dcterms:PeriodOfTime"), {
+            type: "hidden",
+            initial: "dcterms:PeriodOfTime",
+        }),
         startedAtTime: formField<z.ZodTypeAny, any>(customDate.optional(), {
             label: "Start Time",
             type: "customDate",
@@ -496,8 +514,9 @@ export const AGENT_SCHEMA = z.object({
     }),
     agentIndigeneity: formField(z.string().optional(), {
         label: "Indigeneity",
-        type: "concept",
-        vocabIRI: "https://data.idnau.org/pid/vocab/org-indigeneity",
+        type: "indigeneitySelect",
+        orgVocabIRI: "https://data.idnau.org/pid/vocab/org-indigeneity",
+        personVocabIRI: "https://data.idnau.org/pid/vocab/persons-indigenous-status",
     }),
     identifier: formField(z.object({
         value: formField(z.string(), {

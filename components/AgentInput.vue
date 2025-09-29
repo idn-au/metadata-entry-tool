@@ -15,6 +15,7 @@ const model = defineModel<z.infer<typeof AGENT_SCHEMA>>();
 const registry: Registry = {
     iri: REGISTRY.iri,
     concept: REGISTRY.concept,
+    indigeneitySelect: REGISTRY.indigeneitySelect,
 };
 
 const { formData: data, isValid, resetForm } = useVtForm(AGENT_SCHEMA);
