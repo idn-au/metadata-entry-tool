@@ -8,6 +8,40 @@ The tool also scores the metadata in real-time using https://www.go-fair.org/fai
 
 Currently this tool is for testing out and understanding the IDN Catalogue Profile's requirements for metadata so it doesn't submit metadata to the IDN systems automatically - it just prints it out for review. Automated submission might be added later.
 
+== Developing
+
+=== Install & Run
+To install dependencies, run:
+[source,bash]
+----
+pnpm install
+----
+
+To run locally, run:
+[source,bash]
+----
+pnpm dev
+----
+
+=== Using the Form Builder
+This app uses the https://www.npmjs.com/package/@vulptech/vt-form[`vt-form`] package for building dynamic forms, which uses https://zod.dev/[Zod] for defining types & validation. Forms are generated from a top-level Zod schema, which is defined in `form.ts`. To define a new field, create a key in the schema object and call `vt-form` 's `formField()` function. For a basic example:
+
+[source,typescript]
+----
+schema: {
+    text: formField(z.string(), {
+        label: "Text field",
+        type: "text",
+        initial: "",
+        description: "The description of this field",
+        tooltip: "Text for the tooltip",
+        class: "custom-class",
+    }),
+}
+----
+
+Additional documentation will be available soon in the `vt-form` repo.
+
 == License & Rights
 
 The contents of this repository is licensed under Creative Commons 4.0 International. See the LICENSE file in the repository for details.

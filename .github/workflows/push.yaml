@@ -1,0 +1,82 @@
+name: Build & deploy to Swift container
+
+on:
+  push:
+    branches:
+      - feature/refactor
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  packages: read    # to access idn-lib GitHub NPM package
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+        name: Install pnpm
+        with:
+          version: 9
+          run_install: false
+      - name: Install Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: 'pnpm'
+          registry-url: "https://npm.pkg.github.com"
+      - name: Install dependencies
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: pnpm install
+      - name: Generate static site
+        run: pnpm generate
+      - name: Copy error files
+        working-directory: .output/public
+        run: cp index.html 404error.html && cp index.html 401error.html
+      - name: Upload dist artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: dist
+          path: .output/public
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    env:
+      OS_AUTH_URL: https://keystone.rc.nectar.org.au:5000/v3/
+      OS_PROJECT_ID: 0a23562e67e04297b1dc3ce25a30858d
+      OS_PROJECT_NAME: "unimelb-idc"
+      OS_USER_DOMAIN_NAME: "Default"
+      OS_PROJECT_DOMAIN_ID: "default"
+      OS_USERNAME: "jamie.feiss@unimelb.edu.au"
+      OS_PASSWORD: ${{ secrets.OS_PASSWORD }}
+      OS_REGION_NAME: "Melbourne"
+      OS_INTERFACE: public
+      OS_IDENTITY_API_VERSION: 3
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12' 
+      - name: Install OpenStack Swift CLI
+        run: pip install python-swiftclient python-keystoneclient
+      - name: Download dist artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: dist
+          path: ./dist
+      - name: Clear Swift container
+        run: |
+          objectList=$(swift list met)
+          if [ ! -z "$objectList" ]
+          then
+          swift delete met $objectList
+          fi
+      - name: Upload to Swift container
+        run: |
+          cd dist
+          swift upload met ./*
