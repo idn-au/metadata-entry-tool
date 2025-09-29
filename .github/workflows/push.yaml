@@ -8,7 +8,7 @@ on:
 
 permissions:
   contents: read
-  packages: read    # to access idn-lib GitHub NPM package
+  packages: read # to access IDN GitHub NPM packages
 
 jobs:
   build:
