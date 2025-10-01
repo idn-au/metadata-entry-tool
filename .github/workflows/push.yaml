@@ -26,13 +26,11 @@ jobs:
           password: ${{ secrets.GITHUB_TOKEN }}
       - name: Build and push Docker image
         uses: docker/build-push-action@v6
-        env:
-            NPM_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
           push: true
           tags: ghcr.io/idn-au/met:latest
           secrets: |
-            "npm_token=${{ secrets.GITHUB_TOKEN }}"
+            "NPM_TOKEN=${{ secrets.GITHUB_TOKEN }}"
   deploy:
     needs: publish
     runs-on: self-hosted
