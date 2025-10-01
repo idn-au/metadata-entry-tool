@@ -1,0 +1,13 @@
+version: "3"
+name: idn-met
+services:
+  met:
+    image: ghcr.io/idn-au/met:latest
+    pull_policy: always
+    restart: always
+    ports:
+      - 3002:3000
+    environment:
+      NUXT_FUSEKI_URL: "${FUSEKI_URL}"
+      NUXT_FUSEKI_USERNAME: "${FUSEKI_USERNAME}"
+      NUXT_FUSEKI_PASSWORD: "${FUSEKI_PASSWORD}"

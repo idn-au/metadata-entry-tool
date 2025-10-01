@@ -56,7 +56,7 @@ export async function agentSearch(term: string): Promise<Option[]> {
 }
 
 export async function agentGet(iri: string) {
-    const r = await sparqlSelect(`PREFIX dcterms: <http://purl.org/dc/terms/>
+    const query = `PREFIX dcterms: <http://purl.org/dc/terms/>
         PREFIX sdo: <https://schema.org/>
         SELECT DISTINCT ?iri ?name ?type ?url ?desc ?indigeneity ?identifier
         WHERE {
@@ -78,8 +78,9 @@ export async function agentGet(iri: string) {
                     ?iri sdo:identifier ?identifier .
                 }
             }
-        } LIMIT 1`);
-    return r.map(x => {
+        } LIMIT 1`;
+    const r = await $fetch(`/api/agent?query=${encodeURIComponent(query)}`);
+    return r.results?.bindings.map(x => {
         return {
             iri: x.iri.value,
             name: x.name.value,

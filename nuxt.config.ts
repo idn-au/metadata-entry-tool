@@ -5,7 +5,13 @@ export default defineNuxtConfig({
     compatibilityDate: "2024-04-03",
     devtools: { enabled: true },
     modules: ["@nuxtjs/color-mode", "shadcn-nuxt"],
-    css: ["@vulptech/vt-form/vt-form.css", "@idn-au/score-component-lib/score-component-lib.css", "@kurrawongai/kai-ui/kai-ui.css", "~/assets/css/tailwind.css", "~/assets/css/style.css"],
+    css: [
+        "@vulptech/vt-form/vt-form.css",
+        "@idn-au/score-component-lib/score-component-lib.css",
+        "@kurrawongai/kai-ui/kai-ui.css",
+        "~/assets/css/tailwind.css",
+        "~/assets/css/style.css",
+    ],
     app: {
         head: {
             link: [
@@ -15,11 +21,13 @@ export default defineNuxtConfig({
         }
     },
     runtimeConfig: {
+        fusekiURL: "",
+        fusekiUsername: "",
+        fusekiPassword: "",
         public: {
             apiURL: "https://api.idnau.org",
-        }
+        },
     },
-    // ssr: false,
     colorMode: {
         classPrefix: "",
         classSuffix: "",
