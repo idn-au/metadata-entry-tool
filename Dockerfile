@@ -1,6 +1,6 @@
 # syntax=docker/dockerfile:1
 
-FROM node:alpine AS base
+FROM node:24.9.0-alpine AS base
 ARG PORT=3000
 WORKDIR /src
 
