@@ -113,7 +113,7 @@ export const FORM_SCHEMA = z.object({
         vocabIRI: "https://data.idnau.org/pid/vocab/indigeneity",
         multiple: true,
         placeholder: "Select indigeneity",
-        description: "You can add mulitple indigeneity terms",
+        description: "You can add multiple indigeneity terms",
         tooltip: "The indigeneity of this dataset.",
         step: "general",
     }),
