@@ -177,13 +177,14 @@ onMounted(async () => {
                 rel="noopener noreferrer">Agents Database</a>. You can refer to this list of agents or create a custom
             agent if required.</p>
         <p>This form saves your progress between reloads. If you're experiencing problems or need to clear your data, either select "Clear Form" below or clear your local storage in your browser.</p>
+	    <p>Watch the tutorial <a href="https://youtu.be/6UXqMmZgRvk" target="_blank">here</a>.</p>
     </div>
     <div class="flex flex-col-reverse md:grid md:grid-cols-[3fr_1fr] gap-4 relative">
         <div>
             <div class="flex flex-row gap-2 items-start mb-6">
                 <div class="flex flex-col max-w-min mr-auto">
-                    <Button variant="outline" class="mr-auto" disabled>Tutorial</Button>
-                    <span class="text-muted-foreground text-xs">Not yet implemented</span>
+<!--                    <Button variant="outline" class="mr-auto" disabled>Tutorial</Button>-->
+<!--                    <span class="text-muted-foreground text-xs">Not yet implemented</span>-->
                 </div>
                 <div class="flex flex-col max-w-min">
                     <Button variant="secondary" as-child>
