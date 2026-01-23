@@ -1,4 +1,4 @@
-import { SPARQLResultsJSON } from "~/utils/types";
+import { SPARQLResultsJSON } from "#shared/utils/types";
 
 export default defineEventHandler(async (event) => {
     const { fusekiURL, fusekiUsername, fusekiPassword } = useRuntimeConfig(event);

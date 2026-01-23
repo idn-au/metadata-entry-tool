@@ -1,0 +1,7 @@
+a:not(header a) {
+    color: var(--color-link);
+}
+
+a:not(header a):not(.btn):hover {
+    text-decoration: underline;
+}

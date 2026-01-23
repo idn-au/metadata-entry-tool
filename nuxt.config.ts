@@ -2,8 +2,8 @@ import tailwindcss from "@tailwindcss/vite";
 
 // https://nuxt.com/docs/api/configuration/nuxt-config
 export default defineNuxtConfig({
-    compatibilityDate: "2024-04-03",
-    devtools: { enabled: true },
+    compatibilityDate: "2026-01-19",
+    devtools: { enabled: false },
     modules: ["@nuxtjs/color-mode", "shadcn-nuxt"],
     css: [
         "@vulptech/vt-form/vt-form.css",
@@ -32,17 +32,17 @@ export default defineNuxtConfig({
         classPrefix: "",
         classSuffix: "",
     },
-    nitro: {
-        prerender: {
-            autoSubfolderIndex: false,
-        },
-    },
+    // nitro: {
+    //     prerender: {
+    //         autoSubfolderIndex: false,
+    //     },
+    // },
     vite: {
         plugins: [tailwindcss()],
     },
     shadcn: {
         prefix: "",
-        componentDir: "./components/ui"
+        componentDir: "./app/components/ui"
     },
     // locally installing built packages
     // imports: {
