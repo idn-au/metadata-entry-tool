@@ -124,4 +124,8 @@ export const CONTEXT: ContextDefinition = {
         "@type": "xsd:anyURI",
     },
     "telephone": "sdo:telephone",
+    "language": {
+        "@id": "dcterms:language",
+        "@type": "@id",
+    },
 };

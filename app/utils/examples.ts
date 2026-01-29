@@ -4,6 +4,7 @@ import metExample from "~/data/metExample.ttl?raw";
 export const exampleData: Example[] = [
     {
         label: "Example 1",
+        description: "A description of a metadata record example",
         data: metExample,
         format: "text/turtle",
     },

@@ -117,6 +117,16 @@ export const FORM_SCHEMA = z.object({
         tooltip: "The indigeneity of this dataset.",
         step: "general",
     }),
+    language: formField(z.string().array().optional(), {
+        label: "Language",
+        type: "concept",
+        vocabIRI: "https://data.idnau.org/pid/austlang",
+        multiple: true,
+        placeholder: "Select language",
+        description: "You can add multiple languages. (Note: This list may be slow due to its size.)",
+        tooltip: "The language of this dataset.",
+        step: "general",
+    }),
     description: formField(z.string(), {
         label: "Description",
         type: "textarea",
@@ -130,6 +140,12 @@ export const FORM_SCHEMA = z.object({
         type: formField(z.literal("odrl:Policy"), {
             type: "hidden",
             initial: "odrl:Policy",
+        }),
+        title: formField(z.string(), {
+            label: "Title",
+            type: "text",
+            tooltip: "The name of the policy",
+            emptyValue: "",
         }),
         additionalType: formField(z.string().url().optional(), {
             label: "Policy Type",

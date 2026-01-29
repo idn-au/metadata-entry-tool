@@ -1,6 +1,6 @@
 <script lang="ts" setup>
 import * as jsonld from "jsonld";
-import { ChevronDown, ChevronsUpDown, Expand, Upload, Download, Trash2, Send } from "lucide-vue-next";
+import { ChevronDown, ChevronUp, Expand, Upload, Download, Trash2, Send } from "lucide-vue-next";
 import { useVtForm, FormBuilder, type Registry, schemaCreateEmptyObject } from "@vulptech/vt-form";
 import { Scoring, type TopScoreValueObj } from "@idn-au/scores-calculator-js";
 import { Scores } from "@idn-au/score-component-lib";
@@ -199,8 +199,11 @@ onMounted(async () => {
                             <Button variant="secondary">Load Example <ChevronDown class="size-4 ml-2" /></Button>
                         </DropdownMenuTrigger>
                     </div>
-                    <DropdownMenuContent>
-                        <DropdownMenuItem v-for="example in exampleData" class="cursor-pointer" @select="loadExample(example)">{{ example.label }}</DropdownMenuItem>
+                    <DropdownMenuContent class="max-w-80">
+                        <DropdownMenuItem v-for="example in exampleData" class="cursor-pointer flex flex-col items-start" @select="loadExample(example)">
+	                        <span class="line-clamp-1">{{ example.label }}</span>
+	                        <span v-if="example.description" class="text-xs italic text-muted-foreground line-clamp-1">{{example.description}}</span>
+                        </DropdownMenuItem>
                     </DropdownMenuContent>
                 </DropdownMenu>
             </div>
@@ -245,7 +248,11 @@ onMounted(async () => {
                 </Modal>
                 <Collapsible v-model:open="showRDF" class="hidden md:flex flex-col gap-2 items-start">
                     <CollapsibleTrigger as-child>
-                        <Button variant="outline">RDF <ChevronsUpDown class="size-4" /></Button>
+                        <Button variant="outline">
+	                        RDF
+	                        <ChevronUp v-if="showRDF" class="size-4" />
+	                        <ChevronDown v-else class="size-4" />
+                        </Button>
                     </CollapsibleTrigger>
                     <CollapsibleContent class="flex flex-col gap-2 items-start w-full max-w-sm">
                         <div class="w-full">

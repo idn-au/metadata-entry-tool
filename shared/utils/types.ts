@@ -25,6 +25,7 @@ export type ConceptOption = {
 
 export type Example = {
     label: string;
+    description?: string;
     data: string;
     format: Format;
 };
