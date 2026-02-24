@@ -14,6 +14,9 @@ const items = [
 </script>
 
 <template>
+    <div class="w-full bg-yellow-300 text-black text-center py-1 px-4 text-sm font-medium">
+            We are pleased to inform you that this site is under construction and will be updated as soon as possible
+    </div>
     <TopHeader />
     <main class="grow">
         <div class="mx-auto p-3 max-w-[1400px]">
