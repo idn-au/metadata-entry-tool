@@ -12,8 +12,9 @@
     --popover-foreground: hsl(228.82 85% 5%);
     --primary: var(--isu-blue);
     --primary-foreground: var(--isu-blue-foreground);
-    --secondary: hsl(210 41% 96%);
-    --secondary-foreground: hsl(222.34 49% 11%);
+
+    --secondary: oklch(0.968 0.007 247.896);
+    --secondary-foreground: oklch(0.208 0.042 265.755);
     --muted: hsl(210 41% 96%);
     --muted-foreground: hsl(215.38 18% 47%);
     --accent: hsl(210 41% 96%);
@@ -48,6 +49,7 @@
     --isu-blue-foreground: hsl(210 40% 98%);
 
     --link: var(--isu-blue);
+    --link-foreground: var(--isu-blue-foreground);
 }
 
 .dark {

@@ -12,9 +12,9 @@ router.beforeEach((from, to) => {
 </script>
 
 <template>
-    <header class="bg-background sticky top-0 z-50 md:z-[unset] md:position-[unset] md:top-[unset] p-4 flex flex-row justify-between items-center">
+    <header class="bg-background sticky top-0 z-40 md:z-[unset] md:position-[unset] md:top-[unset] p-4 flex flex-row justify-between items-center">
         <!-- mobile nav -->
-        <Sheet v-model:open="showSidenav">
+        <!-- <Sheet v-model:open="showSidenav">
             <SheetTrigger as-child>
                 <Button variant="ghost" size="icon" class="md:hidden">
                     <Menu class="size-4" />
@@ -36,25 +36,25 @@ router.beforeEach((from, to) => {
                 </SheetHeader>
                 <NavContent class="md:hidden" />
             </SheetContent>
-        </Sheet>
+        </Sheet> -->
         <!-- header -->
-        <div class="flex flex-row gap-3 mr-8 md:mr-auto">
-            <a href="https://idnau.org/" target="_blank" rel="noopener noreferrer">
+        <!-- <div class="flex flex-row gap-3 mr-8 md:mr-auto"> -->
+            <!-- <a href="https://idnau.org/" target="_blank" rel="noopener noreferrer">
                 <img v-show="colorMode.unknown || colorMode.value === 'light'" src="/img/idn-logo-250.png" alt="IDN Logo" class="h-[40px] md:h-[80px]">
                 <img v-show="!colorMode.unknown && colorMode.value === 'dark'" src="/img/idn-logo-250.png" alt="IDN Logo" class="h-[40px] md:h-[80px]">
-            </a>
-            <div class="flex flex-col justify-center gap-1">
+            </a> -->
+            <!-- <div class="flex flex-col justify-center gap-1">
                 <a href="https://idnau.org/" target="_blank" rel="noopener noreferrer" class="text-2xl hidden md:flex">The Indigenous Data Network</a>
                 <NuxtLink to="/" class="text-xl flex md:hidden">IDN MET v2</NuxtLink>
                 <NuxtLink to="/" class="text-xl hidden md:flex">IDN Metadata Entry Tool</NuxtLink>
-            </div>
-        </div>
+            </div> -->
+        <!-- </div> -->
         <!-- desktop nav -->
-        <NavContent class="hidden md:flex" />
-        <Button variant="ghost" size="icon" @click="!colorMode.unknown ? colorMode.value === 'dark' ? colorMode.preference = 'light' : colorMode.preference = 'dark' : undefined">
+        <NavContent />
+        <!-- <Button variant="ghost" size="icon" @click="!colorMode.unknown ? colorMode.value === 'dark' ? colorMode.preference = 'light' : colorMode.preference = 'dark' : undefined">
             <SunMoon v-show="colorMode.unknown" />
             <Sun v-show="colorMode.value === 'dark'" class="w-4 h-4" />
             <Moon v-show="colorMode.value === 'light'" class="w-4 h-4" />
-        </Button>
+        </Button> -->
     </header>
 </template>
