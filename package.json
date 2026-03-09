@@ -13,6 +13,7 @@
         "@idn-au/score-component-lib": "^0.3.1",
         "@idn-au/scores-calculator-js": "^0.3.1",
         "@kurrawongai/kai-ui": "0.2.5",
+        "@nuxt/image": "2.0.0",
         "@nuxtjs/color-mode": "^4.0.0",
         "@tailwindcss/vite": "^4.1.18",
         "@vueuse/core": "^14.1.0",
