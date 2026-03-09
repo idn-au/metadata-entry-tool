@@ -36,7 +36,7 @@ const extLinks: { label: string; url: string }[] = [
 </script>
 
 <template>
-    <nav :class="cn('flex flex-col flex-row items-center', props.class)">
+    <nav :class="cn('flex flex-row items-center', props.class)">
         <Button
             v-for="link in links"
             variant="ghost"
