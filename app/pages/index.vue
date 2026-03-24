@@ -2,7 +2,7 @@
 import * as jsonld from "jsonld";
 import { ChevronDown, ChevronUp, Expand, Upload, Download, Trash2, Send } from "lucide-vue-next";
 import { useVtForm, FormBuilder, type Registry, schemaCreateEmptyObject } from "@vulptech/vt-form";
-import { Scoring, type TopScoreValueObj } from "@idn-au/scores-calculator-js";
+import { ScoreCalculator, type TopScoreValueObj } from "@idn-au/scores-calculator-js";
 import { Scores } from "@idn-au/score-component-lib";
 import { Editor } from "@kurrawongai/kai-ui";
 import init, * as oxigraph from "oxigraph/web";
@@ -88,7 +88,7 @@ async function rdfToData(rdf: string, format: Format) {
 
     // data.value = schemaCreateEmptyObject();
     if (!initialised) {
-        await init("https://cdn.jsdelivr.net/npm/oxigraph@0.4.10/web_bg.wasm");
+        await init("https://cdn.jsdelivr.net/npm/oxigraph@0.5.6/web_bg.wasm");
         initialised = true;
     }
     const store = new oxigraph.Store();
@@ -106,7 +106,7 @@ const debouncedSerialiseRDF = useDebounceFn(async (newValue: typeof data.value) 
 
     // N-Quads -> Turtle - Oxigraph JS doesn't serialize prefixes or compact [] bnodes yet
     if (!initialised) {
-        await init("https://cdn.jsdelivr.net/npm/oxigraph@0.4.10/web_bg.wasm");
+        await init("https://cdn.jsdelivr.net/npm/oxigraph@0.5.6/web_bg.wasm");
         initialised = true;
     }
     const store = new oxigraph.Store();
@@ -114,15 +114,32 @@ const debouncedSerialiseRDF = useDebounceFn(async (newValue: typeof data.value) 
     rdfString.value = store.dump({ format: "text/turtle", from_graph_name: oxigraph.defaultGraph() });
 }, 200);
 
-let scoringObj: Scoring;
+let scoringObj: ScoreCalculator;
 
-async function doScoring(scoringObj: Scoring, rdf: string) {
-    const p = await Promise.all([
-        scoringObj.score(data.value.iri, "fair", "json", { value: rdf, format: "text/turtle" }) as Promise<TopScoreValueObj>,
-        scoringObj.score(data.value.iri, "care", "json", { value: rdf, format: "text/turtle" }) as Promise<TopScoreValueObj>
-    ]);
-    fair.value = p[0];
-    care.value = p[1];
+function sparqlQuery(store: oxigraph.Store, query: string, ask: boolean = false): SPARQLResultsJSON | boolean {
+	const options = {use_default_graph_as_union: true};
+	if (!ask) {
+		options.results_format = "application/sparql-results+json"
+	}
+	let result = store.query(query, options);
+	if (!ask) {
+		result = JSON.parse(result as string) as SPARQLResultsJSON;
+	}
+	return result;
+}
+
+async function doScoring(scoringObj: ScoreCalculator, rdf: string) {
+	await init({module_or_path: "https://cdn.jsdelivr.net/npm/oxigraph@0.5.6/web_bg.wasm"});
+	const store = new oxigraph.Store();
+	store.load(rdf, { format: "text/turtle" });
+
+	const p = await Promise.all([
+		scoringObj.score(data.value.iri, "fair", "json", (query) => sparqlQuery(store, query, true), (query) => sparqlQuery(store, query)),
+		scoringObj.score(data.value.iri, "care", "json", (query) => sparqlQuery(store, query, true), (query) => sparqlQuery(store, query))
+	]);
+
+    fair.value = p[0] as TopScoreValueObj;
+    care.value = p[1] as TopScoreValueObj;
 }
 
 watch(data, async (newValue) => {
@@ -152,7 +169,7 @@ onMounted(async () => {
     } else {
         data.value.iri = generateIRI("resource");
     }
-    scoringObj = await Scoring.init(["fair", "care"], { value: rdfString.value, format: "text/turtle" });
+    scoringObj = await ScoreCalculator.init(["fair", "care"]);
     doScoring(scoringObj, rdfString.value);
 });
 </script>
@@ -179,120 +196,71 @@ onMounted(async () => {
         <p>This form saves your progress between reloads. If you're experiencing problems or need to clear your data, either select "Clear Form" below or clear your local storage in your browser.</p>
 	    <p>Watch the tutorial <a href="https://youtu.be/6UXqMmZgRvk" target="_blank">here</a>.</p>
     </div>
-    <div class="flex flex-col-reverse md:grid md:grid-cols-[3fr_1fr] gap-4 relative">
-        <div>
-            <div class="flex flex-row gap-2 items-start mb-6">
-                <div class="flex flex-col max-w-min mr-auto">
-<!--                    <Button variant="outline" class="mr-auto" disabled>Tutorial</Button>-->
-<!--                    <span class="text-muted-foreground text-xs">Not yet implemented</span>-->
-                </div>
-                <div class="flex flex-col max-w-min">
-                    <Button variant="secondary" as-child>
-                        <Label for="file">Upload<span class="hidden md:flex"> File</span> <Upload class="size-4 ml-2" /></Label>
-                        <Input id="file" type="file" :accept="Object.keys(rdfFormats).map(ext => `.${ext}`).join(',')" @change="uploadFile" hidden />
-                    </Button>
-                    <span class="text-muted-foreground text-xs">Supports {{ Object.keys(rdfFormats).map(ext => `.${ext}`).join(', ') }}</span>
-                </div>
-                <DropdownMenu>
-                    <div class="flex flex-col max-w-min">
-                        <DropdownMenuTrigger as-child>
-                            <Button variant="secondary">Load Example <ChevronDown class="size-4 ml-2" /></Button>
-                        </DropdownMenuTrigger>
-                    </div>
-                    <DropdownMenuContent class="max-w-80">
-                        <DropdownMenuItem v-for="example in exampleData" class="cursor-pointer flex flex-col items-start" @select="loadExample(example)">
-	                        <span class="line-clamp-1">{{ example.label }}</span>
-	                        <span v-if="example.description" class="text-xs italic text-muted-foreground line-clamp-1">{{example.description}}</span>
-                        </DropdownMenuItem>
-                    </DropdownMenuContent>
-                </DropdownMenu>
-            </div>
-            <FormBuilder :schema="FORM_SCHEMA" v-model="data" :steps="steps" :registry="registry" v-model:step="stepIndex" class="">
-                <template #left-buttons>
-                    <Button variant="destructive" size="sm" @click="clearForm">Clear<span class="hidden md:flex"> Form</span> <Trash2 class="size-4 ml-2" /></Button>
-                </template>
-                <template #right-buttons>
-                    <div class="flex flex-col max-w-min">
-                        <Button variant="secondary" size="sm" @click="downloadFile">Save<span class="hidden md:flex"> File</span> <Download class="size-4 ml-2" /></Button>
-                    </div>
-                </template>
-                <template #right-buttons-last>
-                    <div class="flex flex-col max-w-min">
-                        <Button variant="default" size="sm" disabled>Submit <Send class="size-4 ml-2" /></Button>
-                        <span class="text-muted-foreground text-xs">Not yet implemented</span>
-                    </div>
-                </template>
-            </FormBuilder>
-        </div>
-        <div class="bg-background sticky top-[72px] md:position-[unset] md:top-[unset] z-40 md:z-[unset]">
-            <div class="flex flex-row items-center md:items-stretch md:flex-col md:min-w-[200px] gap-4 md:sticky md:top-0">
-                <Scores title="FAIR" :score="fair" />
-                <Scores title="CARE" :score="care" />
-                <Modal>
-                    <template #trigger>
-                        <Button variant="outline" size="sm" title="Show RDF" class="flex md:hidden ml-auto">
-                            RDF <Expand class="h-4 w-4" />
-                        </Button>
-                    </template>
-                    <template #title>Metadata RDF</template>
-                    <Editor
-                        v-model="rdfString"
-                        class="h-[600px] w-full"
-                        language="turtle"
-                        readonly
-                        hideTheme
-                        hideLanguage
-                        :theme="colorMode.unknown || colorMode.value === 'light' ? 'light' : 'dark'"
-                        :downloadFilename="data.title || 'metadata'"
-                    />
-                </Modal>
-                <Collapsible v-model:open="showRDF" class="hidden md:flex flex-col gap-2 items-start">
-                    <CollapsibleTrigger as-child>
-                        <Button variant="outline">
-	                        RDF
-	                        <ChevronUp v-if="showRDF" class="size-4" />
-	                        <ChevronDown v-else class="size-4" />
-                        </Button>
-                    </CollapsibleTrigger>
-                    <CollapsibleContent class="flex flex-col gap-2 items-start w-full max-w-sm">
-                        <div class="w-full">
-                            <Editor
-                                v-model="rdfString"
-                                class="h-[340px] w-full"
-                                language="turtle"
-                                readonly
-                                hideTheme
-                                hideLanguage
-                                :theme="colorMode.unknown || colorMode.value === 'light' ? 'light' : 'dark'"
-                                :downloadFilename="data.title || 'metadata'"
-                                :options="{lineNumbers: 'off', fontSize: 11, lineDecorationsWidth: 0}"
-                            >
-                                <template #toolbar-top-right>
-                                    <Modal>
-                                        <template #trigger>
-                                            <Button variant="outline" size="sm" class="size-8" title="Expand">
-                                                <Expand class="h-4 w-4" />
-                                            </Button>
-                                        </template>
-                                        <template #title>Metadata RDF</template>
-                                        <Editor
-                                            v-model="rdfString"
-                                            class="h-[600px] w-full"
-                                            language="turtle"
-                                            readonly
-                                            hideTheme
-                                            hideLanguage
-                                            :theme="colorMode.unknown || colorMode.value === 'light' ? 'light' : 'dark'"
-                                            :downloadFilename="data.title || 'metadata'"
-                                        />
-                                    </Modal>
-                                </template>
-                            </Editor>
-                        </div>
-                    </CollapsibleContent>
-                </Collapsible>
-            </div>
-        </div>
+    <div class="flex flex-col gap-4 relative">
+	    <div class="flex flex-row max-sm:flex-wrap gap-2 items-start mb-6 sticky top-0 bg-background z-50 py-2">
+		    <!--                <div class="flex flex-col max-w-min mr-auto">-->
+		    <!--                    <Button variant="outline" class="mr-auto" disabled>Tutorial</Button>-->
+		    <!--                    <span class="text-muted-foreground text-xs">Not yet implemented</span>-->
+		    <!--                </div>-->
+		    <div class="flex flex-col max-w-min">
+			    <Button variant="secondary" as-child>
+				    <Label for="file">Upload<span class="hidden md:flex"> File</span> <Upload class="size-4 ml-2" /></Label>
+				    <Input id="file" type="file" :accept="Object.keys(rdfFormats).map(ext => `.${ext}`).join(',')" @change="uploadFile" hidden />
+			    </Button>
+			    <span class="text-muted-foreground text-xs">Supports {{ Object.keys(rdfFormats).map(ext => `.${ext}`).join(', ') }}</span>
+		    </div>
+		    <DropdownMenu>
+			    <div class="flex flex-col max-w-min">
+				    <DropdownMenuTrigger as-child>
+					    <Button variant="secondary">Load Example <ChevronDown class="size-4 ml-2" /></Button>
+				    </DropdownMenuTrigger>
+			    </div>
+			    <DropdownMenuContent class="max-w-80">
+				    <DropdownMenuItem v-for="example in exampleData" class="cursor-pointer flex flex-col items-start" @select="loadExample(example)">
+					    <span class="line-clamp-1">{{ example.label }}</span>
+					    <span v-if="example.description" class="text-xs italic text-muted-foreground line-clamp-1">{{example.description}}</span>
+				    </DropdownMenuItem>
+			    </DropdownMenuContent>
+		    </DropdownMenu>
+		    <Modal>
+			    <template #trigger>
+				    <Button variant="outline" title="Show RDF">
+					    RDF <Expand class="size-4" />
+				    </Button>
+			    </template>
+			    <template #title>Metadata RDF</template>
+			    <Editor
+				    v-model="rdfString"
+				    class="h-[600px] w-full"
+				    language="turtle"
+				    readonly
+				    hideTheme
+				    hideLanguage
+				    :theme="colorMode.unknown || colorMode.value === 'light' ? 'light' : 'dark'"
+				    :downloadFilename="data.title || 'metadata'"
+			    />
+		    </Modal>
+		    <div class="flex flex-row items-center gap-2 ml-auto">
+			    <Scores title="FAIR" :score="fair" />
+			    <Scores title="CARE" :score="care" />
+		    </div>
+	    </div>
+	    <FormBuilder :schema="FORM_SCHEMA" v-model="data" :steps="steps" :registry="registry" v-model:step="stepIndex" class="md:[&>div>div]:top-[180px] md:[&>div>div]:w-1/5!">
+		    <template #left-buttons>
+			    <Button variant="destructive" size="sm" @click="clearForm">Clear<span class="hidden md:flex"> Form</span> <Trash2 class="size-4 ml-2" /></Button>
+		    </template>
+		    <template #right-buttons>
+			    <div class="flex flex-col max-w-min">
+				    <Button variant="secondary" size="sm" @click="downloadFile">Save<span class="hidden md:flex"> File</span> <Download class="size-4 ml-2" /></Button>
+			    </div>
+		    </template>
+		    <template #right-buttons-last>
+			    <div class="flex flex-col max-w-min">
+				    <Button variant="default" size="sm" disabled>Submit <Send class="size-4 ml-2" /></Button>
+				    <span class="text-muted-foreground text-xs">Not yet implemented</span>
+			    </div>
+		    </template>
+	    </FormBuilder>
     </div>
 </template>
 

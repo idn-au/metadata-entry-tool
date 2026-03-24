@@ -11,11 +11,3 @@ const useIdFunction = () => useId();
         </NuxtLayout>
     </ConfigProvider>
 </template>
-
-<style>
-#__nuxt {
-    min-height: 100dvh;
-    display: flex;
-    flex-direction: column;
-}
-</style>
