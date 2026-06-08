@@ -88,25 +88,25 @@ async function rdfToData(rdf: string, format: Format) {
 
     // data.value = schemaCreateEmptyObject();
     if (!initialised) {
-        await init("https://cdn.jsdelivr.net/npm/oxigraph@0.5.6/web_bg.wasm");
+        await init("https://cdn.jsdelivr.net/npm/oxigraph@0.5.8/web_bg.wasm");
         initialised = true;
     }
     const store = new oxigraph.Store();
     store.load(rdf, {format});
     const nquads = store.dump({format: "application/n-quads", from_graph_name: oxigraph.defaultGraph()});
     const jsonldObj = await jsonld.fromRDF(nquads, { format: "application/n-quads" });
-    const framedObj = await jsonld.frame(jsonldObj, { "@context": CONTEXT, type: "dcat:Resource" });
+    const framedObj = await jsonld.frame(jsonldObj, { "@context": CONTEXT, type: "sdo:CreativeWork" });
     data.value = framedObj;
 }
 
 const debouncedSerialiseRDF = useDebounceFn(async (newValue: typeof data.value) => {
     // JSON-LD -> N-Quads
-    const doc = { "@context": CONTEXT, type: "dcat:Resource", ...newValue };
+    const doc = { "@context": CONTEXT, type: "sdo:CreativeWork", ...newValue };
     const rdf = await (jsonld.toRDF(doc, { format: "application/n-quads" }) as Promise<string>);
 
     // N-Quads -> Turtle - Oxigraph JS doesn't serialize prefixes or compact [] bnodes yet
     if (!initialised) {
-        await init("https://cdn.jsdelivr.net/npm/oxigraph@0.5.6/web_bg.wasm");
+        await init("https://cdn.jsdelivr.net/npm/oxigraph@0.5.8/web_bg.wasm");
         initialised = true;
     }
     const store = new oxigraph.Store();
@@ -129,7 +129,7 @@ function sparqlQuery(store: oxigraph.Store, query: string, ask: boolean = false)
 }
 
 async function doScoring(scoringObj: ScoreCalculator, rdf: string) {
-	await init({module_or_path: "https://cdn.jsdelivr.net/npm/oxigraph@0.5.6/web_bg.wasm"});
+	await init({module_or_path: "https://cdn.jsdelivr.net/npm/oxigraph@0.5.8/web_bg.wasm"});
 	const store = new oxigraph.Store();
 	store.load(rdf, { format: "text/turtle" });
 
