@@ -1,58 +1,64 @@
-PREFIX dcat: <http://www.w3.org/ns/dcat#>
-PREFIX dcterms: <http://purl.org/dc/terms/>
 PREFIX geo: <http://www.opengis.net/ont/geosparql#>
 PREFIX prov: <http://www.w3.org/ns/prov#>
 PREFIX sdo: <https://schema.org/>
 PREFIX xsd: <http://www.w3.org/2001/XMLSchema#>
 
-<https://example.com/example1> a dcat:Resource ;
-    dcterms:accessRights <https://linked.data.gov.au/def/data-access-rights/open> ;
-    dcterms:created "2024-08-12"^^xsd:date ;
-    dcterms:description "This is a description for example 1" ;
-    dcterms:issued "2024-08-12"^^xsd:date ;
-    dcterms:license <http://purl.org/NET/rdflicense/allrightsreserved> ;
-    dcterms:modified "2024-08-12"^^xsd:date ;
-    dcterms:rights "rights" ;
-    dcterms:type <https://data.idnau.org/pid/vocab/indigeneity/by-indigenous-people> ;
-    dcterms:spatial [
-        a geo:Geometry ;
-        geo:asWKT "POLYGON ((0 1 2 3 4))"^^geo:wktLiteral ;
-    ] ;
-    dcterms:temporal [
-        a dcterms:PeriodOfTime ;
-        prov:endedAtTime "2024-07"^^xsd:monthYear ;
-        prov:startedAtTime "2023"^^xsd:gYear ;
-    ] ;
-    dcterms:title "Example 1" ;
-    dcat:distribution [
-        a dcat:Distribution ;
-        dcat:accessURL "https://example.com/distribution"^^xsd:anyURI ;
-    ] ;
-    dcat:theme <https://vocabularyserver.com/apais/xml.php?skosTema=181> ,
-        <https://vocabularyserver.com/apais/xml.php?skosTema=147> ;
-    prov:qualifiedAttribution [
-        a prov:Attribution ;
-        dcat:hadRole <https://linked.data.gov.au/def/data-roles/custodian> ;
-        sdo:agent <https://example.com/custodianagent> ;
-    ] ;
-    prov:wasInfluencedBy _:b1 ,
-        _:b2 ;
+<https://example.com/example1>
+    a sdo:CreativeWork ;
+    prov:qualifiedAttribution
+        [
+            a prov:Attribution ;
+            prov:hadRole <https://linked.data.gov.au/def/data-roles/custodian> ;
+            sdo:agent <https://example.com/custodianagent> ;
+        ] ;
+    prov:wasInfluencedBy 
+        [
+            a sdo:DigitalDocument ;
+            sdo:additionalType <https://data.idnau.org/pid/vocab/policy-types/data-policy> ;
+            sdo:description "Description of the archive policy" ;
+        ] ,
+        _:b0 ;
+    sdo:copyrightNotice "rights" ;
+    sdo:dateCreated "2024-08-12"^^xsd:date ;
+    sdo:dateIssued "2024-08-12"^^xsd:date ;
+    sdo:dateModified "2024-08-12"^^xsd:date ;
+    sdo:description "This is a description for example 1" ;
+    sdo:distribution
+        [
+            a sdo:DataDownload ;
+            sdo:contentUrl "https://example.com/distribution"^^xsd:anyURI ;
+        ] ;
+    sdo:keywords
+        <https://data.idnau.org/pid/vocab/indigeneity/by-indigenous-people> ,
+        <https://vocabularyserver.com/apais/xml.php?skosTema=147> ,
+        <https://vocabularyserver.com/apais/xml.php?skosTema=181> ;
+    sdo:license <http://purl.org/NET/rdflicense/allrightsreserved> ;
+    sdo:name "Example 1" ;
+    sdo:spatialCoverage
+        [
+            a geo:Geometry ;
+            geo:asWKT "POLYGON ((0 1 2 3 4))"^^geo:wktLiteral ;
+        ] ;
+    sdo:temporalCoverage
+        [
+            a sdo:Duration ;
+            sdo:coverageEndTime "2024-07"^^xsd:monthYear ;
+            sdo:coverageStartTime "2023"^^xsd:gYear ;
+        ] ;
+    sdo:usageInfo <https://linked.data.gov.au/def/data-access-rights/open> ;
 .
 
-<https://example.com/custodianagent> a sdo:Organization ;
-    dcterms:type <https://data.idnau.org/pid/vocab/org-indigeneity/indigenous-persons-organisation> ;
+<https://example.com/custodianagent>
+    a sdo:Organization ;
+    prov:contributed _:b0 ;
     sdo:description "Custodian agent description" ;
     sdo:identifier "id1"^^xsd:token ;
+    sdo:keywords <https://data.idnau.org/pid/vocab/org-indigeneity/indigenous-persons-organisation> ;
     sdo:name "Custodian Agent" ;
-    prov:contributed _:b1 ;
 .
 
-_:b1 a sdo:DigitalDocument ;
+_:b0
+    a sdo:DigitalDocument ;
     sdo:additionalType <https://data.idnau.org/pid/vocab/policy-types/indigenous-data-governance> ;
     sdo:url "https://example.com/idg-framework"^^xsd:anyURI ;
-.
-
-_:b2 a sdo:DigitalDocument ;
-    sdo:additionalType <https://data.idnau.org/pid/vocab/policy-types/data-policy> ;
-    sdo:description "Description of the archive policy" ;
 .

@@ -16,27 +16,27 @@ export const CONTEXT: ContextDefinition = {
     "value": "@value",
     // properties
     "license": {
-        "@id": "dcterms:license",
+        "@id": "sdo:license",
         "@type": "@id"
     },
-    "title": "dcterms:title",
-    "description": "dcterms:description",
+    "title": "sdo:name",
+    "description": "sdo:description",
     "accessRights": {
-        "@id": "dcterms:accessRights",
+        "@id": "sdo:usageInfo",
         "@type": "@id"
     },
     "created": {
-        "@id": "dcterms:created",
+        "@id": "sdo:dateCreated",
     },
     "issued": {
-        "@id": "dcterms:issued",
+        "@id": "sdo:dateIssued",
     },
     "modified": {
-        "@id": "dcterms:modified",
+        "@id": "sdo:dateModified",
     },
-    "rights": "dcterms:rights",
+    "rights": "sdo:copyrightNotice",
     "theme": {
-        "@id": "dcat:theme",
+        "@id": "sdo:keywords",
         "@type": "@id",
         "@container": "@set",
     },
@@ -45,12 +45,12 @@ export const CONTEXT: ContextDefinition = {
         "@container": "@set"
     },
     "role": {
-        "@id": "dcat:hadRole",
+        "@id": "prov:hadRole",
         "@type": "@id",
         "@container": "@set",
     },
     "relationRole": {
-        "@id": "dcat:hadRole",
+        "@id": "prov:hadRole",
         "@type": "@id",
     },
     "agent": {
@@ -58,12 +58,12 @@ export const CONTEXT: ContextDefinition = {
         "@type": "@id"
     },
     "dataIndigeneity": {
-        "@id": "dcterms:type",
+        "@id": "sdo:keywords",
         "@type": "@id",
         "@container": "@set",
     },
     "agentIndigeneity": {
-        "@id": "dcterms:type",
+        "@id": "sdo:keywords",
         "@type": "@id",
     },
     "identifier": {
@@ -77,20 +77,20 @@ export const CONTEXT: ContextDefinition = {
         "@container": "@set"
     },
     "spatial": {
-        "@id": "dcterms:spatial",
+        "@id": "sdo:spatialCoverage",
         "@type": "@id"
     },
-    "temporal": "dcterms:temporal",
+    "temporal": "sdo:temporalCoverage",
     "distribution": {
-        "@id": "dcat:distribution",
+        "@id": "sdo:distribution",
         "@container": "@set",
     },
     "accessURL": {
-        "@id": "dcat:accessURL",
+        "@id": "sdo:contentUrl",
         "@type": "xsd:anyURI",
     },
-    "startedAtTime": "prov:startedAtTime",
-    "endedAtTime": "prov:endedAtTime",
+    "startedAtTime": "sdo:coverageStartTime",
+    "endedAtTime": "sdo:coverageEndTime",
     "additionalType": {
         "@id": "sdo:additionalType",
         "@type": "@id"
@@ -125,7 +125,7 @@ export const CONTEXT: ContextDefinition = {
     },
     "telephone": "sdo:telephone",
     "language": {
-        "@id": "dcterms:language",
+        "@id": "sdo:inLanguage",
         "@type": "@id",
     },
 };
