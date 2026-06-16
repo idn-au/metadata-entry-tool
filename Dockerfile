@@ -8,8 +8,9 @@ FROM base AS build
 
 ENV PNPM_HOME="/pnpm"
 ENV PATH="$PNPM_HOME:$PATH"
-RUN corepack enable
+RUN #corepack enable
 RUN apk add --no-cache python3 py3-pip make build-base
+RUN npm install -g pnpm@10
 COPY --link package.json pnpm-lock.yaml ./
 RUN --mount=type=secret,id=NPM_TOKEN,env=NPM_TOKEN \
     pnpm config set '//npm.pkg.github.com/:_authToken' "${NPM_TOKEN}"
