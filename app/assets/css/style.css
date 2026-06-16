@@ -5,3 +5,11 @@
 a:not(header a):not(.btn):hover {
     text-decoration: underline;
 } */
+
+body {
+    font-family: "Open Sans", sans-serif;
+}
+
+.stroke-muted:not(.dark .stroke-muted) {
+    stroke: color-mix(in oklab, var(--color-muted-foreground) 10%, transparent);
+}

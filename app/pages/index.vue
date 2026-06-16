@@ -1,6 +1,6 @@
 <script lang="ts" setup>
 import * as jsonld from "jsonld";
-import { ChevronDown, ChevronUp, Expand, Upload, Download, Trash2, Send } from "lucide-vue-next";
+import { ChevronDown, ChevronUp, Braces, Upload, Download, Trash2, Send } from "@lucide/vue";
 import { useVtForm, FormBuilder, type Registry, schemaCreateEmptyObject } from "@vulptech/vt-form";
 import { ScoreCalculator, type TopScoreValueObj } from "@idn-au/scores-calculator-js";
 import { Scores } from "@idn-au/score-component-lib";
@@ -175,97 +175,110 @@ onMounted(async () => {
 </script>
 
 <template>
-    <div class="mb-4">
-        <h1 class="bold text-3xl mb-4">Metadata Entry Tool</h1>
-        <p>This form is to be completed for submitting metadata to the Indigenous Data Network.</p>
-        <p>In order to complete a compliant metadata record for your data, you need to fill out the information required
-            in the form below. You have the option of completing only the minimum required information (indicated by a
-            red asterix) but it is recommended that you include as much information as possible in the form.</p>
-        <p>The more information you are able to provide, the higher the <a
-                href="https://force11.org/info/the-fair-data-principles" target="_blank"
-                rel="noopener noreferrer">FAIR</a> and <a href="https://www.gida-global.org/care" target="_blank"
-                rel="noopener noreferrer">CARE</a> scores for your metadata. For now, these scores generate placeholder
-            values.</p>
-        <p>The metadata in RDF format can optionally be viewed on the right of the form. The RDF and scores are updated
-            as you complete the form. More information about the metadata profile can be found <a
-                href="https://data.idnau.org/pid/cp/guide" target="_blank" rel="noopener noreferrer">here</a>.</p>
-        <p>This form uses the IDN's collection of people and organisations, or "agents", that are related to metadata
-            and datasets in the IDN, called the <a href="https://agentsdb.idnau.org" target="_blank"
-                rel="noopener noreferrer">Agents Database</a>. You can refer to this list of agents or create a custom
-            agent if required.</p>
-        <p>This form saves your progress between reloads. If you're experiencing problems or need to clear your data, either select "Clear Form" below or clear your local storage in your browser.</p>
-	    <p>Watch the tutorial <a href="https://youtu.be/6UXqMmZgRvk" target="_blank">here</a>.</p>
-    </div>
-    <div class="flex flex-col gap-4 relative">
-	    <div class="flex flex-row max-sm:flex-wrap gap-2 items-start mb-6 sticky top-0 bg-background z-50 py-2">
-		    <!--                <div class="flex flex-col max-w-min mr-auto">-->
-		    <!--                    <Button variant="outline" class="mr-auto" disabled>Tutorial</Button>-->
-		    <!--                    <span class="text-muted-foreground text-xs">Not yet implemented</span>-->
-		    <!--                </div>-->
-		    <div class="flex flex-col max-w-min">
-			    <Button variant="secondary" as-child>
-				    <Label for="file">Upload<span class="hidden md:flex"> File</span> <Upload class="size-4 ml-2" /></Label>
-				    <Input id="file" type="file" :accept="Object.keys(rdfFormats).map(ext => `.${ext}`).join(',')" @change="uploadFile" hidden />
-			    </Button>
-			    <span class="text-muted-foreground text-xs">Supports {{ Object.keys(rdfFormats).map(ext => `.${ext}`).join(', ') }}</span>
-		    </div>
-		    <DropdownMenu>
-			    <div class="flex flex-col max-w-min">
-				    <DropdownMenuTrigger as-child>
-					    <Button variant="secondary">Load Example <ChevronDown class="size-4 ml-2" /></Button>
-				    </DropdownMenuTrigger>
-			    </div>
-			    <DropdownMenuContent class="max-w-80">
-				    <DropdownMenuItem v-for="example in exampleData" class="cursor-pointer flex flex-col items-start" @select="loadExample(example)">
-					    <span class="line-clamp-1">{{ example.label }}</span>
-					    <span v-if="example.description" class="text-xs italic text-muted-foreground line-clamp-1">{{example.description}}</span>
-				    </DropdownMenuItem>
-			    </DropdownMenuContent>
-		    </DropdownMenu>
-		    <Modal>
-			    <template #trigger>
-				    <Button variant="outline" title="Show RDF">
-					    RDF <Expand class="size-4" />
-				    </Button>
-			    </template>
-			    <template #title>Metadata RDF</template>
-			    <Editor
-				    v-model="rdfString"
-				    class="h-[600px] w-full"
-				    language="turtle"
-				    readonly
-				    hideTheme
-				    hideLanguage
-				    :theme="colorMode.unknown || colorMode.value === 'light' ? 'light' : 'dark'"
-				    :downloadFilename="data.title || 'metadata'"
-			    />
-		    </Modal>
-		    <div class="flex flex-row items-center gap-2 ml-auto">
-			    <Scores title="FAIR" :score="fair" />
-			    <Scores title="CARE" :score="care" />
-		    </div>
-	    </div>
-	    <FormBuilder :schema="FORM_SCHEMA" v-model="data" :steps="steps" :registry="registry" v-model:step="stepIndex" class="md:[&>div>div]:top-[180px] md:[&>div>div]:w-1/5!">
-		    <template #left-buttons>
-			    <Button variant="destructive" size="sm" @click="clearForm">Clear<span class="hidden md:flex"> Form</span> <Trash2 class="size-4 ml-2" /></Button>
-		    </template>
-		    <template #right-buttons>
-			    <div class="flex flex-col max-w-min">
-				    <Button variant="secondary" size="sm" @click="downloadFile">Save<span class="hidden md:flex"> File</span> <Download class="size-4 ml-2" /></Button>
-			    </div>
-		    </template>
-		    <template #right-buttons-last>
-			    <div class="flex flex-col max-w-min">
-				    <Button variant="default" size="sm" disabled>Submit <Send class="size-4 ml-2" /></Button>
-				    <span class="text-muted-foreground text-xs">Not yet implemented</span>
-			    </div>
-		    </template>
-	    </FormBuilder>
-    </div>
+	<NuxtLayout>
+		<template #title>Metadata Entry Tool</template>
+		<template #description>
+			Create metadata records to support the discoverability, governance, and reuse of Indigenous data in line with Indigenous Data Commons principles.
+		</template>
+		<div class="mb-4">
+<!--			<h1 class="bold text-3xl mb-4">Metadata Entry Tool</h1>-->
+			<p>This form is to be completed for submitting metadata to the Indigenous Data Network.</p>
+			<p>In order to complete a compliant metadata record for your data, you need to fill out the information required
+				in the form below. You have the option of completing only the minimum required information (indicated by a
+				red asterix) but it is recommended that you include as much information as possible in the form.</p>
+			<p>The more information you are able to provide, the higher the <a
+				href="https://force11.org/info/the-fair-data-principles" target="_blank"
+				rel="noopener noreferrer">FAIR</a> and <a href="https://www.gida-global.org/care" target="_blank"
+			                                              rel="noopener noreferrer">CARE</a> scores for your metadata. For now, these scores generate placeholder
+				values.</p>
+			<p>The metadata in RDF format can optionally be viewed on the right of the form. The RDF and scores are updated
+				as you complete the form. More information about the metadata profile can be found <a
+					href="https://data.idnau.org/pid/cp/guide" target="_blank" rel="noopener noreferrer">here</a>.</p>
+			<p>This form uses the IDN's collection of people and organisations, or "agents", that are related to metadata
+				and datasets in the IDN, called the <a href="https://agentsdb.idnau.org" target="_blank"
+				                                       rel="noopener noreferrer">Agents Database</a>. You can refer to this list of agents or create a custom
+				agent if required.</p>
+			<p>This form saves your progress between reloads. If you're experiencing problems or need to clear your data, either select "Clear Form" below or clear your local storage in your browser.</p>
+			<p>Watch the tutorial <a href="https://youtu.be/6UXqMmZgRvk" target="_blank">here</a>.</p>
+		</div>
+		<div class="flex flex-col gap-4 relative">
+			<div class="flex flex-row max-sm:flex-wrap gap-2 items-start mb-6 sticky top-[107.65px] md:top-[125.8px] bg-background z-48 py-2">
+				<!--                <div class="flex flex-col max-w-min mr-auto">-->
+				<!--                    <Button variant="outline" class="mr-auto" disabled>Tutorial</Button>-->
+				<!--                    <span class="text-muted-foreground text-xs">Not yet implemented</span>-->
+				<!--                </div>-->
+				<div class="flex flex-col max-w-min">
+					<Button variant="secondary" asChild>
+						<Label for="file">
+							<span class="max-md:hidden">Upload File</span>
+							<Upload class="size-4 md:ml-2" />
+						</Label>
+						<Input id="file" type="file" :accept="Object.keys(rdfFormats).map(ext => `.${ext}`).join(',')" @change="uploadFile" hidden />
+					</Button>
+					<span class="max-md:hidden text-muted-foreground text-xs">Supports {{ Object.keys(rdfFormats).map(ext => `.${ext}`).join(', ') }}</span>
+				</div>
+				<DropdownMenu>
+					<div class="flex flex-col max-w-min">
+						<DropdownMenuTrigger asChild>
+							<Button variant="secondary">
+								<span class="md:hidden">Eg</span>
+								<span class="max-md:hidden">Load Example</span>
+								<ChevronDown class="size-4 md:ml-2" /></Button>
+						</DropdownMenuTrigger>
+					</div>
+					<DropdownMenuContent class="max-w-80">
+						<DropdownMenuItem v-for="example in exampleData" class="cursor-pointer flex flex-col items-start" @select="loadExample(example)">
+							<span class="line-clamp-1">{{ example.label }}</span>
+							<span v-if="example.description" class="text-xs italic text-muted-foreground line-clamp-1">{{example.description}}</span>
+						</DropdownMenuItem>
+					</DropdownMenuContent>
+				</DropdownMenu>
+				<Modal>
+					<template #trigger>
+						<Button variant="outline" title="Show RDF">
+							<span class="max-md:hidden">RDF</span>
+							<Braces class="size-4" />
+						</Button>
+					</template>
+					<template #title>Metadata RDF</template>
+					<Editor
+						v-model="rdfString"
+						class="h-[600px] w-full"
+						language="turtle"
+						readonly
+						hideTheme
+						hideLanguage
+						:theme="colorMode.unknown || colorMode.value === 'light' ? 'light' : 'dark'"
+						:downloadFilename="data.title || 'metadata'"
+					/>
+				</Modal>
+				<div class="flex flex-row items-center gap-2 ml-auto">
+					<Scores title="FAIR" :score="fair" />
+					<Scores title="CARE" :score="care" />
+				</div>
+			</div>
+			<FormBuilder :schema="FORM_SCHEMA" v-model="data" :steps="steps" :registry="registry" v-model:step="stepIndex" class="md:[&>div>div]:top-[180px] md:[&>div>div]:w-1/5!">
+				<template #left-buttons>
+					<Button variant="destructive" size="sm" @click="clearForm">Clear<span class="hidden md:flex"> Form</span> <Trash2 class="size-4 ml-2" /></Button>
+				</template>
+				<template #right-buttons>
+					<div class="flex flex-col max-w-min">
+						<Button variant="secondary" size="sm" @click="downloadFile">Save<span class="hidden md:flex"> File</span> <Download class="size-4 ml-2" /></Button>
+					</div>
+				</template>
+				<template #right-buttons-last>
+					<div class="flex flex-col max-w-min">
+						<Button variant="default" size="sm" disabled>Submit <Send class="size-4 ml-2" /></Button>
+						<span class="text-muted-foreground text-xs">Not yet implemented</span>
+					</div>
+				</template>
+			</FormBuilder>
+		</div>
+	</NuxtLayout>
 </template>
 
 <style>
-p {
+p:not([class]) {
     margin-bottom: 0.5rem;
 }
 </style>

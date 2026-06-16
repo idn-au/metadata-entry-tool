@@ -1,7 +1,7 @@
 <script lang="ts" setup>
 import type { HTMLAttributes } from "vue";
 import * as z from "zod";
-import { Pencil } from "lucide-vue-next";
+import { Pencil } from "@lucide/vue";
 import { useVtForm, FormBuilder, type Registry, SearchInput } from "@vulptech/vt-form";
 import { cn } from "~/lib/utils";
 

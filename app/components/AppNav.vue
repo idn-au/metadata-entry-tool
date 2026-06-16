@@ -18,25 +18,10 @@ const links = [
         to: "/help"
     },
 ];
-
-const extLinks: { label: string; url: string }[] = [
-    {
-        label: "About Us",
-        url: "https://idnau.org/about",
-    },
-    {
-        label: "Resources",
-        url: "https://idnau.org/resources",
-    },
-    {
-        label: "Contact Us",
-        url: "https://idnau.org/contact",
-    },
-];
 </script>
 
 <template>
-    <nav :class="cn('flex flex-row items-center', props.class)">
+    <nav :class="cn('flex flex-row items-center bg-background', props.class)">
         <Button
             v-for="link in links"
             variant="ghost"
@@ -46,10 +31,5 @@ const extLinks: { label: string; url: string }[] = [
         >
             <NuxtLink :to="link.to">{{ link.label }}</NuxtLink>
         </Button>
-        <!-- <span class="mx-4 hidden md:flex border-r-1 border-r-foreground h-6"></span>
-        <hr class="md:hidden border-b-1 border-b-foreground w-3/4 my-4" />
-        <Button v-for="link in extLinks" variant="ghost" class="rounded-none" as-child>
-            <a :href="link.url" target="_blank" rel="noopener noreferrer">{{ link.label }}</a>
-        </Button> -->
     </nav>
 </template>

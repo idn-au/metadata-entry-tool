@@ -13,7 +13,8 @@
         "@idn-au/score-component-lib": "^0.4.0",
         "@idn-au/scores-calculator-js": "^0.4.0",
         "@kurrawongai/kai-ui": "0.2.5",
-        "@nuxt/image": "2.0.0",
+        "@lucide/vue": "^1.18.0",
+        "@nuxt/image": "^2.0.0",
         "@nuxtjs/color-mode": "^4.0.0",
         "@tailwindcss/vite": "^4.1.18",
         "@vueuse/core": "^14.1.0",
@@ -21,13 +22,12 @@
         "class-variance-authority": "^0.7.1",
         "clsx": "^2.1.1",
         "jsonld": "^9.0.0",
-        "lucide-vue-next": "^0.562.0",
-        "nuxt": "^4.3.0",
+        "nuxt": "^4.4.6",
         "oxigraph": "0.5.6",
-        "reka-ui": "^2.7.0",
-        "shadcn-nuxt": "2.4.3",
-        "tailwind-merge": "^3.4.0",
-        "tailwindcss": "^4.1.18",
+        "reka-ui": "^2.9.9",
+        "shadcn-nuxt": "^2.7.4",
+        "tailwind-merge": "^3.6.0",
+        "tailwindcss": "^4.3.0",
         "tw-animate-css": "^1.4.0",
         "uuid": "^13.0.0",
         "vue": "^3.5.26",
@@ -35,6 +35,9 @@
         "zod": "^3.25.76"
     },
     "devDependencies": {
+        "@fortawesome/fontawesome-svg-core": "^7.2.0",
+        "@fortawesome/free-brands-svg-icons": "^7.2.0",
+        "@fortawesome/vue-fontawesome": "^3.2.0",
         "@types/jsonld": "^1.5.15",
         "typescript": "^5.9.3"
     }

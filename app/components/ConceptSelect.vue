@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { ref, watch, type HTMLAttributes } from "vue";
-import { Check, ChevronsUpDown, Search, X, ExternalLink } from "lucide-vue-next";
+import { Check, ChevronsUpDown, Search, X, ExternalLink } from "@lucide/vue";
 import { cn } from "~/lib/utils";
 
 const props = defineProps<{

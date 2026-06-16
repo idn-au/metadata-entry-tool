@@ -1,5 +1,5 @@
 <script lang="ts" setup>
-import { Check, Circle, Dot, ChevronLeft, ChevronRight } from "lucide-vue-next";
+import { Check, Circle, Dot, ChevronLeft, ChevronRight } from "@lucide/vue";
 
 const props = defineProps<{
     steps: {

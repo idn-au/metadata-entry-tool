@@ -1,6 +1,6 @@
 <script lang="ts" setup>
 import type { HTMLAttributes } from "vue";
-import { Copy, RefreshCw } from "lucide-vue-next";
+import { Copy, RefreshCw } from "@lucide/vue";
 import { CustomInput } from "@vulptech/vt-form";
 import { cn } from "~/lib/utils";
 
