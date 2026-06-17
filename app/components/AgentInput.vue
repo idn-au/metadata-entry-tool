@@ -16,6 +16,7 @@ const registry: Registry = {
     iri: REGISTRY.iri,
     concept: REGISTRY.concept,
     indigeneitySelect: REGISTRY.indigeneitySelect,
+	agentSearch: REGISTRY.agentSearch,
 };
 
 const { formData: data, isValid, resetForm } = useVtForm(AGENT_SCHEMA);
@@ -49,14 +50,14 @@ watch(open, (newValue) => {
 
 watch(() => data.value?.type, (newValue, oldValue) => {
     if (newValue !== oldValue) {
-        data.value.iri = generateAgentIRI(newValue === "https://schema.org/Person");
+        data.value.iri = model.value ? model.value.iri : generateAgentIRI(newValue === "https://schema.org/Person");
     }
 });
 </script>
 
 <template>
     <div :class="cn('w-full flex flex-row gap-2 items-center', props.class)">
-        <SearchInput
+        <AgentSearchInput
             v-model="model"
             :listQuery="agentSearch"
             :getQuery="agentGet"
@@ -71,7 +72,7 @@ watch(() => data.value?.type, (newValue, oldValue) => {
                 <Button variant="outline" title="Create a custom agent"><Pencil class="size-4" /></Button>
             </template>
             <template #title>Custom Agent</template>
-            <template #description>You can create your own agent here if it doesn't exist in the IDN's agents database</template>
+            <template #description>You can create your own agent here if it doesn't exist in the IDN's Agents Database</template>
             <FormBuilder :schema="AGENT_SCHEMA" :registry="registry" v-model="data" class="grid grid-cols-2 gap-3" />
             <template #footer>
                 <Button variant="secondary" class="mr-auto" @click="open = false;">Cancel</Button>

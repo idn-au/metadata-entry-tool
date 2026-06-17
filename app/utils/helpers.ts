@@ -36,17 +36,15 @@ export async function sparqlOptions(vocabIRI: string): Promise<ConceptOption[]> 
 }
 
 export async function agentSearch(term: string): Promise<Option[]> {
-    const r = await sparqlSelect(`PREFIX dcterms: <http://purl.org/dc/terms/>
-        PREFIX sdo: <https://schema.org/>
+    const r = await sparqlSelect(`PREFIX sdo: <https://schema.org/>
+        PREFIX text: <http://jena.apache.org/text#>
         SELECT DISTINCT ?iri ?name
         WHERE {
-            GRAPH <https://data.idnau.org/pid/agentsdb> {
-                VALUES ?type { sdo:Person sdo:Organization }
-                ?iri a ?type ;
-                    sdo:name ?name .
-                FILTER regex(?name, "${term}", "i")
-            }
-        } LIMIT 20`);
+            VALUES ?type { sdo:Person sdo:Organization }
+            (?iri ?score ?name) text:query (sdo:name "${term}*") .
+            ?iri a ?type .
+        }
+        ORDER BY DESC(?score) STR(LCASE(?name))`);
     return r.map(x => {
         return {
             value: x.iri.value,
@@ -54,6 +52,8 @@ export async function agentSearch(term: string): Promise<Option[]> {
         }
     });
 }
+
+// https://orcid.org/0000-0002-1398-7524
 
 export async function agentGet(iri: string) {
     const query = `PREFIX dcterms: <http://purl.org/dc/terms/>

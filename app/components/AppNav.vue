@@ -25,7 +25,7 @@ const links = [
         <Button
             v-for="link in links"
             variant="ghost"
-            class="flex-1 justify-center rounded-none border-b-2 text-xs md:text-sm px-1 md:px-3"
+            class="justify-center rounded-none border-b-2 text-xs md:text-sm px-1 md:px-3"
             :class="route.path === link.to ? 'border-b-isu-red' : 'border-b-transparent'"
             as-child
         >

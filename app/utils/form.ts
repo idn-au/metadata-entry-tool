@@ -2,6 +2,7 @@ import * as z from "zod";
 import { formField, type StepConfig, type Registry } from "@vulptech/vt-form";
 import { generateIRI, generateAgentIRI, agentSearch, agentGet } from "./helpers";
 import AgentInput from "~/components/AgentInput.vue";
+import AgentSearchInput from "~/components/AgentSearchInput.vue";
 import DateInput from "~/components/DateInput.vue";
 import SpatialInput from "~/components/SpatialInput.vue";
 import IRIInput from "~/components/IRIInput.vue";
@@ -26,6 +27,14 @@ export const REGISTRY: Registry = {
     },
     agent: {
         component: AgentInput,
+        props: {
+            listQuery: ({ meta }) => meta.listQuery,
+            getQuery: ({ meta }) => meta.getQuery || undefined,
+            resultLabel: ({ meta }) => meta.resultLabel || undefined,
+        },
+    },
+    agentSearch: {
+        component: AgentSearchInput,
         props: {
             listQuery: ({ meta }) => meta.listQuery,
             getQuery: ({ meta }) => meta.getQuery || undefined,
@@ -564,7 +573,7 @@ export const AGENT_SCHEMA = z.object({
         }),
         agent: formField(z.string(), {
             label: "Agent",
-            type: "search",
+            type: "agentSearch",
             placeholder: "Search for an agent",
             listQuery: agentSearch,
         }),

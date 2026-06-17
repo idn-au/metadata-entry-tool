@@ -1,6 +1,6 @@
 {
-  "name": "The Indigenous Data Commons",
-  "short_name": "IDC",
+  "name": "IDN Metadata Entry Tool",
+  "short_name": "MET",
   "icons": [
     {
       "src": "/web-app-manifest-192x192.png",
