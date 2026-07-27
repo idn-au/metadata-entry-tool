@@ -34,6 +34,9 @@ jobs:
   deploy:
     needs: publish
     runs-on: self-hosted
+    environment:
+      name: production
+      url: https://metadata.idnau.org
     steps:
     - uses: actions/checkout@v4
     - name: Stop current met if exists

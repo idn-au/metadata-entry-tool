@@ -1,0 +1,9 @@
+allowBuilds:
+  '@idn-au/score-component-lib': true
+  '@idn-au/scores-calculator-js': true
+  '@kurrawongai/kai-ui': true
+  '@parcel/watcher': true
+  '@vulptech/vt-form': true
+  esbuild: true
+  sharp: true
+  vue-demi: true

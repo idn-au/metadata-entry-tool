@@ -99,20 +99,20 @@ const phoneNumber = z.string().transform((val, ctx) => {
 });
 
 export const FORM_SCHEMA = z.object({
+    title: formField(z.string(), {
+        label: "Title",
+        type: "text",
+        tooltip: "The name of the data that this metadata is describing.",
+        emptyValue: "",
+        step: "general",
+    }),
     iri: formField(z.string().url({ message: "Must be a valid IRI" }), {
-        label: "IRI",
+        label: "ID",
         type: "iri",
         generateFn: () => generateIRI("resource"),
         placeholder: "https://example.com",
         description: "Provide an IRI or have an IRI automatically assigned",
         tooltip: "An IRI is a standard identifier in the form of a web address (URL). Good IRIs are part of a managed system.",
-        emptyValue: "",
-        step: "general",
-    }),
-    title: formField(z.string(), {
-        label: "Title",
-        type: "text",
-        tooltip: "The name of the data that this metadata is describing.",
         emptyValue: "",
         step: "general",
     }),
@@ -186,7 +186,7 @@ export const FORM_SCHEMA = z.object({
     }).array().optional(), {
         label: "Indigenous Data Governance Policy",
         type: "add",
-        step: "general",
+        step: "governance",
         class: "col-span-full",
     }),
     agentRole: formField(z.object({
@@ -259,6 +259,28 @@ export const FORM_SCHEMA = z.object({
         tooltip: "Issued indicates when, if ever, this dataset was published",
         step: "dates",
     }),
+    temporal: formField(z.object({
+        type: formField(z.literal("dcterms:PeriodOfTime"), {
+            type: "hidden",
+            initial: "dcterms:PeriodOfTime",
+        }),
+        startedAtTime: formField<z.ZodTypeAny, any>(customDate.optional(), {
+            label: "Start Time",
+            type: "customDate",
+            description: "Either of YYYY, MM/YYYY or DD/MM/YYYY are supported",
+        }),
+        endedAtTime: formField<z.ZodTypeAny, any>(customDate.optional(), {
+            label: "End Time",
+            type: "customDate",
+            description: "Either of YYYY, MM/YYYY or DD/MM/YYYY are supported",
+        }),
+    }).optional(), {
+        label: "Start & End Dates",
+        type: "group",
+        tooltip: "This is the interval of time which the data covers at the time of publishing. There must be a start and end date.",
+        step: "dates",
+        class: "col-span-full",
+    }),
     license: formField(z.string().optional(), {
         label: "License",
         type: "concept",
@@ -321,29 +343,7 @@ export const FORM_SCHEMA = z.object({
         label: "Spatial",
         type: "spatial",
         description: "Supports an IRI or a WKT/GeoJSON string",
-        step: "spatioTemporal",
-    }),
-    temporal: formField(z.object({
-        type: formField(z.literal("dcterms:PeriodOfTime"), {
-            type: "hidden",
-            initial: "dcterms:PeriodOfTime",
-        }),
-        startedAtTime: formField<z.ZodTypeAny, any>(customDate.optional(), {
-            label: "Start Time",
-            type: "customDate",
-            description: "Either of YYYY, MM/YYYY or DD/MM/YYYY are supported",
-        }),
-        endedAtTime: formField<z.ZodTypeAny, any>(customDate.optional(), {
-            label: "End Time",
-            type: "customDate",
-            description: "Either of YYYY, MM/YYYY or DD/MM/YYYY are supported",
-        }),
-    }).optional(), {
-        label: "Temporal",
-        type: "group",
-        tooltip: "This is the interval of time which the data covers at the time of publishing. There must be a start and end date.",
-        step: "spatioTemporal",
-        class: "col-span-full",
+        step: "spatial",
     }),
     distribution: formField(z.object({
         type: formField(z.literal("dcat:Distribution"), {
@@ -453,49 +453,55 @@ export const STEP_CONFIG: StepConfig = {
     steps: [
         {
             id: "general",
-            label: "General",
+            label: "1. General",
             description: "Basic information about this data.",
             class: "grid grid-cols-1 md:grid-cols-2 gap-3",
         },
         {
-            id: "agentInfo",
-            label: "Agent Information",
-            description: "Information about the roles that agents (people and organisations) play with respect to this data. These roles are critical in determining whether this data is managed properly. Each Agent must have a matching Role.",
+            id: "theme",
+            label: "2. Theme",
+            description: "Classification or categorisation of this data. We are mostly concerned with indications of 'indigeneity', i.e. how this data is related to indigenous people, however other classifications may also be added. Our primary indigenous classification vocabulary is online at https://data.idnau.org/v/vocab/vcb:idn-th which may be browsed for classification suggestions.",
             class: "grid grid-cols-1 md:grid-cols-2 gap-3",
         },
         {
             id: "dates",
-            label: "Dates",
+            label: "3. Dates",
             description: "Standard dates for the establishment and update times of this dataset. A dataset about early 20th century data might only have been made last year and the created date is then some time last year. 'Issued' indicates when, if ever, this dataset was published.",
             class: "grid grid-cols-1 md:grid-cols-2 gap-3",
         },
         {
             id: "rights",
-            label: "Rights",
+            label: "4. Rights",
             description: "Ownership and access information of the data. If a license is selected then the rights holder to that license should also be included.",
             class: "grid grid-cols-1 md:grid-cols-2 gap-3",
         },
         {
-            id: "spatioTemporal",
-            label: "Spatio/Temporal",
+            id: "governance",
+            label: "5. Indigenous Data Governance",
+            description: "Having policies for Indigenous Data Governance",
+            class: "grid grid-cols-1 md:grid-cols-2 gap-3",
+        },
+        {
+            id: "agentInfo",
+            label: "6. Agent Information",
+            description: "Information about the roles that agents (people and organisations) play with respect to this data. These roles are critical in determining whether this data is managed properly. Each Agent must have a matching Role.",
+            class: "grid grid-cols-1 md:grid-cols-2 gap-3",
+        },
+        {
+            id: "spatial",
+            label: "7. Spatial",
             description: "The spatial (geographical) and temporal (time period) extent of the data. Temporal information is different from the dates section as, for example, this dataset may have been created recently but is about someone or something long ago.",
             class: "grid grid-cols-1 md:grid-cols-2 gap-3",
         },
         {
             id: "distribution",
-            label: "Distribution Info",
+            label: "8. Distribution Info",
             description: "This is optional information in the form of a publicly resolvable URL that gives the user access to the data.",
             class: "grid grid-cols-1 md:grid-cols-2 gap-3",
         },
         {
-            id: "theme",
-            label: "Theme",
-            description: "Classification or categorisation of this data. We are mostly concerned with indications of 'indigeneity', i.e. how this data is related to indigenous people, however other classifications may also be added. Our primary indigenous classification vocabulary is online at https://data.idnau.org/v/vocab/vcb:idn-th which may be browsed for classification suggestions.",
-            class: "grid grid-cols-1 md:grid-cols-2 gap-3",
-        },
-        {
             id: "contact",
-            label: "Contact Details",
+            label: "9. Contact Details",
             description: "These details are required if you are submitting this metadata to the IDN. These details are also added as the point of contact for this data unless you've specifically indicated an Agent as the Point of Contact above.",
             class: "grid grid-cols-1 md:grid-cols-2 gap-3",
         },

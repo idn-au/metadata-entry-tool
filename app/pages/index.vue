@@ -1,16 +1,17 @@
 <script lang="ts" setup>
 import * as jsonld from "jsonld";
-import { ChevronDown, ChevronUp, Braces, Upload, Download, Trash2, Send } from "@lucide/vue";
+import { ChevronDown, ChevronUp, Braces, Upload, Download, Trash2, Send, Play, CircleQuestionMark, Info, ArrowUp } from "@lucide/vue";
 import { useVtForm, FormBuilder, type Registry, schemaCreateEmptyObject } from "@vulptech/vt-form";
 import { ScoreCalculator, type TopScoreValueObj } from "@idn-au/scores-calculator-js";
 import { Scores } from "@idn-au/score-component-lib";
 import { Editor } from "@kurrawongai/kai-ui";
 import init, * as oxigraph from "oxigraph/web";
-import { useDebounceFn } from "@vueuse/core";
+import {useDebounceFn, useWindowScroll} from "@vueuse/core";
 
 const SAVE_TO_LOCALSTORAGE = true;
 
 const colorMode = useColorMode();
+const { arrivedState } = useWindowScroll();
 
 const registry: Registry = {
     iri: REGISTRY.iri,
@@ -28,6 +29,24 @@ const fair = ref({} as TopScoreValueObj);
 const care = ref({} as TopScoreValueObj);
 const isDownloading = ref(false);
 const stepIndex = ref(1);
+
+const formRef = useTemplateRef("formRef");
+
+function scrollToForm() {
+	if (formRef.value) {
+		scrollTo({
+			top: formRef.value.offsetTop - 126,
+			behavior: "smooth",
+		});
+	}
+}
+
+function scrollToTop() {
+	scrollTo({
+		top: 0,
+		behavior: "smooth",
+	});
+}
 
 function clearForm() {
     if (confirm("Are you sure you want to clear the form? You will lose all progress if you have not saved as a file.")) {
@@ -181,7 +200,19 @@ onMounted(async () => {
 			Create metadata records to support the discoverability, governance, and reuse of Indigenous data in line with Indigenous Data Commons principles.
 		</template>
 		<div class="mb-4">
-<!--			<h1 class="bold text-3xl mb-4">Metadata Entry Tool</h1>-->
+			<div class="mx-auto max-w-2l w-full p-4 flex flex-col items-center gap-4">
+				Single sentence on what this tool is.
+				<div class="flex flex-row items-center gap-4">
+					<Button @click="scrollToForm">
+						Get Started <Play />
+					</Button>
+					<Button variant="secondary" asChild>
+						<NuxtLink to="/help">
+							How to use <CircleQuestionMark />
+						</NuxtLink>
+					</Button>
+				</div>
+			</div>
 			<p>This form is to be completed for submitting metadata to the Indigenous Data Network.</p>
 			<p>In order to complete a compliant metadata record for your data, you need to fill out the information required
 				in the form below. You have the option of completing only the minimum required information (indicated by a
@@ -201,21 +232,31 @@ onMounted(async () => {
 			<p>This form saves your progress between reloads. If you're experiencing problems or need to clear your data, either select "Clear Form" below or clear your local storage in your browser.</p>
 			<p>Watch the tutorial <a href="https://youtu.be/6UXqMmZgRvk" target="_blank">here</a>.</p>
 		</div>
-		<div class="flex flex-col gap-4 relative">
+		<div class="flex flex-col gap-4 relative border rounded-xl p-2" ref="formRef">
 			<div class="flex flex-row max-sm:flex-wrap gap-2 items-start mb-6 sticky top-[107.65px] md:top-[125.8px] bg-background z-48 py-2">
 				<!--                <div class="flex flex-col max-w-min mr-auto">-->
 				<!--                    <Button variant="outline" class="mr-auto" disabled>Tutorial</Button>-->
 				<!--                    <span class="text-muted-foreground text-xs">Not yet implemented</span>-->
 				<!--                </div>-->
-				<div class="flex flex-col max-w-min">
+				<div class="flex flex-row items-center gap-2">
 					<Button variant="secondary" asChild>
 						<Label for="file">
-							<span class="max-md:hidden">Upload File</span>
+							<span class="max-md:hidden">Import Data</span>
 							<Upload class="size-4 md:ml-2" />
 						</Label>
 						<Input id="file" type="file" :accept="Object.keys(rdfFormats).map(ext => `.${ext}`).join(',')" @change="uploadFile" hidden />
 					</Button>
-					<span class="max-md:hidden text-muted-foreground text-xs">Supports {{ Object.keys(rdfFormats).map(ext => `.${ext}`).join(', ') }}</span>
+					<TooltipProvider>
+						<Tooltip>
+							<TooltipTrigger>
+								<Info class="size-4 text-muted-foreground" />
+							</TooltipTrigger>
+							<TooltipContent>
+								<div>Import an existing RDF file to edit in this form.</div>
+								<div>Supports {{ Object.keys(rdfFormats).map(ext => `.${ext}`).join(', ') }} files</div>
+							</TooltipContent>
+						</Tooltip>
+					</TooltipProvider>
 				</div>
 				<DropdownMenu>
 					<div class="flex flex-col max-w-min">
@@ -257,7 +298,7 @@ onMounted(async () => {
 					<Scores title="CARE" :score="care" />
 				</div>
 			</div>
-			<FormBuilder :schema="FORM_SCHEMA" v-model="data" :steps="steps" :registry="registry" v-model:step="stepIndex" class="md:[&>div>div]:top-[180px] md:[&>div>div]:w-1/5!">
+			<FormBuilder :schema="FORM_SCHEMA" v-model="data" :steps="steps" :registry="registry" v-model:step="stepIndex" class="md:[&>div>div]:top-[180px] md:[&>div>div]:w-1/5! **:[&.grid]:gap-6">
 				<template #left-buttons>
 					<Button variant="destructive" size="sm" @click="clearForm">Clear<span class="hidden md:flex"> Form</span> <Trash2 class="size-4 ml-2" /></Button>
 				</template>
@@ -274,6 +315,9 @@ onMounted(async () => {
 				</template>
 			</FormBuilder>
 		</div>
+		<IDCButton v-show="!arrivedState.top" variant="green" size="icon" class="rounded-full fixed bottom-4 right-4 z-50" @click="scrollToTop">
+			<ArrowUp />
+		</IDCButton>
 	</NuxtLayout>
 </template>
 
