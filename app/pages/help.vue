@@ -17,6 +17,10 @@ import { HelpCircle } from "@lucide/vue";
 		<h2 class="bold text-2xl my-4">The Metadata Entry Tool</h2>
 		<p>With this tool you can describe your data using the metadata elements described in the <a href="https://data.idnau.org/pid/cp/guide" target="_blank" rel="noopener noreferrer">IDN Catalogue Profile Guidance</a>.</p>
 		<p>You can download your completed metadata record in RDF and, if appropriate, submit the metadata record to catalogue your Indigenous Data in the IDN Data Catalogue. <em>Note that this will require pre-registration in the IDN Agents Database before the IDN can accept the metadata record.</em></p>
+		<h3 class="bold text-xl my-4">Watch the tutorial</h3>
+		<div class="max-w-2xl mx-auto">
+			<iframe class="rounded-xl overflow-hiddenborder aspect-video h-auto w-full" src="https://www.youtube.com/embed/6UXqMmZgRvk" width="560" height="315" frameborder="0" referrerpolicy="strict-origin-when-cross-origin" allow="autoplay; fullscreen; picture-in-picture; clipboard-write; encrypted-media; web-share" allowfullscreen></iframe>
+		</div>
 		<h2 class="bold text-2xl my-4">Completing a metadata record for your data</h2>
 		<p>There are eight areas of metadata that need to be completed to fully describe the data asset. You are able to limit your description to the fields that have a red asterisk but it is encouraged to complete as much information as you are able.</p>
 		<p><span class="text-muted-foreground inline-block"><HelpCircle class="size-4" /></span> If you hover over this text you will get a brief description of what should be entered in this field.</p>

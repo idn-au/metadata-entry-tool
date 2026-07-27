@@ -200,8 +200,15 @@ onMounted(async () => {
 			Create metadata records to support the discoverability, governance, and reuse of Indigenous data in line with Indigenous Data Commons principles.
 		</template>
 		<div class="mb-4">
-			<div class="mx-auto max-w-2l w-full p-4 flex flex-col items-center gap-4">
-				Single sentence on what this tool is.
+			<div class="mx-auto max-w-2l w-full p-8 flex flex-col items-center gap-4">
+				<div class="flex flex-col gap-3 text-center">
+					<div class="text-xl font-semibold">
+						A form to create & score metadata of Indigenous Data
+					</div>
+					<p class="text-muted-foreground">
+						This form is to be completed for submitting metadata to the Indigenous Data Network.
+					</p>
+				</div>
 				<div class="flex flex-row items-center gap-4">
 					<Button @click="scrollToForm">
 						Get Started <Play />
@@ -213,7 +220,6 @@ onMounted(async () => {
 					</Button>
 				</div>
 			</div>
-			<p>This form is to be completed for submitting metadata to the Indigenous Data Network.</p>
 			<p>In order to complete a compliant metadata record for your data, you need to fill out the information required
 				in the form below. You have the option of completing only the minimum required information (indicated by a
 				red asterix) but it is recommended that you include as much information as possible in the form.</p>
@@ -230,7 +236,6 @@ onMounted(async () => {
 				                                       rel="noopener noreferrer">Agents Database</a>. You can refer to this list of agents or create a custom
 				agent if required.</p>
 			<p>This form saves your progress between reloads. If you're experiencing problems or need to clear your data, either select "Clear Form" below or clear your local storage in your browser.</p>
-			<p>Watch the tutorial <a href="https://youtu.be/6UXqMmZgRvk" target="_blank">here</a>.</p>
 		</div>
 		<div class="flex flex-col gap-4 relative border rounded-xl p-2" ref="formRef">
 			<div class="flex flex-row max-sm:flex-wrap gap-2 items-start mb-6 sticky top-[107.65px] md:top-[125.8px] bg-background z-48 py-2">

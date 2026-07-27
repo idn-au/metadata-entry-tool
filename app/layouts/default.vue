@@ -134,6 +134,6 @@ footer {
 	background-position-x: right;
 	background-position-y: top;
 	background-blend-mode: lighten;
-	//background-blend-mode: luminosity;
+	/* background-blend-mode: luminosity; */
 }
 </style>
