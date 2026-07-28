@@ -1,7 +1,8 @@
 <script lang="ts" setup>
-import { Newspaper } from "@lucide/vue";
+import { Newspaper, ArrowUp } from "@lucide/vue";
 import {FontAwesomeIcon} from "@fortawesome/vue-fontawesome";
 import {faFacebookF, faInstagram, faLinkedinIn, faYoutube, type IconDefinition, faXTwitter} from "@fortawesome/free-brands-svg-icons";
+import { useWindowScroll } from "@vueuse/core";
 
 const socials: {
 	title: string;
@@ -36,6 +37,15 @@ const socials: {
 ];
 
 const defaultImage = "/img/Milky_Way_IDN_Logo_75percent-fpng.webp";
+
+const { arrivedState } = useWindowScroll();
+
+function scrollToTop() {
+	scrollTo({
+		top: 0,
+		behavior: "smooth",
+	});
+}
 </script>
 
 <template>
@@ -125,6 +135,9 @@ const defaultImage = "/img/Milky_Way_IDN_Logo_75percent-fpng.webp";
 			</div>
 		</footer>
 	</div>
+	<IDCButton v-show="!arrivedState.top" variant="green" size="icon" class="rounded-full fixed bottom-12 md:bottom-4 right-4 z-50" @click="scrollToTop">
+		<ArrowUp />
+	</IDCButton>
 </template>
 
 <style scoped>

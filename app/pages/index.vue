@@ -1,17 +1,16 @@
 <script lang="ts" setup>
 import * as jsonld from "jsonld";
-import { ChevronDown, ChevronUp, Braces, Upload, Download, Trash2, Send, Play, CircleQuestionMark, Info, ArrowUp } from "@lucide/vue";
+import { ChevronDown, Braces, Upload, Download, Trash2, Send, Play, CircleQuestionMark, Info } from "@lucide/vue";
 import { useVtForm, FormBuilder, type Registry, schemaCreateEmptyObject } from "@vulptech/vt-form";
 import { ScoreCalculator, type TopScoreValueObj } from "@idn-au/scores-calculator-js";
 import { Scores } from "@idn-au/score-component-lib";
 import { Editor } from "@kurrawongai/kai-ui";
 import init, * as oxigraph from "oxigraph/web";
-import {useDebounceFn, useWindowScroll} from "@vueuse/core";
+import { useDebounceFn } from "@vueuse/core";
 
 const SAVE_TO_LOCALSTORAGE = true;
 
 const colorMode = useColorMode();
-const { arrivedState } = useWindowScroll();
 
 const registry: Registry = {
     iri: REGISTRY.iri,
@@ -39,13 +38,6 @@ function scrollToForm() {
 			behavior: "smooth",
 		});
 	}
-}
-
-function scrollToTop() {
-	scrollTo({
-		top: 0,
-		behavior: "smooth",
-	});
 }
 
 function clearForm() {
@@ -238,7 +230,7 @@ onMounted(async () => {
 			<p>This form saves your progress between reloads. If you're experiencing problems or need to clear your data, either select "Clear Form" below or clear your local storage in your browser.</p>
 		</div>
 		<div class="flex flex-col gap-4 relative border rounded-xl p-2" ref="formRef">
-			<div class="flex flex-row max-sm:flex-wrap gap-2 items-start sticky top-[107.65px] md:top-[125.8px] bg-background z-48 py-2 border-b">
+			<div class="flex flex-row max-sm:flex-wrap gap-2 items-start sticky top-[83px] md:top-[92px] bg-background z-48 border-b">
 				<!--                <div class="flex flex-col max-w-min mr-auto">-->
 				<!--                    <Button variant="outline" class="mr-auto" disabled>Tutorial</Button>-->
 				<!--                    <span class="text-muted-foreground text-xs">Not yet implemented</span>-->
@@ -323,9 +315,6 @@ onMounted(async () => {
 				</template>
 			</FormBuilder>
 		</div>
-		<IDCButton v-show="!arrivedState.top" variant="green" size="icon" class="rounded-full fixed bottom-12 md:bottom-4 right-4 z-50" @click="scrollToTop">
-			<ArrowUp />
-		</IDCButton>
 	</NuxtLayout>
 </template>
 

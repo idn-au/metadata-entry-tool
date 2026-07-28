@@ -1,37 +1,33 @@
 <script lang="ts" setup>
-import { Sun, Moon, SunMoon, Hammer } from "@lucide/vue";
+import { Sun, Moon, SunMoon } from "@lucide/vue";
+import {useWindowScroll, useWindowSize} from "@vueuse/core";
 
 const router = useRouter();
-const route = useRoute();
 const colorMode = useColorMode();
-
-const props = defineProps<{
-	allowToggleNav?: boolean;
-}>();
-
-const linkClasses = "bg-transparent hover:bg-black/10 transition-colors";
+const { y } = useWindowScroll();
+const { width: windowWidth } = useWindowSize();
 
 const showSidenav = ref(false);
-const expandNav = ref(route.path !== "/");
-// const expandNav = ref(true);
+
+const logoWidth = computed(() => {
+	const breakpoint = 768; // md
+	const isMobile = windowWidth.value < breakpoint;
+	const maxWidth = isMobile ? 200 : 248;
+	const minWidth = isMobile ? 136 : 160;
+	return Math.max(maxWidth - y.value / 2, minWidth);
+});
 
 router.beforeEach((from, to) => {
 	showSidenav.value = false;
-	expandNav.value = false;
 });
 </script>
 
 <template>
-	<header :class="`top-nav sticky top-0 flex flex-row items-center p-4 gap-2 z-49 transition-colors flex-wrap ${props.allowToggleNav ? 'bg-transparent' : 'bg-background'}`">
-<!--		<Alert class="w-full border-none bg-transparent p-0 text-muted-foreground text-sm">-->
-<!--			<Hammer />-->
-<!--			<AlertTitle>This website is currently under development</AlertTitle>-->
-<!--		</Alert>-->
+	<header class="top-nav sticky top-0 flex flex-row items-center p-4 gap-2 z-49 transition-colors flex-wrap bg-background">
 		<a href="https://indigenousdatacommons.org" class="mr-auto">
-			<NuxtImg src="/img/idc-logo.png" class="w-50 md:w-62 h-auto" />
+			<NuxtImg src="/img/idc-logo.png" class="max-w-50 min-w-34 md:max-w-62 md:min-w-40 h-auto" :style="{width: `${logoWidth}px`}" />
 		</a>
-		<MainNav :allowToggleNav="props.allowToggleNav" />
-<!--		<SearchCommand icon :class="linkClasses" />-->
+		<MainNav />
         <Button variant="ghost" size="icon" @click="!colorMode.unknown ? colorMode.value === 'dark' ? colorMode.preference = 'light' : colorMode.preference = 'dark' : undefined">
 	        <SunMoon v-show="colorMode.unknown" />
 	        <Sun v-show="colorMode.value === 'dark'" class="size-4" />

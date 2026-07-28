@@ -7,18 +7,12 @@ import { cn } from "~/lib/utils";
 const router = useRouter();
 const route = useRoute();
 
-const props = defineProps<{
-	allowToggleNav?: boolean;
-}>();
-
 const linkClasses = "bg-transparent hover:bg-black/10 transition-colors";
 
 const showSidenav = ref(false);
-const expandNav = ref(route.path !== "/");
 
 router.beforeEach((from, to) => {
     showSidenav.value = false;
-	expandNav.value = false;
 });
 </script>
 
@@ -60,9 +54,9 @@ router.beforeEach((from, to) => {
 			</div>
 		</SheetContent>
 	</Sheet>
-	<div :class="props.allowToggleNav ? `transition-opacity ${expandNav ? '' : 'opacity-0'}` : ''">
+	<div>
 		<!--		    desktop nav-->
-		<NavigationMenu v-show="!props.allowToggleNav || expandNav" class="max-md:hidden **:data-[slot=navigation-menu-viewport]:bg-secondary **:data-[slot=navigation-menu-viewport]:border-none">
+		<NavigationMenu class="max-md:hidden **:data-[slot=navigation-menu-viewport]:bg-secondary **:data-[slot=navigation-menu-viewport]:border-none">
 			<NavigationMenuList>
 				<NavigationMenuItem v-for="link of navigation">
 					<template v-if="!!link.children && link.children.length > 1">
@@ -87,9 +81,6 @@ router.beforeEach((from, to) => {
 			</NavigationMenuList>
 		</NavigationMenu>
 	</div>
-	<Button v-if="props.allowToggleNav" size="icon" variant="ghost" :class="`max-md:hidden ${linkClasses}`" title="Toggle navbar" @click="expandNav = !expandNav">
-		<ListIndentDecrease :class="`size-4 transition-transform ${expandNav ? 'rotate-y-180' : ''}`" />
-	</Button>
 </template>
 
 <style scoped>
