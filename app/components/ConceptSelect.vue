@@ -35,7 +35,7 @@ watch(model, (newValue) => {
 </script>
 
 <template>
-    <div class="flex flex-row gap-1 items-center w-full relative">
+    <div class="flex flex-row gap-2 items-center w-full relative">
         <Combobox v-model="model" by="label" v-model:open="open" :multiple="props.multiple" class="relative w-full flex items-center">
             <ComboboxAnchor as-child>
                 <ComboboxTrigger as-child>

@@ -69,7 +69,7 @@ watch(() => data.value?.type, (newValue, oldValue) => {
         />
         <Modal v-model:open="open" class="sm:max-w-[800px]" @update:open="!$event && emits('blur')">
             <template #trigger>
-                <Button variant="outline" title="Create a custom agent"><Pencil class="size-4" /></Button>
+                <Button variant="outline" size="icon" title="Create a custom agent"><Pencil class="size-4" /></Button>
             </template>
             <template #title>Custom Agent</template>
             <template #description>You can create your own agent here if it doesn't exist in the IDN's Agents Database</template>

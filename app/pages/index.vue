@@ -238,7 +238,7 @@ onMounted(async () => {
 			<p>This form saves your progress between reloads. If you're experiencing problems or need to clear your data, either select "Clear Form" below or clear your local storage in your browser.</p>
 		</div>
 		<div class="flex flex-col gap-4 relative border rounded-xl p-2" ref="formRef">
-			<div class="flex flex-row max-sm:flex-wrap gap-2 items-start mb-6 sticky top-[107.65px] md:top-[125.8px] bg-background z-48 py-2">
+			<div class="flex flex-row max-sm:flex-wrap gap-2 items-start sticky top-[107.65px] md:top-[125.8px] bg-background z-48 py-2 border-b">
 				<!--                <div class="flex flex-col max-w-min mr-auto">-->
 				<!--                    <Button variant="outline" class="mr-auto" disabled>Tutorial</Button>-->
 				<!--                    <span class="text-muted-foreground text-xs">Not yet implemented</span>-->
@@ -253,7 +253,7 @@ onMounted(async () => {
 					</Button>
 					<TooltipProvider>
 						<Tooltip>
-							<TooltipTrigger>
+							<TooltipTrigger class="max-md:hidden">
 								<Info class="size-4 text-muted-foreground" />
 							</TooltipTrigger>
 							<TooltipContent>
@@ -279,33 +279,36 @@ onMounted(async () => {
 						</DropdownMenuItem>
 					</DropdownMenuContent>
 				</DropdownMenu>
-				<Modal>
-					<template #trigger>
-						<Button variant="outline" title="Show RDF">
-							<span class="max-md:hidden">RDF</span>
-							<Braces class="size-4" />
-						</Button>
-					</template>
-					<template #title>Metadata RDF</template>
-					<Editor
-						v-model="rdfString"
-						class="h-[600px] w-full"
-						language="turtle"
-						readonly
-						hideTheme
-						hideLanguage
-						:theme="colorMode.unknown || colorMode.value === 'light' ? 'light' : 'dark'"
-						:downloadFilename="data.title || 'metadata'"
-					/>
-				</Modal>
-				<div class="flex flex-row items-center gap-2 ml-auto">
+				<div class="flex flex-row gap-2 items-center ml-auto max-w-2xl">
 					<Scores title="FAIR" :score="fair" />
+					<div class="w-px bg-border self-stretch"></div>
 					<Scores title="CARE" :score="care" />
 				</div>
 			</div>
 			<FormBuilder :schema="FORM_SCHEMA" v-model="data" :steps="steps" :registry="registry" v-model:step="stepIndex" class="md:[&>div>div]:top-[180px] md:[&>div>div]:w-1/5! **:[&.grid]:gap-6">
 				<template #left-buttons>
-					<Button variant="destructive" size="sm" @click="clearForm">Clear<span class="hidden md:flex"> Form</span> <Trash2 class="size-4 ml-2" /></Button>
+					<Modal>
+						<template #trigger>
+							<Button variant="outline" title="Show RDF">
+								<span class="max-md:hidden">RDF</span>
+								<Braces class="size-4" />
+							</Button>
+						</template>
+						<template #title>Metadata RDF</template>
+						<Editor
+							v-model="rdfString"
+							class="h-[600px] w-full"
+							language="turtle"
+							readonly
+							hideTheme
+							hideLanguage
+							:theme="colorMode.unknown || colorMode.value === 'light' ? 'light' : 'dark'"
+							:downloadFilename="data.title || 'metadata'"
+						/>
+					</Modal>
+					<Button variant="outline" size="sm" class="!border-destructive text-destructive hover:!bg-destructive hover:text-destructive-foreground" @click="clearForm">
+						Clear All <Trash2 class="size-4" />
+					</Button>
 				</template>
 				<template #right-buttons>
 					<div class="flex flex-col max-w-min">
@@ -320,7 +323,7 @@ onMounted(async () => {
 				</template>
 			</FormBuilder>
 		</div>
-		<IDCButton v-show="!arrivedState.top" variant="green" size="icon" class="rounded-full fixed bottom-4 right-4 z-50" @click="scrollToTop">
+		<IDCButton v-show="!arrivedState.top" variant="green" size="icon" class="rounded-full fixed bottom-12 md:bottom-4 right-4 z-50" @click="scrollToTop">
 			<ArrowUp />
 		</IDCButton>
 	</NuxtLayout>

@@ -235,6 +235,7 @@ export const FORM_SCHEMA = z.object({
         // initial: [
         //     {}
         // ],
+        description: "You can add more than one",
         step: "agentInfo",
         class: "col-span-full",
     }),
@@ -248,14 +249,14 @@ export const FORM_SCHEMA = z.object({
     modified: formField<z.ZodTypeAny, any>(customDate, {
         label: "Modified",
         type: "customDate",
-        description: "Either of YYYY, MM/YYYY or DD/MM/YYYY are supported",
+        // description: "Either of YYYY, MM/YYYY or DD/MM/YYYY are supported",
         tooltip: "The most recent date on which the data was modified. It can be the same as the date it was created.",
         step: "dates",
     }),
     issued: formField<z.ZodTypeAny, any>(customDate.optional(), {
         label: "Issued",
         type: "customDate",
-        description: "Either of YYYY, MM/YYYY or DD/MM/YYYY are supported",
+        // description: "Either of YYYY, MM/YYYY or DD/MM/YYYY are supported",
         tooltip: "Issued indicates when, if ever, this dataset was published",
         step: "dates",
     }),
@@ -267,12 +268,12 @@ export const FORM_SCHEMA = z.object({
         startedAtTime: formField<z.ZodTypeAny, any>(customDate.optional(), {
             label: "Start Time",
             type: "customDate",
-            description: "Either of YYYY, MM/YYYY or DD/MM/YYYY are supported",
+            // description: "Either of YYYY, MM/YYYY or DD/MM/YYYY are supported",
         }),
         endedAtTime: formField<z.ZodTypeAny, any>(customDate.optional(), {
             label: "End Time",
             type: "customDate",
-            description: "Either of YYYY, MM/YYYY or DD/MM/YYYY are supported",
+            // description: "Either of YYYY, MM/YYYY or DD/MM/YYYY are supported",
         }),
     }).optional(), {
         label: "Start & End Dates",
