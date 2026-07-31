@@ -25,8 +25,8 @@ export default defineNuxtConfig({
             meta: [
                 { name: "apple-mobile-web-app-title", content: "IDN Metadata Entry Tool" },
             ],
-            title: "IDN Metadata Entry Tool"
-        }
+            title: "IDN Metadata Entry Tool",
+        },
     },
     runtimeConfig: {
         fusekiURL: "",
@@ -50,7 +50,7 @@ export default defineNuxtConfig({
     },
     shadcn: {
         prefix: "",
-        componentDir: "./app/components/ui"
+        componentDir: "./app/components/ui",
     },
     // locally installing built packages
     // imports: {

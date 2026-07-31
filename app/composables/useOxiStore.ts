@@ -28,7 +28,7 @@ export function useOxiStore() {
     } as OxiStore);
 
     onMounted(() => {
-        init("https://cdn.jsdelivr.net/npm/oxigraph@0.5.6/web_bg.wasm").then(() => {
+        init("https://cdn.jsdelivr.net/npm/oxigraph@0.5.9/web_bg.wasm").then(() => {
             _store = new oxigraph.Store();
 
             function updateStore() {
@@ -39,35 +39,35 @@ export function useOxiStore() {
             store.value = {
                 ...store.value,
                 _store,
-                add: function (quad: oxigraph.Quad) {
+                add(quad: oxigraph.Quad) {
                     _store.add(quad);
                     updateStore();
                 },
-                load: function (data: string, format: Format = "text/turtle", graph?: string) {
+                load(data: string, format: Format = "text/turtle", graph?: string) {
                     _store.load(data, { format, to_graph_name: graph ? oxigraph.namedNode(graph) : undefined });
                     updateStore();
                 },
-                query: function (query: string, results_format: string = "application/sparql-results+json", default_union_graph: boolean = true) {
+                query(query: string, results_format: string = "application/sparql-results+json", default_union_graph: boolean = true) {
                     return _store.query(query, { results_format, use_default_graph_as_union: default_union_graph });
                 },
-                update: function (query: string) {
+                update(query: string) {
                     _store.update(query);
                     updateStore();
                 },
-                delete: function (quad: oxigraph.Quad) {
+                delete(quad: oxigraph.Quad) {
                     _store.delete(quad);
                     updateStore();
                 },
-                has: function (quad: oxigraph.Quad) {
+                has(quad: oxigraph.Quad) {
                     return _store.has(quad);
                 },
-                dump: function (format: Format = "text/turtle", graph: oxigraph.NamedNode | oxigraph.BlankNode | oxigraph.DefaultGraph | null = null) {
-                    return _store.dump({ format, from_graph_name: graph == null ? oxigraph.defaultGraph() : graph });
+                dump(format: Format = "text/turtle", graph: oxigraph.NamedNode | oxigraph.BlankNode | oxigraph.DefaultGraph | null = null) {
+                    return _store.dump({ format, from_graph_name: graph ?? oxigraph.defaultGraph() });
                 },
-                match: function (s?: oxigraph.Term | null, p?: oxigraph.Term | null, o?: oxigraph.Term | null, g?: oxigraph.Term | null) {
+                match(s?: oxigraph.Term | null, p?: oxigraph.Term | null, o?: oxigraph.Term | null, g?: oxigraph.Term | null) {
                     return _store.match(s, p, o, g);
-                }
-            }
+                },
+            };
         });
     });
 

@@ -17,7 +17,9 @@ const props = defineProps<{
                 <pre>{{ props.error.stack }}</pre>
             </div>
             <Button as-child>
-                <NuxtLink to="/">Go home</NuxtLink>
+                <NuxtLink to="/">
+                    Go home
+                </NuxtLink>
             </Button>
         </div>
     </NuxtLayout>

@@ -1,6 +1,7 @@
 <script setup lang="ts">
-import { ref, watch, type HTMLAttributes } from "vue";
-import { Check, ChevronsUpDown, Search, X, ExternalLink } from "@lucide/vue";
+import type { HTMLAttributes } from "vue";
+import { Check, ChevronsUpDown, ExternalLink, Search, X } from "@lucide/vue";
+import { ref, watch } from "vue";
 import { cn } from "~/lib/utils";
 
 const props = defineProps<{
@@ -10,12 +11,6 @@ const props = defineProps<{
     class?: HTMLAttributes["class"];
 }>();
 
-const model = defineModel<string | string[]>();
-
-const open = ref(false);
-
-const { data: conceptOptions } = await useLazyAsyncData(props.vocabIRI, () => sparqlOptions(props.vocabIRI));
-
 const emits = defineEmits<{
     focus: [];
     blur: [];
@@ -23,6 +18,12 @@ const emits = defineEmits<{
     input: [value: string | string[]];
     change: [value: string | string[]];
 }>();
+
+const model = defineModel<string | string[]>();
+
+const open = ref(false);
+
+const { data: conceptOptions } = await useLazyAsyncData(props.vocabIRI, () => sparqlOptions(props.vocabIRI));
 
 watch(open, (newValue) => {
     newValue ? emits("focus") : emits("blur");
@@ -36,16 +37,16 @@ watch(model, (newValue) => {
 
 <template>
     <div class="flex flex-row gap-2 items-center w-full relative">
-        <Combobox v-model="model" by="label" v-model:open="open" :multiple="props.multiple" class="relative w-full flex items-center">
+        <Combobox v-model="model" v-model:open="open" by="label" :multiple="props.multiple" class="relative w-full flex items-center">
             <ComboboxAnchor as-child>
                 <ComboboxTrigger as-child>
                     <Button variant="outline" role="combobox" :aria-expanded="open" :class="cn(`grow justify-between !pr-10 ${(props.multiple && Array.isArray(model) ? model.length > 0 : model) ? '' : 'text-muted-foreground'}`, props.class)">
                         <span class="overflow-hidden">
                             {{ (props.multiple && Array.isArray(model) ? model.length > 0 : model) && conceptOptions
-                            ? (Array.isArray(model)
-                                ? model.map(v => conceptOptions.find((option) => option.value === v)?.label).join(", ")
-                                : conceptOptions.find((option) => option.value === model)?.label)
-                            : props.placeholder || "Select an option" }}
+                                ? (Array.isArray(model)
+                                    ? model.map(v => conceptOptions.find((option) => option.value === v)?.label).join(", ")
+                                    : conceptOptions.find((option) => option.value === model)?.label)
+                                : props.placeholder || "Select an option" }}
                         </span>
                         <ChevronsUpDown class="ml-2 h-4 w-4 shrink-0 opacity-50" />
                     </Button>
@@ -68,7 +69,7 @@ watch(model, (newValue) => {
                 </ComboboxEmpty>
 
                 <ComboboxGroup class="max-h-[260px] overflow-y-auto">
-                    <ComboboxItem v-for="option in conceptOptions" class="cursor-pointer" :key="option.value.toString()" :value="option.value">
+                    <ComboboxItem v-for="option in conceptOptions" :key="option.value.toString()" class="cursor-pointer" :value="option.value">
                         <div class="flex flex-col">
                             <span>{{ option.label || option.value }}</span>
                             <span class="text-muted-foreground text-xs italic">{{ option.desc }}</span>

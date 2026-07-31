@@ -1,13 +1,14 @@
+import type { Registry, StepConfig } from "@vulptech/vt-form";
+import { formField } from "@vulptech/vt-form";
 import * as z from "zod";
-import { formField, type StepConfig, type Registry } from "@vulptech/vt-form";
-import { generateIRI, generateAgentIRI, agentSearch, agentGet } from "./helpers";
 import AgentInput from "~/components/AgentInput.vue";
 import AgentSearchInput from "~/components/AgentSearchInput.vue";
-import DateInput from "~/components/DateInput.vue";
-import SpatialInput from "~/components/SpatialInput.vue";
-import IRIInput from "~/components/IRIInput.vue";
 import ConceptSelect from "~/components/ConceptSelect.vue";
+import DateInput from "~/components/DateInput.vue";
 import IndigeneitySelect from "~/components/IndigeneitySelect.vue";
+import IRIInput from "~/components/IRIInput.vue";
+import SpatialInput from "~/components/SpatialInput.vue";
+import { agentGet, agentSearch, generateAgentIRI, generateIRI } from "./helpers";
 
 export const REGISTRY: Registry = {
     iri: {
@@ -79,7 +80,7 @@ const customDate = z.object({
             return false;
         }
         return true;
-    })
+    }),
 });
 
 const phoneNumber = z.string().transform((val, ctx) => {
@@ -181,7 +182,7 @@ export const FORM_SCHEMA = z.object({
             trueValue: "http://example.com/duty/archive-data-and-metadata",
             falseValue: "",
             emptyValue: "",
-            class: "col-span-full"
+            class: "col-span-full",
         }),
     }).array().optional(), {
         label: "Indigenous Data Governance Policy",
@@ -305,7 +306,7 @@ export const FORM_SCHEMA = z.object({
         description: "Max 300 characters",
         emptyValue: "",
         step: "rights",
-        class: "col-span-full"
+        class: "col-span-full",
     }),
     spatial: formField<z.ZodTypeAny, any>(z.union([z.string().url(), z.object({
         type: formField(z.literal("geo:Geometry"), {
@@ -314,7 +315,7 @@ export const FORM_SCHEMA = z.object({
         }),
         asWKT: z.object({
             type: z.literal("geo:wktLiteral"),
-            value: z.string()
+            value: z.string(),
             // .refine((val) => {
             //     if (typeof val !== "string") {
             //         return false;
@@ -328,7 +329,7 @@ export const FORM_SCHEMA = z.object({
         }).optional(),
         asGeoJSON: z.object({
             type: z.literal("geo:geoJSONLiteral"),
-            value: z.string()
+            value: z.string(),
             // .refine((val) => {
             //     if (typeof val !== "string") {
             //         return false;
@@ -383,7 +384,7 @@ export const FORM_SCHEMA = z.object({
         label: "Distribution",
         type: "add",
         step: "distribution",
-        class: "grid-cols-1 md:grid-cols-2 gap-2 col-span-full"
+        class: "grid-cols-1 md:grid-cols-2 gap-2 col-span-full",
     }),
     theme: formField(z.string().array(), {
         label: "Theme",
@@ -404,11 +405,11 @@ export const FORM_SCHEMA = z.object({
         agent: formField(z.object({
             iri: formField(z.literal("https://data.idnau.org/pid/person/6cf32191-8d20-4a43-99ba-1a7727615ad9"), {
                 type: "hidden",
-                initial: "https://data.idnau.org/pid/person/6cf32191-8d20-4a43-99ba-1a7727615ad9"
+                initial: "https://data.idnau.org/pid/person/6cf32191-8d20-4a43-99ba-1a7727615ad9",
             }),
             type: formField(z.literal("sdo:Person"), {
                 type: "hidden",
-                initial: "sdo:Person"
+                initial: "sdo:Person",
             }),
             name: formField(z.string(), {
                 label: "Name",
@@ -434,7 +435,7 @@ export const FORM_SCHEMA = z.object({
         }),
         role: formField(z.literal("https://linked.data.gov.au/def/data-roles/pointOfContact").array().length(1), {
             type: "hidden",
-            initial: ["https://linked.data.gov.au/def/data-roles/pointOfContact"]
+            initial: ["https://linked.data.gov.au/def/data-roles/pointOfContact"],
         }),
     }).array().length(1), {
         label: "Contact Details",
@@ -540,7 +541,7 @@ export const AGENT_SCHEMA = z.object({
         placeholder: "Select a type",
         options: [
             { label: "Person", value: "https://schema.org/Person" },
-            { label: "Organization", value: "https://schema.org/Organization" }
+            { label: "Organization", value: "https://schema.org/Organization" },
         ],
     }),
     url: formField(z.string().url().optional(), {
@@ -580,7 +581,7 @@ export const AGENT_SCHEMA = z.object({
     }).array().optional(), {
         label: "Identifier",
         type: "add",
-        class: "col-span-full grid-cols-1 md:grid-cols-2 gap-2"
+        class: "col-span-full grid-cols-1 md:grid-cols-2 gap-2",
     }),
     relation: formField(z.object({
         type: formField(z.literal("dcat:Relationship"), {
@@ -598,11 +599,11 @@ export const AGENT_SCHEMA = z.object({
             type: "concept",
             vocabIRI: "https://data.idnau.org/pid/vocab/aarr",
             placeholder: "Select role",
-            tooltip: "The role of the relation to this agent."
+            tooltip: "The role of the relation to this agent.",
         }),
     }).array().optional(), {
         label: "Relations",
         type: "add",
-        class: "col-span-full"
+        class: "col-span-full",
     }),
 });
