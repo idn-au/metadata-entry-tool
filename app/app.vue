@@ -6,9 +6,8 @@ const useIdFunction = () => useId();
 
 <template>
     <ConfigProvider :use-id="useIdFunction">
-<!--        <NuxtLayout>-->
-<!--            -->
-<!--        </NuxtLayout>-->
-	    <NuxtPage />
+        <NuxtLayout>
+	        <NuxtPage />
+        </NuxtLayout>
     </ConfigProvider>
 </template>

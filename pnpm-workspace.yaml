@@ -7,3 +7,7 @@ allowBuilds:
   esbuild: true
   sharp: true
   vue-demi: true
+minimumReleaseAgeExclude:
+  - '@idn-au/score-component-lib@0.4.1'
+  - '@idn-au/scores-calculator-js@0.4.1'
+  - '@vulptech/vt-form@0.3.3'

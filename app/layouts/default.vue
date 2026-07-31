@@ -51,14 +51,13 @@ function scrollToTop() {
 <template>
 	<div class="min-h-dvh flex flex-col">
 		<IDCHeader />
-		<div class="mx-auto max-w-[1400px] w-full">
-			<AppNav />
-		</div>
 		<main class="grow mb-12">
 			<div class="min-h-[300px] py-0 px-2 flex flex-col justify-end bg-cover bg-no-repeat bg-center relative -z-1 isolate mb-6" :style="{backgroundImage: `url(${defaultImage})`}">
 				<div class="mx-auto max-w-[1400px] w-full">
-					<h1 class="text-white text-5xl mt-6 mb-10.5"><slot name="title" /></h1>
-					<p class="text-white font-bold my-5"><slot name="description" /></p>
+					<h1 class="text-white text-5xl mt-6 mb-10.5">Metadata Entry Tool</h1>
+					<p class="text-white font-bold my-5">
+						Create metadata records to support the discoverability, governance, and reuse of Indigenous data in line with Indigenous Data Commons principles.
+					</p>
 				</div>
 				<IDCLogo class="fill-isu-yellow absolute h-[750px] w-auto -top-[50px] right-0 opacity-30 dark:opacity-10 saturate-10 brightness-140 -z-1" />
 			</div>

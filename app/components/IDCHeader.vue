@@ -23,7 +23,7 @@ router.beforeEach((from, to) => {
 </script>
 
 <template>
-	<header class="top-nav sticky top-0 flex flex-row items-center p-4 gap-2 z-49 transition-colors flex-wrap bg-background">
+	<header class="top-nav sticky top-0 flex flex-row items-center p-4 gap-2 z-49 transition-colors flex-wrap bg-background border-b">
 		<a href="https://indigenousdatacommons.org" class="mr-auto">
 			<NuxtImg src="/img/idc-logo.png" class="max-w-50 min-w-34 md:max-w-62 md:min-w-40 h-auto" :style="{width: `${logoWidth}px`}" />
 		</a>

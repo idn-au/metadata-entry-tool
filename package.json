@@ -10,15 +10,15 @@
         "postinstall": "nuxt prepare"
     },
     "dependencies": {
-        "@idn-au/score-component-lib": "^0.4.0",
-        "@idn-au/scores-calculator-js": "^0.4.0",
+        "@idn-au/score-component-lib": "^0.4.1",
+        "@idn-au/scores-calculator-js": "^0.4.1",
         "@kurrawongai/kai-ui": "0.2.5",
         "@lucide/vue": "^1.27.0",
         "@nuxt/image": "^2.0.0",
         "@nuxtjs/color-mode": "^4.0.1",
         "@tailwindcss/vite": "^4.3.3",
         "@vueuse/core": "^14.3.0",
-        "@vulptech/vt-form": "^0.3.2",
+        "@vulptech/vt-form": "^0.3.3",
         "class-variance-authority": "^0.7.1",
         "clsx": "^2.1.1",
         "jsonld": "^9.0.0",
