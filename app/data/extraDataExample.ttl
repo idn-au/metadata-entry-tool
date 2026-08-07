@@ -1,12 +1,9 @@
-PREFIX dcat: <http://www.w3.org/ns/dcat#>
-PREFIX dcterms: <http://purl.org/dc/terms/>
-PREFIX geo: <http://www.opengis.net/ont/geosparql#>
-PREFIX prov: <http://www.w3.org/ns/prov#>
-PREFIX sdo: <https://schema.org/>
-PREFIX xsd: <http://www.w3.org/2001/XMLSchema#>
+PREFIX ex: <https://example.com/>
+PREFIX schema: <https://schema.org/>
 
-<https://example.com/example2> a dcat:Resource ;
-    dcterms:description "This is a description for example 2" ;
-    dcterms:title "Example 2" ;
-    <https://example.com/predicate> <https://example.com/object> ;
+ex:example2
+    a schema:CreativeWork ;
+    ex:predicate ex:object ;
+    schema:description "This is a description for example 2" ;
+    schema:name "Example 2" ;
 .
