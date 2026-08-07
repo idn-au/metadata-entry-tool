@@ -109,13 +109,13 @@ async function rdfToData(rdf: string, format: Format) {
     store.load(rdf, { format });
     const nquads = store.dump({ format: "application/n-quads", from_graph_name: oxigraph.defaultGraph() });
     const jsonldObj = await jsonld.fromRDF(nquads, { format: "application/n-quads" });
-    const framedObj = await jsonld.frame(jsonldObj, { "@context": CONTEXT, "type": "dcat:Resource" });
+    const framedObj = await jsonld.frame(jsonldObj, { "@context": CONTEXT, "type": "sdo:CreativeWork" });
     data.value = framedObj;
 }
 
 const debouncedSerialiseRDF = useDebounceFn(async (newValue: typeof data.value) => {
     // JSON-LD -> N-Quads
-    const doc = { "@context": CONTEXT, "type": "dcat:Resource", ...newValue };
+    const doc = { "@context": CONTEXT, "type": "sdo:CreativeWork", ...newValue };
     const rdf = await (jsonld.toRDF(doc, { format: "application/n-quads" }) as Promise<string>);
 
     // N-Quads -> Turtle - Oxigraph JS doesn't serialize prefixes or compact [] bnodes yet
@@ -194,9 +194,9 @@ onMounted(async () => {
     <div ref="formRef" class="flex flex-col gap-4 relative border rounded-xl my-4">
         <div class="flex flex-row max-sm:flex-wrap gap-2 items-start sticky top-[83px] md:top-[92px] bg-background z-48 border-b rounded-t-xl">
             <div class="flex flex-row gap-2 items-center mx-auto max-w-2xl">
-                <Scores title="FAIR" :score="fair" compact />
+                <Scores keys="fair" v-bind="fair" compact />
                 <div class="w-px bg-border self-stretch" />
-                <Scores title="CARE" :score="care" compact />
+                <Scores keys="care" v-bind="care" compact />
             </div>
         </div>
         <FormBuilder

@@ -1,130 +1,130 @@
-import { type ContextDefinition } from "jsonld";
+import type { ContextDefinition } from "jsonld";
 
 export const CONTEXT: ContextDefinition = {
     // "@version": "1.1",
     // prefixes
-    "dcat": "http://www.w3.org/ns/dcat#",
-    "dcterms": "http://purl.org/dc/terms/",
-    "geo": "http://www.opengis.net/ont/geosparql#",
-    "odrl": "http://www.w3.org/ns/odrl/2/",
-    "prov": "http://www.w3.org/ns/prov#",
-    "sdo": "https://schema.org/",
-    "xsd": "http://www.w3.org/2001/XMLSchema#",
+    dcat: "http://www.w3.org/ns/dcat#",
+    dcterms: "http://purl.org/dc/terms/",
+    geo: "http://www.opengis.net/ont/geosparql#",
+    odrl: "http://www.w3.org/ns/odrl/2/",
+    prov: "http://www.w3.org/ns/prov#",
+    sdo: "https://schema.org/",
+    xsd: "http://www.w3.org/2001/XMLSchema#",
     // alias JSON-LD stuff
-    "iri": "@id",
-    "type": "@type",
-    "value": "@value",
+    iri: "@id",
+    type: "@type",
+    value: "@value",
     // properties
-    "license": {
+    license: {
         "@id": "sdo:license",
-        "@type": "@id"
+        "@type": "@id",
     },
-    "title": "sdo:name",
-    "description": "sdo:description",
-    "accessRights": {
+    title: "sdo:name",
+    description: "sdo:description",
+    accessRights: {
         "@id": "sdo:usageInfo",
-        "@type": "@id"
+        "@type": "@id",
     },
-    "created": {
+    created: {
         "@id": "sdo:dateCreated",
     },
-    "issued": {
+    issued: {
         "@id": "sdo:dateIssued",
     },
-    "modified": {
+    modified: {
         "@id": "sdo:dateModified",
     },
-    "rights": "sdo:copyrightNotice",
-    "theme": {
+    rights: "sdo:copyrightNotice",
+    theme: {
         "@id": "sdo:keywords",
         "@type": "@id",
         "@container": "@set",
     },
-    "agentRole": {
+    agentRole: {
         "@id": "prov:qualifiedAttribution",
-        "@container": "@set"
+        "@container": "@set",
     },
-    "role": {
+    role: {
         "@id": "prov:hadRole",
         "@type": "@id",
         "@container": "@set",
     },
-    "relationRole": {
+    relationRole: {
         "@id": "prov:hadRole",
         "@type": "@id",
     },
-    "agent": {
+    agent: {
         "@id": "sdo:agent",
-        "@type": "@id"
+        "@type": "@id",
     },
-    "dataIndigeneity": {
+    dataIndigeneity: {
         "@id": "sdo:keywords",
         "@type": "@id",
         "@container": "@set",
     },
-    "agentIndigeneity": {
+    agentIndigeneity: {
         "@id": "sdo:keywords",
         "@type": "@id",
     },
-    "identifier": {
+    identifier: {
         "@id": "sdo:identifier",
         "@container": "@set",
     },
-    "name": "sdo:name",
-    "sdoDescription": "sdo:description",
-    "relation": {
+    name: "sdo:name",
+    sdoDescription: "sdo:description",
+    relation: {
         "@id": "dcat:qualifiedRelation",
-        "@container": "@set"
+        "@container": "@set",
     },
-    "spatial": {
+    spatial: {
         "@id": "sdo:spatialCoverage",
-        "@type": "@id"
+        "@type": "@id",
     },
-    "temporal": "sdo:temporalCoverage",
-    "distribution": {
+    temporal: "sdo:temporalCoverage",
+    distribution: {
         "@id": "sdo:distribution",
         "@container": "@set",
     },
-    "accessURL": {
+    accessURL: {
         "@id": "sdo:contentUrl",
         "@type": "xsd:anyURI",
     },
-    "startedAtTime": "sdo:coverageStartTime",
-    "endedAtTime": "sdo:coverageEndTime",
-    "additionalType": {
+    startedAtTime: "sdo:coverageStartTime",
+    endedAtTime: "sdo:coverageEndTime",
+    additionalType: {
         "@id": "sdo:additionalType",
-        "@type": "@id"
+        "@type": "@id",
     },
-    "wasInfluencedBy": {
+    wasInfluencedBy: {
         "@id": "prov:wasInfluencedBy",
-        "@container": "@set"
+        "@container": "@set",
     },
-    "contributed": {
+    contributed: {
         "@id": "prov:contributed",
-        "@type": "@id"
+        "@type": "@id",
     },
-    "url": {
+    url: {
         "@id": "sdo:url",
         "@type": "xsd:anyURI",
     },
-    "asWKT": "geo:asWKT",
-    "asGeoJSON": "geo:asGeoJSON",
-    "hasPolicy": {
+    asWKT: "geo:asWKT",
+    asGeoJSON: "geo:asGeoJSON",
+    hasPolicy: {
         "@id": "odrl:hasPolicy",
         "@type": "@id",
         "@container": "@set",
     },
-    "duty": {
+    duty: {
         "@id": "odrl:duty",
         "@type": "@id",
     },
-    "contact": "prov:qualifiedAttribution", // extra alias for agentRole to avoid form conflicts
-    "email": {
+    contact: "prov:qualifiedAttribution", // extra alias for agentRole to avoid form conflicts
+    email: {
         "@id": "sdo:email",
         "@type": "xsd:anyURI",
     },
-    "telephone": "sdo:telephone",
-    "language": {
+    telephone: "sdo:telephone",
+    language: {
         "@id": "sdo:inLanguage",
         "@type": "@id",
     },

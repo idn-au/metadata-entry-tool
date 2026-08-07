@@ -13,8 +13,8 @@
         "types": "nuxt typecheck"
     },
     "dependencies": {
-        "@idn-au/score-component-lib": "^0.4.1",
-        "@idn-au/scores-calculator-js": "^0.4.1",
+        "@idn-au/score-component-lib": "^0.5.0",
+        "@idn-au/scores-calculator-js": "^0.5.0",
         "@kurrawongai/kai-ui": "0.2.5",
         "@lucide/vue": "^1.27.0",
         "@nuxt/image": "^2.0.0",
