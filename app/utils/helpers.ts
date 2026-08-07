@@ -1,13 +1,13 @@
-import { v4 as uuidv4 } from "uuid";
-import { type Option } from "@vulptech/vt-form";
+import type { Option } from "@vulptech/vt-form";
 import type { SPARQLResultsJSON } from "#shared/utils/types";
+import { v4 as uuidv4 } from "uuid";
 
 export async function sparqlSelect(query: string): Promise<NonNullable<SPARQLResultsJSON["results"]>["bindings"]> {
     const runtimeConfig = useRuntimeConfig();
     const r = await $fetch<SPARQLResultsJSON>(`${runtimeConfig.public.apiURL}/sparql`, {
         params: {
-            query: query
-        }
+            query,
+        },
     });
     return r.results?.bindings || [];
 }
@@ -24,7 +24,7 @@ export async function sparqlOptions(vocabIRI: string): Promise<ConceptOption[]> 
                 skos:prefLabel ?label ;
                 skos:definition ?desc .
         }`);
-    const options: ConceptOption[] = results.map(result => {
+    const options: ConceptOption[] = results.map((result) => {
         return {
             value: result.value.value,
             label: result.label.value,
@@ -36,24 +36,24 @@ export async function sparqlOptions(vocabIRI: string): Promise<ConceptOption[]> 
 }
 
 export async function agentSearch(term: string): Promise<Option[]> {
-    const r = await sparqlSelect(`PREFIX dcterms: <http://purl.org/dc/terms/>
-        PREFIX sdo: <https://schema.org/>
+    const r = await sparqlSelect(`PREFIX sdo: <https://schema.org/>
+        PREFIX text: <http://jena.apache.org/text#>
         SELECT DISTINCT ?iri ?name
         WHERE {
-            GRAPH <https://data.idnau.org/pid/agentsdb> {
-                VALUES ?type { sdo:Person sdo:Organization }
-                ?iri a ?type ;
-                    sdo:name ?name .
-                FILTER regex(?name, "${term}", "i")
-            }
-        } LIMIT 20`);
-    return r.map(x => {
+            VALUES ?type { sdo:Person sdo:Organization }
+            (?iri ?score ?name) text:query (sdo:name "${term}*") .
+            ?iri a ?type .
+        }
+        ORDER BY DESC(?score) STR(LCASE(?name))`);
+    return r.map((x) => {
         return {
             value: x.iri.value,
             label: x.name.value,
-        }
+        };
     });
 }
+
+// https://orcid.org/0000-0002-1398-7524
 
 export async function agentGet(iri: string) {
     const query = `PREFIX dcterms: <http://purl.org/dc/terms/>
@@ -80,7 +80,7 @@ export async function agentGet(iri: string) {
             }
         } LIMIT 1`;
     const r = await $fetch(`/api/agent?query=${encodeURIComponent(query)}`);
-    return r.results?.bindings.map(x => {
+    return r.results?.bindings.map((x) => {
         return {
             iri: x.iri.value,
             name: x.name.value,
@@ -89,7 +89,7 @@ export async function agentGet(iri: string) {
             sdoDescription: x.desc?.value,
             agentIndigeneity: x.indigeneity?.value,
             identifier: x.identifier?.value,
-        }
+        };
     })[0] || null;
 }
 
@@ -100,7 +100,8 @@ export function generateIRI(suffix: string): string {
 export function generateAgentIRI(isPerson: boolean): string {
     if (isPerson) {
         return generateIRI("person");
-    } else {
+    }
+    else {
         return generateIRI("organization");
     }
 }

@@ -1,12 +1,14 @@
+import type { Registry, StepConfig } from "@vulptech/vt-form";
+import { formField } from "@vulptech/vt-form";
 import * as z from "zod";
-import { formField, type StepConfig, type Registry } from "@vulptech/vt-form";
-import { generateIRI, generateAgentIRI, agentSearch, agentGet } from "./helpers";
 import AgentInput from "~/components/AgentInput.vue";
-import DateInput from "~/components/DateInput.vue";
-import SpatialInput from "~/components/SpatialInput.vue";
-import IRIInput from "~/components/IRIInput.vue";
+import AgentSearchInput from "~/components/AgentSearchInput.vue";
 import ConceptSelect from "~/components/ConceptSelect.vue";
+import DateInput from "~/components/DateInput.vue";
 import IndigeneitySelect from "~/components/IndigeneitySelect.vue";
+import IRIInput from "~/components/IRIInput.vue";
+import SpatialInput from "~/components/SpatialInput.vue";
+import { agentGet, agentSearch, generateAgentIRI, generateIRI } from "./helpers";
 
 export const REGISTRY: Registry = {
     iri: {
@@ -26,6 +28,14 @@ export const REGISTRY: Registry = {
     },
     agent: {
         component: AgentInput,
+        props: {
+            listQuery: ({ meta }) => meta.listQuery,
+            getQuery: ({ meta }) => meta.getQuery || undefined,
+            resultLabel: ({ meta }) => meta.resultLabel || undefined,
+        },
+    },
+    agentSearch: {
+        component: AgentSearchInput,
         props: {
             listQuery: ({ meta }) => meta.listQuery,
             getQuery: ({ meta }) => meta.getQuery || undefined,
@@ -70,7 +80,7 @@ const customDate = z.object({
             return false;
         }
         return true;
-    })
+    }),
 });
 
 const phoneNumber = z.string().transform((val, ctx) => {
@@ -90,20 +100,20 @@ const phoneNumber = z.string().transform((val, ctx) => {
 });
 
 export const FORM_SCHEMA = z.object({
+    title: formField(z.string(), {
+        label: "Title",
+        type: "text",
+        tooltip: "The name of the data that this metadata is describing.",
+        emptyValue: "",
+        step: "general",
+    }),
     iri: formField(z.string().url({ message: "Must be a valid IRI" }), {
-        label: "IRI",
+        label: "ID",
         type: "iri",
         generateFn: () => generateIRI("resource"),
         placeholder: "https://example.com",
         description: "Provide an IRI or have an IRI automatically assigned",
         tooltip: "An IRI is a standard identifier in the form of a web address (URL). Good IRIs are part of a managed system.",
-        emptyValue: "",
-        step: "general",
-    }),
-    title: formField(z.string(), {
-        label: "Title",
-        type: "text",
-        tooltip: "The name of the data that this metadata is describing.",
         emptyValue: "",
         step: "general",
     }),
@@ -172,12 +182,12 @@ export const FORM_SCHEMA = z.object({
             trueValue: "http://example.com/duty/archive-data-and-metadata",
             falseValue: "",
             emptyValue: "",
-            class: "col-span-full"
+            class: "col-span-full",
         }),
     }).array().optional(), {
         label: "Indigenous Data Governance Policy",
         type: "add",
-        step: "general",
+        step: "governance",
         class: "col-span-full",
     }),
     agentRole: formField(z.object({
@@ -226,6 +236,7 @@ export const FORM_SCHEMA = z.object({
         // initial: [
         //     {}
         // ],
+        description: "You can add more than one",
         step: "agentInfo",
         class: "col-span-full",
     }),
@@ -239,16 +250,38 @@ export const FORM_SCHEMA = z.object({
     modified: formField<z.ZodTypeAny, any>(customDate, {
         label: "Modified",
         type: "customDate",
-        description: "Either of YYYY, MM/YYYY or DD/MM/YYYY are supported",
+        // description: "Either of YYYY, MM/YYYY or DD/MM/YYYY are supported",
         tooltip: "The most recent date on which the data was modified. It can be the same as the date it was created.",
         step: "dates",
     }),
     issued: formField<z.ZodTypeAny, any>(customDate.optional(), {
         label: "Issued",
         type: "customDate",
-        description: "Either of YYYY, MM/YYYY or DD/MM/YYYY are supported",
+        // description: "Either of YYYY, MM/YYYY or DD/MM/YYYY are supported",
         tooltip: "Issued indicates when, if ever, this dataset was published",
         step: "dates",
+    }),
+    temporal: formField(z.object({
+        type: formField(z.literal("dcterms:PeriodOfTime"), {
+            type: "hidden",
+            initial: "dcterms:PeriodOfTime",
+        }),
+        startedAtTime: formField<z.ZodTypeAny, any>(customDate.optional(), {
+            label: "Start Time",
+            type: "customDate",
+            // description: "Either of YYYY, MM/YYYY or DD/MM/YYYY are supported",
+        }),
+        endedAtTime: formField<z.ZodTypeAny, any>(customDate.optional(), {
+            label: "End Time",
+            type: "customDate",
+            // description: "Either of YYYY, MM/YYYY or DD/MM/YYYY are supported",
+        }),
+    }).optional(), {
+        label: "Start & End Dates",
+        type: "group",
+        tooltip: "This is the interval of time which the data covers at the time of publishing. There must be a start and end date.",
+        step: "dates",
+        class: "col-span-full",
     }),
     license: formField(z.string().optional(), {
         label: "License",
@@ -273,7 +306,7 @@ export const FORM_SCHEMA = z.object({
         description: "Max 300 characters",
         emptyValue: "",
         step: "rights",
-        class: "col-span-full"
+        class: "col-span-full",
     }),
     spatial: formField<z.ZodTypeAny, any>(z.union([z.string().url(), z.object({
         type: formField(z.literal("geo:Geometry"), {
@@ -282,7 +315,7 @@ export const FORM_SCHEMA = z.object({
         }),
         asWKT: z.object({
             type: z.literal("geo:wktLiteral"),
-            value: z.string()
+            value: z.string(),
             // .refine((val) => {
             //     if (typeof val !== "string") {
             //         return false;
@@ -296,7 +329,7 @@ export const FORM_SCHEMA = z.object({
         }).optional(),
         asGeoJSON: z.object({
             type: z.literal("geo:geoJSONLiteral"),
-            value: z.string()
+            value: z.string(),
             // .refine((val) => {
             //     if (typeof val !== "string") {
             //         return false;
@@ -312,29 +345,7 @@ export const FORM_SCHEMA = z.object({
         label: "Spatial",
         type: "spatial",
         description: "Supports an IRI or a WKT/GeoJSON string",
-        step: "spatioTemporal",
-    }),
-    temporal: formField(z.object({
-        type: formField(z.literal("dcterms:PeriodOfTime"), {
-            type: "hidden",
-            initial: "dcterms:PeriodOfTime",
-        }),
-        startedAtTime: formField<z.ZodTypeAny, any>(customDate.optional(), {
-            label: "Start Time",
-            type: "customDate",
-            description: "Either of YYYY, MM/YYYY or DD/MM/YYYY are supported",
-        }),
-        endedAtTime: formField<z.ZodTypeAny, any>(customDate.optional(), {
-            label: "End Time",
-            type: "customDate",
-            description: "Either of YYYY, MM/YYYY or DD/MM/YYYY are supported",
-        }),
-    }).optional(), {
-        label: "Temporal",
-        type: "group",
-        tooltip: "This is the interval of time which the data covers at the time of publishing. There must be a start and end date.",
-        step: "spatioTemporal",
-        class: "col-span-full",
+        step: "spatial",
     }),
     distribution: formField(z.object({
         type: formField(z.literal("dcat:Distribution"), {
@@ -373,7 +384,7 @@ export const FORM_SCHEMA = z.object({
         label: "Distribution",
         type: "add",
         step: "distribution",
-        class: "grid-cols-1 md:grid-cols-2 gap-2 col-span-full"
+        class: "grid-cols-1 md:grid-cols-2 gap-2 col-span-full",
     }),
     theme: formField(z.string().array(), {
         label: "Theme",
@@ -394,11 +405,11 @@ export const FORM_SCHEMA = z.object({
         agent: formField(z.object({
             iri: formField(z.literal("https://data.idnau.org/pid/person/6cf32191-8d20-4a43-99ba-1a7727615ad9"), {
                 type: "hidden",
-                initial: "https://data.idnau.org/pid/person/6cf32191-8d20-4a43-99ba-1a7727615ad9"
+                initial: "https://data.idnau.org/pid/person/6cf32191-8d20-4a43-99ba-1a7727615ad9",
             }),
             type: formField(z.literal("sdo:Person"), {
                 type: "hidden",
-                initial: "sdo:Person"
+                initial: "sdo:Person",
             }),
             name: formField(z.string(), {
                 label: "Name",
@@ -424,7 +435,7 @@ export const FORM_SCHEMA = z.object({
         }),
         role: formField(z.literal("https://linked.data.gov.au/def/data-roles/pointOfContact").array().length(1), {
             type: "hidden",
-            initial: ["https://linked.data.gov.au/def/data-roles/pointOfContact"]
+            initial: ["https://linked.data.gov.au/def/data-roles/pointOfContact"],
         }),
     }).array().length(1), {
         label: "Contact Details",
@@ -441,54 +452,69 @@ export const FORM_SCHEMA = z.object({
 export const STEP_CONFIG: StepConfig = {
     type: "stepper",
     orientation: "vertical",
+    numbered: true,
     steps: [
+        {
+            id: "start",
+            label: "Start",
+        },
         {
             id: "general",
             label: "General",
             description: "Basic information about this data.",
-            class: "grid grid-cols-1 md:grid-cols-2 gap-3",
-        },
-        {
-            id: "agentInfo",
-            label: "Agent Information",
-            description: "Information about the roles that agents (people and organisations) play with respect to this data. These roles are critical in determining whether this data is managed properly. Each Agent must have a matching Role.",
-            class: "grid grid-cols-1 md:grid-cols-2 gap-3",
-        },
-        {
-            id: "dates",
-            label: "Dates",
-            description: "Standard dates for the establishment and update times of this dataset. A dataset about early 20th century data might only have been made last year and the created date is then some time last year. 'Issued' indicates when, if ever, this dataset was published.",
-            class: "grid grid-cols-1 md:grid-cols-2 gap-3",
-        },
-        {
-            id: "rights",
-            label: "Rights",
-            description: "Ownership and access information of the data. If a license is selected then the rights holder to that license should also be included.",
-            class: "grid grid-cols-1 md:grid-cols-2 gap-3",
-        },
-        {
-            id: "spatioTemporal",
-            label: "Spatio/Temporal",
-            description: "The spatial (geographical) and temporal (time period) extent of the data. Temporal information is different from the dates section as, for example, this dataset may have been created recently but is about someone or something long ago.",
-            class: "grid grid-cols-1 md:grid-cols-2 gap-3",
-        },
-        {
-            id: "distribution",
-            label: "Distribution Info",
-            description: "This is optional information in the form of a publicly resolvable URL that gives the user access to the data.",
-            class: "grid grid-cols-1 md:grid-cols-2 gap-3",
+            class: "grid grid-cols-1 md:grid-cols-2 gap-6",
         },
         {
             id: "theme",
             label: "Theme",
             description: "Classification or categorisation of this data. We are mostly concerned with indications of 'indigeneity', i.e. how this data is related to indigenous people, however other classifications may also be added. Our primary indigenous classification vocabulary is online at https://data.idnau.org/v/vocab/vcb:idn-th which may be browsed for classification suggestions.",
-            class: "grid grid-cols-1 md:grid-cols-2 gap-3",
+            class: "grid grid-cols-1 md:grid-cols-2 gap-6",
+        },
+        {
+            id: "dates",
+            label: "Dates",
+            description: "Standard dates for the establishment and update times of this dataset. A dataset about early 20th century data might only have been made last year and the created date is then some time last year. 'Issued' indicates when, if ever, this dataset was published.",
+            class: "grid grid-cols-1 md:grid-cols-2 gap-6",
+        },
+        {
+            id: "rights",
+            label: "Rights",
+            description: "Ownership and access information of the data. If a license is selected then the rights holder to that license should also be included.",
+            class: "grid grid-cols-1 md:grid-cols-2 gap-6",
+        },
+        {
+            id: "governance",
+            label: "Indigenous Data Governance",
+            description: "Having policies for Indigenous Data Governance",
+            class: "grid grid-cols-1 md:grid-cols-2 gap-6",
+        },
+        {
+            id: "agentInfo",
+            label: "Agent Information",
+            description: "Information about the roles that agents (people and organisations) play with respect to this data. These roles are critical in determining whether this data is managed properly. Each Agent must have a matching Role.",
+            class: "grid grid-cols-1 md:grid-cols-2 gap-6",
+        },
+        {
+            id: "spatial",
+            label: "Spatial",
+            description: "The spatial (geographical) and temporal (time period) extent of the data. Temporal information is different from the dates section as, for example, this dataset may have been created recently but is about someone or something long ago.",
+            class: "grid grid-cols-1 md:grid-cols-2 gap-6",
+        },
+        {
+            id: "distribution",
+            label: "Distribution Info",
+            description: "This is optional information in the form of a publicly resolvable URL that gives the user access to the data.",
+            class: "grid grid-cols-1 md:grid-cols-2 gap-6",
         },
         {
             id: "contact",
             label: "Contact Details",
             description: "These details are required if you are submitting this metadata to the IDN. These details are also added as the point of contact for this data unless you've specifically indicated an Agent as the Point of Contact above.",
-            class: "grid grid-cols-1 md:grid-cols-2 gap-3",
+            class: "grid grid-cols-1 md:grid-cols-2 gap-6",
+        },
+        {
+            id: "finish",
+            label: "Finish",
         },
     ],
 };
@@ -515,7 +541,7 @@ export const AGENT_SCHEMA = z.object({
         placeholder: "Select a type",
         options: [
             { label: "Person", value: "https://schema.org/Person" },
-            { label: "Organization", value: "https://schema.org/Organization" }
+            { label: "Organization", value: "https://schema.org/Organization" },
         ],
     }),
     url: formField(z.string().url().optional(), {
@@ -555,7 +581,7 @@ export const AGENT_SCHEMA = z.object({
     }).array().optional(), {
         label: "Identifier",
         type: "add",
-        class: "col-span-full grid-cols-1 md:grid-cols-2 gap-2"
+        class: "col-span-full grid-cols-1 md:grid-cols-2 gap-2",
     }),
     relation: formField(z.object({
         type: formField(z.literal("dcat:Relationship"), {
@@ -564,7 +590,7 @@ export const AGENT_SCHEMA = z.object({
         }),
         agent: formField(z.string(), {
             label: "Agent",
-            type: "search",
+            type: "agentSearch",
             placeholder: "Search for an agent",
             listQuery: agentSearch,
         }),
@@ -573,11 +599,11 @@ export const AGENT_SCHEMA = z.object({
             type: "concept",
             vocabIRI: "https://data.idnau.org/pid/vocab/aarr",
             placeholder: "Select role",
-            tooltip: "The role of the relation to this agent."
+            tooltip: "The role of the relation to this agent.",
         }),
     }).array().optional(), {
         label: "Relations",
         type: "add",
-        class: "col-span-full"
+        class: "col-span-full",
     }),
 });

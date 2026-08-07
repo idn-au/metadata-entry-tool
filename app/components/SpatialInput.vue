@@ -1,6 +1,10 @@
 <script lang="ts" setup>
 import { CustomInput } from "@vulptech/vt-form";
 
+const emit = defineEmits<{
+    clear: [];
+}>();
+
 const WKT_TYPES = [
     "POINT",
     "LINESTRING",
@@ -9,10 +13,10 @@ const WKT_TYPES = [
     "MULTILINESTRING",
     "MULTIPOLYGON",
     "GEOMETRYCOLLECTION",
-    // circle, triangle, etc.  
+    // circle, triangle, etc.
 ];
 
-type SpatialObj = {
+interface SpatialObj {
     type: "geo:Geometry";
     asWKT?: {
         type: "geo:wktLiteral";
@@ -31,10 +35,6 @@ const geom = ref<SpatialObj>({
 });
 const data = ref("");
 
-const emit = defineEmits<{
-    clear: [];
-}>();
-
 watch(data, (newValue) => {
     if (newValue === "") {
         iri.value = "";
@@ -42,19 +42,22 @@ watch(data, (newValue) => {
             type: "geo:Geometry",
         };
         model.value = "";
-    } else if (newValue.startsWith("http")) {
+    }
+    else if (newValue.startsWith("http")) {
         iri.value = newValue;
         geom.value = {
             type: "geo:Geometry",
         };
-    } else if (newValue.startsWith("{")) {
+    }
+    else if (newValue.startsWith("{")) {
         geom.value.asGeoJSON = {
             type: "geo:geoJSONLiteral",
             value: newValue,
         };
         iri.value = "";
         delete geom.value.asWKT;
-    } else if (WKT_TYPES.some(t => newValue.startsWith(t))) {
+    }
+    else if (WKT_TYPES.some(t => newValue.startsWith(t))) {
         geom.value.asWKT = {
             type: "geo:wktLiteral",
             value: newValue,
@@ -79,14 +82,15 @@ watch(geom, (newValue) => {
 watch(model, (newValue) => {
     if (typeof newValue === "string") {
         data.value = newValue;
-    } else if (typeof newValue === "object") {
+    }
+    else if (typeof newValue === "object") {
         data.value = (newValue.asGeoJSON || newValue.asWKT)!.value;
     }
-}, { deep: true })
+}, { deep: true });
 </script>
 
 <template>
     <div>
-        <CustomInput type="text" v-model="data" @clear="data = ''; emit('clear')" />
+        <CustomInput v-model="data" type="text" @clear="data = ''; emit('clear')" />
     </div>
 </template>

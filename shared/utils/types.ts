@@ -14,34 +14,34 @@ export type Format = "text/turtle"
     | "text/n3"
     | "n3"
     | "application/rdf+xml"
-    | "rdf"
+    | "rdf";
 // | "xml";
 
-export type ConceptOption = {
+export interface ConceptOption {
     value: string;
     label?: string;
     desc?: string;
-};
+}
 
-export type Example = {
+export interface Example {
     label: string;
     description?: string;
     data: string;
     format: Format;
-};
+}
 
-export type SPARQLResultsJSON = {
+export interface SPARQLResultsJSON {
     head: {
         vars?: string[];
         link?: string[];
-    },
+    };
     results?: {
         bindings: Record<string, {
-            type: "uri" | "literal" | "bnode";
-            value: string;
+            "type": "uri" | "literal" | "bnode";
+            "value": string;
             "xml:lang"?: string;
-            datatype?: string;
+            "datatype"?: string;
         }>[];
-    },
+    };
     boolean?: boolean;
-};
+}

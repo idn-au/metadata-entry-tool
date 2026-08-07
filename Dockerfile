@@ -1,6 +1,4 @@
-# syntax=docker/dockerfile:1
-
-FROM node:24.9.0-alpine AS base
+FROM node:26.5.0-alpine AS base
 ARG PORT=3000
 WORKDIR /src
 
@@ -8,9 +6,10 @@ FROM base AS build
 
 ENV PNPM_HOME="/pnpm"
 ENV PATH="$PNPM_HOME:$PATH"
+RUN npm install -g corepack
 RUN corepack enable
 RUN apk add --no-cache python3 py3-pip make build-base
-COPY --link package.json pnpm-lock.yaml ./
+COPY --link package.json pnpm-lock.yaml pnpm-workspace.yaml ./
 RUN --mount=type=secret,id=NPM_TOKEN,env=NPM_TOKEN \
     pnpm config set '//npm.pkg.github.com/:_authToken' "${NPM_TOKEN}"
 RUN pnpm install --frozen-lockfile

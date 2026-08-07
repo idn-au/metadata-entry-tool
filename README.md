@@ -36,7 +36,7 @@ schema: z.object({
         tooltip: "Text for the tooltip",
         class: "custom-class",
     }),
-})
+});
 ```
 
 ## License & Rights

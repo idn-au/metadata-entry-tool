@@ -15,10 +15,18 @@ export default defineNuxtConfig({
     app: {
         head: {
             link: [
-                { rel: "stylesheet", href: "https://fonts.googleapis.com/css2?family=Material+Symbols+Sharp" }
+                { rel: "stylesheet", href: "https://fonts.googleapis.com/css2?family=Open+Sans:ital,wght@0,300..800;1,300..800&display=swap", type: "text/css" },
+                { rel: "icon", type: "image/png", href: "/favicon-96x96.png", sizes: "96x96" },
+                { rel: "icon", type: "image/svg+xml", href: "/favicon.svg" },
+                { rel: "shortcut icon", href: "/favicon.ico" },
+                { rel: "apple-touch-icon", sizes: "180x180", href: "/apple-touch-icon.png" },
+                { rel: "manifest", href: "/site.webmanifest" },
             ],
-            title: "IDN Metadata Entry Tool"
-        }
+            meta: [
+                { name: "apple-mobile-web-app-title", content: "IDN Metadata Entry Tool" },
+            ],
+            title: "IDN Metadata Entry Tool",
+        },
     },
     runtimeConfig: {
         fusekiURL: "",
@@ -42,7 +50,7 @@ export default defineNuxtConfig({
     },
     shadcn: {
         prefix: "",
-        componentDir: "./app/components/ui"
+        componentDir: "./app/components/ui",
     },
     // locally installing built packages
     // imports: {
