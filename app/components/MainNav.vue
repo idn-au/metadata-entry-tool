@@ -19,7 +19,7 @@ router.beforeEach((from, to) => {
 <template>
     <!--		    mobile nav -->
     <Sheet v-model:open="showSidenav">
-        <SheetTrigger as-child>
+        <SheetTrigger asChild>
             <Button variant="ghost" size="icon" class="md:hidden bg-transparent hover:bg-black/10 transition-colors">
                 <Menu />
             </Button>
@@ -30,8 +30,8 @@ router.beforeEach((from, to) => {
             </a>
             <div class="flex flex-col gap-2 overflow-y-auto">
                 <div v-for="link of navigation">
-                    <Collapsible v-if="!!link.children && link.children.length > 1" :default-open="link.active || route.path.startsWith(link.path)">
-                        <CollapsibleTrigger as-child>
+                    <Collapsible v-if="!!link.children && link.children.length > 1" :defaultOpen="link.active || route.path.startsWith(link.path)">
+                        <CollapsibleTrigger asChild>
                             <Button variant="ghost" :class="`text-sm font-medium bg-transparent hover:bg-black/10 transition-colors w-full data-active:!text-isu-red justify-between ${route.path.startsWith(link.path) ? '!text-isu-red' : ''}`">
                                 {{ link.title }}
                                 <ChevronDown class="size-4" />
@@ -39,7 +39,7 @@ router.beforeEach((from, to) => {
                         </CollapsibleTrigger>
                         <CollapsibleContent>
                             <div class="dark bg-secondary text-secondary-foreground p-2 gap-2 flex flex-col rounded-lg">
-                                <Button v-for="child in link.children.filter(c => c.path !== link.path)" variant="ghost" :data-active="child.active || route.path === child.path || undefined" class="nav-link hover:!bg-background/30 transition-colors data-active:bg-background/50 hover:data-active:bg-background/50 justify-start text-ellipsis overflow-hidden" as-child>
+                                <Button v-for="child in link.children.filter(c => c.path !== link.path)" variant="ghost" :data-active="child.active || route.path === child.path || undefined" class="nav-link hover:!bg-background/30 transition-colors data-active:bg-background/50 hover:data-active:bg-background/50 justify-start text-ellipsis overflow-hidden" asChild>
                                     <NuxtLink :to="child.path">
                                         <div class="leading-none font-medium text-sm">
                                             {{ child.title }}
@@ -49,7 +49,7 @@ router.beforeEach((from, to) => {
                             </div>
                         </CollapsibleContent>
                     </Collapsible>
-                    <Button v-else variant="ghost" :active="route.path === link.path" :class="cn('bg-transparent hover:bg-black/10 transition-colors data-active:!text-isu-red w-full justify-start')" as-child>
+                    <Button v-else variant="ghost" :active="route.path === link.path" :class="cn('bg-transparent hover:bg-black/10 transition-colors data-active:!text-isu-red w-full justify-start')" asChild>
                         <NuxtLink :to="link.path">
                             {{ link.title }}
                         </NuxtLink>
@@ -68,7 +68,7 @@ router.beforeEach((from, to) => {
                             {{ link.title }}
                         </NavigationMenuTrigger>
                         <NavigationMenuContent class="dark bg-secondary text-secondary-foreground p-4 gap-4 grid sm:grid-cols-2 md:grid-cols-4 lg:grid-cols-5 !w-[calc(100dvw-35px)] rounded-lg">
-                            <NavigationMenuLink v-for="child in link.children.filter(c => c.path !== link.path)" :active="child.active || route.path === child.path" class="nav-link hover:not-data-active:bg-background/30 transition-colors p-4 rounded-md data-active:bg-background/50 hover:data-active:bg-background/50" as-child>
+                            <NavigationMenuLink v-for="child in link.children.filter(c => c.path !== link.path)" :active="child.active || route.path === child.path" class="nav-link hover:not-data-active:bg-background/30 transition-colors p-4 rounded-md data-active:bg-background/50 hover:data-active:bg-background/50" asChild>
                                 <NuxtLink :to="child.path">
                                     <div class="leading-none font-medium text-base">
                                         {{ child.title }}
@@ -80,7 +80,7 @@ router.beforeEach((from, to) => {
                             </NavigationMenuLink>
                         </NavigationMenuContent>
                     </template>
-                    <NavigationMenuLink v-else :active="route.path === link.path" :class="cn(navigationMenuTriggerStyle(), 'bg-transparent hover:bg-black/10 transition-colors data-active:!text-isu-red')" as-child>
+                    <NavigationMenuLink v-else :active="route.path === link.path" :class="cn(navigationMenuTriggerStyle(), 'bg-transparent hover:bg-black/10 transition-colors data-active:!text-isu-red')" asChild>
                         <NuxtLink :to="link.path">
                             {{ link.title }}
                         </NuxtLink>

@@ -11,7 +11,7 @@ const model = defineModel<boolean>("open");
 
 <template>
     <Dialog v-model:open="model">
-        <DialogTrigger as-child>
+        <DialogTrigger asChild>
             <slot name="trigger" />
         </DialogTrigger>
         <DialogContent :class="cn('w-[90dvw] sm:max-w-[1200px] max-h-[90dvh] p-0', props.class)">

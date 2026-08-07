@@ -224,7 +224,7 @@ onMounted(async () => {
                     </EmptyHeader>
                     <EmptyContent class="flex flex-row flex-wrap items-center justify-center">
                         <div class="flex flex-row items-center gap-2">
-                            <Button variant="secondary" as-child>
+                            <Button variant="secondary" asChild>
                                 <Label for="file">
                                     <span class="max-md:hidden">Import Data</span>
                                     <Upload class="size-4 md:ml-2" />
@@ -245,7 +245,7 @@ onMounted(async () => {
                         </div>
                         <DropdownMenu>
                             <div class="flex flex-col max-w-min">
-                                <DropdownMenuTrigger as-child>
+                                <DropdownMenuTrigger asChild>
                                     <Button variant="secondary">
                                         <span class="md:hidden">Eg</span>
                                         <span class="max-md:hidden">Load Example</span>
@@ -309,10 +309,10 @@ onMounted(async () => {
                         class="h-[65dvh] w-full rounded-lg"
                         language="turtle"
                         readonly
-                        hide-theme
-                        hide-language
+                        hideTheme
+                        hideLanguage
                         :theme="colorMode.unknown || colorMode.value === 'light' ? 'light' : 'dark'"
-                        :download-filename="data.title || 'metadata'"
+                        :downloadFilename="data.title || 'metadata'"
                     />
                 </Modal>
                 <Button variant="outline" class="!border-destructive text-destructive hover:!bg-destructive hover:text-destructive-foreground" @click="clearForm">

@@ -16,7 +16,7 @@ const props = defineProps<{
             <div class="overflow-auto">
                 <pre>{{ props.error.stack }}</pre>
             </div>
-            <Button as-child>
+            <Button asChild>
                 <NuxtLink to="/">
                     Go home
                 </NuxtLink>

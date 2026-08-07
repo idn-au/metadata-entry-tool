@@ -28,7 +28,7 @@ const variantClasses: Record<CustomIDCButtonVariants, HTMLAttributes["class"]> =
         :size="props.size"
         :class="cn('', props.variant in Object.keys(variantClasses) ? '' : variantClasses[props.variant], props.class)"
         :disabled="props.disabled"
-        :as-child="props.asChild"
+        :asChild="props.asChild"
     >
         <slot />
     </Button>

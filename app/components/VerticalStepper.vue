@@ -26,7 +26,7 @@ const stepIndex = ref(1);
                 class="absolute left-[18px] top-[38px] block h-[105%] w-0.5 shrink-0 rounded-full bg-muted group-data-[state=completed]:bg-primary"
             />
 
-            <StepperTrigger as-child>
+            <StepperTrigger asChild>
                 <Button
                     :variant="state === 'completed' || state === 'active' ? 'default' : 'outline'" size="icon"
                     class="z-10 rounded-full shrink-0"
@@ -45,7 +45,7 @@ const stepIndex = ref(1);
                 >
                     {{ step.title }}
                 </StepperTitle>
-                <slot :step-obj="step" :step-index="stepIndex" />
+                <slot :stepObj="step" :stepIndex="stepIndex" />
             </div>
         </StepperItem>
         <div class="flex items-start justify-between mt-4 sticky bottom-0 bg-background p-2 z-40 border-t">

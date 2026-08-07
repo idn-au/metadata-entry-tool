@@ -40,6 +40,11 @@ export const CONTEXT: ContextDefinition = {
         "@type": "@id",
         "@container": "@set",
     },
+    catRoles: {
+        "@id": "sdo:keywords",
+        "@type": "@id",
+        "@container": "@set",
+    },
     agentRole: {
         "@id": "prov:qualifiedAttribution",
         "@container": "@set",
@@ -126,6 +131,10 @@ export const CONTEXT: ContextDefinition = {
     telephone: "sdo:telephone",
     language: {
         "@id": "sdo:inLanguage",
+        "@type": "@id",
+    },
+    addType: {
+        "@id": "sdo:additionalType",
         "@type": "@id",
     },
 };

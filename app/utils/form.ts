@@ -137,6 +137,22 @@ export const FORM_SCHEMA = z.object({
         tooltip: "The language of this dataset.",
         step: "general",
     }),
+    addType: formField(z.string().optional(), {
+        label: "Resource Type",
+        type: "concept",
+        vocabIRI: "https://data.idnau.org/pid/vocab/cat-obj-types",
+        placeholder: "Choose type",
+        step: "general",
+    }),
+    catRoles: formField(z.string().array().optional(), {
+        label: "Catalogue Roles",
+        type: "concept",
+        vocabIRI: "https://data.idnau.org/pid/vocab/cat-roles",
+        multiple: true,
+        placeholder: "Choose roles",
+        emptyValue: [],
+        step: "general",
+    }),
     description: formField(z.string(), {
         label: "Description",
         type: "textarea",
@@ -185,9 +201,9 @@ export const FORM_SCHEMA = z.object({
             class: "col-span-full",
         }),
     }).array().optional(), {
-        label: "Indigenous Data Governance Policy",
+        label: "Policy",
         type: "add",
-        step: "governance",
+        step: "policies",
         class: "col-span-full",
     }),
     agentRole: formField(z.object({
@@ -243,7 +259,7 @@ export const FORM_SCHEMA = z.object({
     created: formField<z.ZodTypeAny, any>(customDate, {
         label: "Created",
         type: "customDate",
-        description: "Either of YYYY, MM/YYYY or DD/MM/YYYY are supported",
+        // description: "Either of YYYY, MM/YYYY or DD/MM/YYYY are supported",
         tooltip: "This is the date that this dataset was created (NOT the date the data occurred).",
         step: "dates",
     }),
@@ -279,7 +295,7 @@ export const FORM_SCHEMA = z.object({
     }).optional(), {
         label: "Start & End Dates",
         type: "group",
-        tooltip: "This is the interval of time which the data covers at the time of publishing. There must be a start and end date.",
+        tooltip: "This is the interval of time which the data covers at the time of publishing.",
         step: "dates",
         class: "col-span-full",
     }),
@@ -352,12 +368,12 @@ export const FORM_SCHEMA = z.object({
             type: "hidden",
             initial: "dcat:Distribution",
         }),
-        title: formField(z.string(), {
+        title: formField(z.string().optional(), {
             label: "Title",
             type: "text",
             emptyValue: "",
         }),
-        accessURL: formField(z.string().url({ message: "Must be a valid URL" }), {
+        accessURL: formField(z.string().url({ message: "Must be a valid URL" }).optional(), {
             label: "Access URL",
             type: "url",
             placeholder: "https://example.com",
@@ -365,15 +381,15 @@ export const FORM_SCHEMA = z.object({
             tooltip: "A URL is normally in the format https://… . If you are NOT submitting the metadata to the Indigenous Data Network, you could insert any resolvable URL into the metadata.",
             emptyValue: "",
         }),
-        theme: formField(z.string().array(), {
-            label: "Theme",
-            type: "concept",
-            vocabIRI: "https://data.idnau.org/pid/vocab/cat-roles",
-            multiple: true,
-            placeholder: "Choose themes",
-            emptyValue: [],
-        }),
-        description: formField(z.string(), {
+        // theme: formField(z.string().array().optional(), {
+        //     label: "Catalogue Roles",
+        //     type: "concept",
+        //     vocabIRI: "https://data.idnau.org/pid/vocab/cat-roles",
+        //     multiple: true,
+        //     placeholder: "Choose roles",
+        //     emptyValue: [],
+        // }),
+        description: formField(z.string().optional(), {
             label: "Description",
             type: "textarea",
             description: "Supports new lines and basic formatting",
@@ -403,10 +419,10 @@ export const FORM_SCHEMA = z.object({
             initial: "prov:Attribution",
         }),
         agent: formField(z.object({
-            iri: formField(z.literal("https://data.idnau.org/pid/person/6cf32191-8d20-4a43-99ba-1a7727615ad9"), {
-                type: "hidden",
-                initial: "https://data.idnau.org/pid/person/6cf32191-8d20-4a43-99ba-1a7727615ad9",
-            }),
+            // iri: formField(z.literal("https://data.idnau.org/pid/person/6cf32191-8d20-4a43-99ba-1a7727615ad9"), {
+            //     type: "hidden",
+            //     initial: "https://data.idnau.org/pid/person/6cf32191-8d20-4a43-99ba-1a7727615ad9",
+            // }),
             type: formField(z.literal("sdo:Person"), {
                 type: "hidden",
                 initial: "sdo:Person",
@@ -417,13 +433,13 @@ export const FORM_SCHEMA = z.object({
                 placeholder: "Contact name",
                 emptyValue: "",
             }),
-            email: formField(z.string().email(), {
+            email: formField(z.string().email().optional(), {
                 label: "Email",
                 type: "email",
                 placeholder: "Contact email",
                 emptyValue: "",
             }),
-            telephone: formField(phoneNumber, {
+            telephone: formField(phoneNumber.optional(), {
                 label: "Phone",
                 type: "tel",
                 placeholder: "Contact phone",
@@ -440,9 +456,9 @@ export const FORM_SCHEMA = z.object({
     }).array().length(1), {
         label: "Contact Details",
         type: "add",
-        // initial: [
-        //     {}
-        // ],
+        initial: [
+            {},
+        ],
         step: "contact",
         class: "col-span-full",
         elementClass: "border-none p-0",
@@ -473,7 +489,7 @@ export const STEP_CONFIG: StepConfig = {
         {
             id: "dates",
             label: "Dates",
-            description: "Standard dates for the establishment and update times of this dataset. A dataset about early 20th century data might only have been made last year and the created date is then some time last year. 'Issued' indicates when, if ever, this dataset was published.",
+            description: "Standard dates for the establishment and update times of this dataset. A dataset about early 20th century data might only have been made last year and the created date is then some time last year. 'Issued' indicates when, if ever, this dataset was published. Either of YYYY, MM/YYYY or DD/MM/YYYY are supported.",
             class: "grid grid-cols-1 md:grid-cols-2 gap-6",
         },
         {
@@ -483,21 +499,21 @@ export const STEP_CONFIG: StepConfig = {
             class: "grid grid-cols-1 md:grid-cols-2 gap-6",
         },
         {
-            id: "governance",
-            label: "Indigenous Data Governance",
-            description: "Having policies for Indigenous Data Governance",
+            id: "policies",
+            label: "Policies",
+            description: "Indicate Policies that apply to this data whether they're specifically Indigenous or generic institutional. There could be more than one",
             class: "grid grid-cols-1 md:grid-cols-2 gap-6",
         },
         {
             id: "agentInfo",
-            label: "Agent Information",
+            label: "People & Orgs",
             description: "Information about the roles that agents (people and organisations) play with respect to this data. These roles are critical in determining whether this data is managed properly. Each Agent must have a matching Role.",
             class: "grid grid-cols-1 md:grid-cols-2 gap-6",
         },
         {
             id: "spatial",
             label: "Spatial",
-            description: "The spatial (geographical) and temporal (time period) extent of the data. Temporal information is different from the dates section as, for example, this dataset may have been created recently but is about someone or something long ago.",
+            description: "The spatial (geographical) and temporal (time period) extent of the data. Temporal information is different from the dates section as, for example, this dataset may have been created recently but is about someone or something long ago. You can search for locations in the IDN search portal - https://data.idnau.org",
             class: "grid grid-cols-1 md:grid-cols-2 gap-6",
         },
         {
@@ -509,7 +525,7 @@ export const STEP_CONFIG: StepConfig = {
         {
             id: "contact",
             label: "Contact Details",
-            description: "These details are required if you are submitting this metadata to the IDN. These details are also added as the point of contact for this data unless you've specifically indicated an Agent as the Point of Contact above.",
+            description: "These details are required if you are submitting this metadata to the IDN. These details are also added as the point of contact for this data unless you've specifically indicated an Agent as the Point of Contact above. Please specify at least a phone number and/or an email address.",
             class: "grid grid-cols-1 md:grid-cols-2 gap-6",
         },
         {

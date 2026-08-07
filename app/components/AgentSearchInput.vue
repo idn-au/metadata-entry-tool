@@ -105,7 +105,7 @@ watch(model, (newValue) => {
 <template>
     <div :class="cn('relative w-full items-center', props.class)">
         <Dialog v-model:open="open">
-            <DialogTrigger as-child>
+            <DialogTrigger asChild>
                 <Button variant="outline" :class="cn('justify-start w-full pr-10', props.class)">
                     <Search class="size-4 text-muted-foreground mr-2" />
                     <span :class="`overflow-x-hidden ${model === undefined || Object.keys(model).length === 0 ? 'text-muted-foreground' : ''}`">

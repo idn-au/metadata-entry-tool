@@ -38,8 +38,8 @@ watch(model, (newValue) => {
 <template>
     <div class="flex flex-row gap-2 items-center w-full relative">
         <Combobox v-model="model" v-model:open="open" by="label" :multiple="props.multiple" class="relative w-full flex items-center">
-            <ComboboxAnchor as-child>
-                <ComboboxTrigger as-child>
+            <ComboboxAnchor asChild>
+                <ComboboxTrigger asChild>
                     <Button variant="outline" role="combobox" :aria-expanded="open" :class="cn(`grow justify-between !pr-10 ${(props.multiple && Array.isArray(model) ? model.length > 0 : model) ? '' : 'text-muted-foreground'}`, props.class)">
                         <span class="overflow-hidden">
                             {{ (props.multiple && Array.isArray(model) ? model.length > 0 : model) && conceptOptions
@@ -81,7 +81,7 @@ watch(model, (newValue) => {
                 </ComboboxGroup>
             </ComboboxList>
         </Combobox>
-        <Button size="icon" variant="outline" title="Vocab page" as-child>
+        <Button size="icon" variant="outline" title="Vocab page" asChild>
             <a :href="props.vocabIRI" target="_blank" rel="noopener noreferrer">
                 <ExternalLink class="size-4" />
             </a>

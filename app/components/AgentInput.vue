@@ -62,9 +62,9 @@ watch(() => data.value?.type, (newValue, oldValue) => {
     <div :class="cn('w-full flex flex-row gap-2 items-center', props.class)">
         <AgentSearchInput
             v-model="model"
-            :list-query="agentSearch"
-            :get-query="agentGet"
-            result-label="name"
+            :listQuery="agentSearch"
+            :getQuery="agentGet"
+            resultLabel="name"
             :placeholder="props.placeholder"
             :class="props.class"
             @clear="resetForm(); emits('clear')"

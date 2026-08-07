@@ -123,13 +123,13 @@ function scrollToTop() {
                         </div>
                         <div class="flex flex-row items-center gap-2 justify-between flex-wrap">
                             <div class="flex flex-row items-center justify-around gap-2 grow">
-                                <IDCButton v-for="social in socials" size="icon" variant="green" :title="social.title" as-child>
+                                <IDCButton v-for="social in socials" size="icon" variant="green" :title="social.title" asChild>
                                     <a :href="social.url">
                                         <FontAwesomeIcon :icon="social.icon" />
                                     </a>
                                 </IDCButton>
                             </div>
-                            <IDCButton variant="red" as-child>
+                            <IDCButton variant="red" asChild>
                                 <a href="https://indigenousdatacommons.org/news/newsletter">
                                     <Newspaper class="size-4" /> Subscribe to our newsletter
                                 </a>
