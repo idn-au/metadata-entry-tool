@@ -207,9 +207,6 @@ onMounted(async () => {
             :registry="registry"
             class="md:[&>div>div]:top-[180px] md:[&>div>div]:w-1/5! **:[&.grid]:gap-6 *:[.stepper-buttons]:rounded-b-xl"
         >
-            <template #step-1-header>
-&nbsp;
-            </template>
             <template #step-1-top="{ nextStep }">
                 <Empty>
                     <EmptyHeader>

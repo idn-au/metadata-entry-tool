@@ -103,6 +103,7 @@ export const FORM_SCHEMA = z.object({
     title: formField(z.string(), {
         label: "Title",
         type: "text",
+        description: "This is the name by which this resource will be known",
         tooltip: "The name of the data that this metadata is describing.",
         emptyValue: "",
         step: "general",
@@ -112,19 +113,19 @@ export const FORM_SCHEMA = z.object({
         type: "iri",
         generateFn: () => generateIRI("resource"),
         placeholder: "https://example.com",
-        description: "Provide an IRI or have an IRI automatically assigned",
+        description: "An IRI is automatically assigned, please change this if the dataset already has an identifier.",
         tooltip: "An IRI is a standard identifier in the form of a web address (URL). Good IRIs are part of a managed system.",
         emptyValue: "",
         step: "general",
     }),
     dataIndigeneity: formField(z.string().array().optional(), {
-        label: "Indigeneity",
+        label: "Indigenous Status",
         type: "concept",
         vocabIRI: "https://data.idnau.org/pid/vocab/indigeneity",
         multiple: true,
-        placeholder: "Select indigeneity",
-        description: "You can add multiple indigeneity terms",
-        tooltip: "The indigeneity of this dataset.",
+        placeholder: "Select Indigenous statuses",
+        description: "A dataset can have multiple types of Indigenous status.",
+        tooltip: "The Indigenous status of the dataset.",
         step: "general",
     }),
     language: formField(z.string().array().optional(), {
@@ -132,15 +133,17 @@ export const FORM_SCHEMA = z.object({
         type: "concept",
         vocabIRI: "https://data.idnau.org/pid/austlang",
         multiple: true,
-        placeholder: "Select language",
-        description: "You can add multiple languages. (Note: This list may be slow due to its size.)",
-        tooltip: "The language of this dataset.",
+        placeholder: "Select language(s)",
+        description: "A dataset can have multiple Indigenous languages.",
+        tooltip: "The Indigenous language(s) the dataset relates to, coded using the AUSTLANG classification.",
         step: "general",
     }),
     addType: formField(z.string().optional(), {
         label: "Resource Type",
         type: "concept",
         vocabIRI: "https://data.idnau.org/pid/vocab/cat-obj-types",
+        description: "Multiple types can be selected",
+        tooltip: "The type of resource to be catalogued",
         placeholder: "Choose type",
         step: "general",
     }),
@@ -230,8 +233,8 @@ export const FORM_SCHEMA = z.object({
             label: "Agent",
             type: "agent",
             placeholder: "Search for an agent",
-            description: "You can search for an agent or create your own",
-            tooltip: "The name of the person, community or business that is providing this data.",
+            description: "Search or add an agent if not in our Agents database",
+            tooltip: "The person or organisation",
             listQuery: agentSearch,
             getQuery: agentGet,
             resultLabel: "name",
@@ -243,8 +246,8 @@ export const FORM_SCHEMA = z.object({
             vocabIRI: "https://linked.data.gov.au/def/data-roles",
             multiple: true,
             placeholder: "Choose roles",
-            description: "You can select multiple roles",
-            tooltip: "What role (e.g. custodian) the named person, community or business has with this data.",
+            description: "What role does the person or organisation have in relation to the data",
+            tooltip: "The role that the person, community or business has in relation to the data",
         }),
     }).array().min(1, "Must have an agent and role selected"), {
         label: "Agents",
@@ -257,21 +260,21 @@ export const FORM_SCHEMA = z.object({
         class: "col-span-full",
     }),
     created: formField<z.ZodTypeAny, any>(customDate, {
-        label: "Created",
+        label: "Collected",
         type: "customDate",
         // description: "Either of YYYY, MM/YYYY or DD/MM/YYYY are supported",
-        tooltip: "This is the date that this dataset was created (NOT the date the data occurred).",
+        tooltip: "The date that this dataset was created.",
         step: "dates",
     }),
     modified: formField<z.ZodTypeAny, any>(customDate, {
-        label: "Modified",
+        label: "Updated",
         type: "customDate",
         // description: "Either of YYYY, MM/YYYY or DD/MM/YYYY are supported",
         tooltip: "The most recent date on which the data was modified. It can be the same as the date it was created.",
         step: "dates",
     }),
     issued: formField<z.ZodTypeAny, any>(customDate.optional(), {
-        label: "Issued",
+        label: "Published",
         type: "customDate",
         // description: "Either of YYYY, MM/YYYY or DD/MM/YYYY are supported",
         tooltip: "Issued indicates when, if ever, this dataset was published",
@@ -312,13 +315,13 @@ export const FORM_SCHEMA = z.object({
         type: "concept",
         vocabIRI: "https://linked.data.gov.au/def/data-access-rights",
         placeholder: "Select an access right",
-        tooltip: "Data access rights control how users and systems access a data resource. e.g. Metadata access only. Definitions can be found here.",
+        tooltip: "Control how users and systems access a resource. e.g. Metadata access only. Definitions can be found here.",
         step: "rights",
     }),
     rights: formField(z.string().max(300).optional(), {
         label: "Rights",
         type: "textarea",
-        tooltip: "This is a statement that provides required details of who holds the license selected previously. e.g. ©University of Melbourne.",
+        tooltip: "If you don't already have a license and/or access rights indicated, you can put in free form rights information here.",
         description: "Max 300 characters",
         emptyValue: "",
         step: "rights",
@@ -361,6 +364,7 @@ export const FORM_SCHEMA = z.object({
         label: "Spatial",
         type: "spatial",
         description: "Supports an IRI or a WKT/GeoJSON string",
+        tooltip: "The spatial area the data covers",
         step: "spatial",
     }),
     distribution: formField(z.object({
@@ -371,6 +375,7 @@ export const FORM_SCHEMA = z.object({
         title: formField(z.string().optional(), {
             label: "Title",
             type: "text",
+            tooltip: "Name this distribution if it is important to distinguish from other distributions",
             emptyValue: "",
         }),
         accessURL: formField(z.string().url({ message: "Must be a valid URL" }).optional(), {
@@ -378,7 +383,7 @@ export const FORM_SCHEMA = z.object({
             type: "url",
             placeholder: "https://example.com",
             description: "A publicly resolvable URL that gives the user access to the data",
-            tooltip: "A URL is normally in the format https://… . If you are NOT submitting the metadata to the Indigenous Data Network, you could insert any resolvable URL into the metadata.",
+            tooltip: "A weblink to access the data",
             emptyValue: "",
         }),
         // theme: formField(z.string().array().optional(), {
@@ -408,7 +413,7 @@ export const FORM_SCHEMA = z.object({
         vocabIRI: "https://data.idnau.org/pid/vocab/idn-th",
         multiple: true,
         placeholder: "Choose themes",
-        description: "You can add more than one Theme term",
+        description: "We are concerned here to record how the data is related to Indigenous people. The data may cover multiple themes.",
         tooltip: "Our vocabulary for the primary classification for indigeneity of data being described can be browsed here. This vocabulary contains historical terms which exist in legacy data but are no longer used today. We welcome suggestions and feedback on this vocabulary.",
         emptyValue: [],
         step: "theme",
@@ -473,23 +478,24 @@ export const STEP_CONFIG: StepConfig = {
         {
             id: "start",
             label: "Start",
+            description: "Click \"start\" below to begin a new metadata entry. If you already have an existing RDF or draft Metadata Entry you can load this file into the form by clicking \"import data\". If you would like to see an example before starting click \"load example\"",
         },
         {
             id: "general",
             label: "General",
-            description: "Basic information about this data.",
+            description: "Information about the data that you are cataloguing.",
             class: "grid grid-cols-1 md:grid-cols-2 gap-6",
         },
         {
             id: "theme",
             label: "Theme",
-            description: "Classification or categorisation of this data. We are mostly concerned with indications of 'indigeneity', i.e. how this data is related to indigenous people, however other classifications may also be added. Our primary indigenous classification vocabulary is online at https://data.idnau.org/v/vocab/vcb:idn-th which may be browsed for classification suggestions.",
+            description: "A subject idea or theme that describes your data, particularly how the data is related to Indigenous people. Our primary Indigenous classification vocabulary is online at https://data.idnau.org/pid/vocab/idn-th which may be browsed for classification suggestions. Other classifications may also be added.",
             class: "grid grid-cols-1 md:grid-cols-2 gap-6",
         },
         {
             id: "dates",
             label: "Dates",
-            description: "Standard dates for the establishment and update times of this dataset. A dataset about early 20th century data might only have been made last year and the created date is then some time last year. 'Issued' indicates when, if ever, this dataset was published. Either of YYYY, MM/YYYY or DD/MM/YYYY are supported.",
+            description: "Standard dates and time for when the dataset was created, modified, and/or published, as well as the period of time the data references. Either of YYYY, MM/YYYY or DD/MM/YYYY are supported.",
             class: "grid grid-cols-1 md:grid-cols-2 gap-6",
         },
         {
@@ -501,31 +507,31 @@ export const STEP_CONFIG: StepConfig = {
         {
             id: "policies",
             label: "Policies",
-            description: "Indicate Policies that apply to this data whether they're specifically Indigenous or generic institutional. There could be more than one",
+            description: "Indicate Policies that apply to this data whether they're specifically Indigenous or generic institutional. A dataset could have multiple policies that govern it.",
             class: "grid grid-cols-1 md:grid-cols-2 gap-6",
         },
         {
             id: "agentInfo",
             label: "People & Orgs",
-            description: "Information about the roles that agents (people and organisations) play with respect to this data. These roles are critical in determining whether this data is managed properly. Each Agent must have a matching Role.",
+            description: "People and organisations who play a role with respect to the data such as the owner, publisher or creator. Each Agent must have a matching Role.",
             class: "grid grid-cols-1 md:grid-cols-2 gap-6",
         },
         {
             id: "spatial",
             label: "Spatial",
-            description: "The spatial (geographical) and temporal (time period) extent of the data. Temporal information is different from the dates section as, for example, this dataset may have been created recently but is about someone or something long ago. You can search for locations in the IDN search portal - https://data.idnau.org",
+            description: "The spatial (geographical) and temporal (time period) extent of the data. You can search for locations in the IDN search portal - https://data.idnau.org",
             class: "grid grid-cols-1 md:grid-cols-2 gap-6",
         },
         {
             id: "distribution",
             label: "Distribution Info",
-            description: "This is optional information in the form of a publicly resolvable URL that gives the user access to the data.",
+            description: "Including a public and open access URL improves access and findability of your data.",
             class: "grid grid-cols-1 md:grid-cols-2 gap-6",
         },
         {
             id: "contact",
             label: "Contact Details",
-            description: "These details are required if you are submitting this metadata to the IDN. These details are also added as the point of contact for this data unless you've specifically indicated an Agent as the Point of Contact above. Please specify at least a phone number and/or an email address.",
+            description: "A point of contact or responsible person/organisation associated with this dataset is required when submitting this form to the IDN.",
             class: "grid grid-cols-1 md:grid-cols-2 gap-6",
         },
         {
@@ -536,6 +542,12 @@ export const STEP_CONFIG: StepConfig = {
 };
 
 export const AGENT_SCHEMA = z.object({
+    name: formField(z.string(), {
+        label: "Name",
+        type: "text",
+        tooltip: "The name of the person or organization",
+        emptyValue: "",
+    }),
     iri: formField(z.string().url({ message: "Must be a valid IRI" }), {
         label: "IRI",
         type: "iri",
@@ -545,15 +557,11 @@ export const AGENT_SCHEMA = z.object({
         tooltip: "An IRI is a standard identifier in the form of a web address (URL). Good IRIs are part of a managed system.",
         emptyValue: "",
     }),
-    name: formField(z.string(), {
-        label: "Name",
-        type: "text",
-        tooltip: "The name of the person or organization",
-        emptyValue: "",
-    }),
     type: formField(z.string(), {
         label: "Type",
         type: "select",
+        description: "Is this agent a person or an organisation?",
+        tooltip: "The type of the agent",
         placeholder: "Select a type",
         options: [
             { label: "Person", value: "https://schema.org/Person" },
@@ -573,8 +581,9 @@ export const AGENT_SCHEMA = z.object({
         class: "col-span-full",
     }),
     agentIndigeneity: formField(z.string().optional(), {
-        label: "Indigeneity",
+        label: "Indigenous Status",
         type: "indigeneitySelect",
+        placeholder: "Select a status",
         orgVocabIRI: "https://data.idnau.org/pid/vocab/org-indigeneity",
         personVocabIRI: "https://data.idnau.org/pid/vocab/persons-indigenous-status",
     }),
@@ -597,6 +606,8 @@ export const AGENT_SCHEMA = z.object({
     }).array().optional(), {
         label: "Identifier",
         type: "add",
+        description: "You can add multiple identifiers",
+        tooltip: "Other identifiers this agent may have from other systems, e.g. ABN, ORCID",
         class: "col-span-full grid-cols-1 md:grid-cols-2 gap-2",
     }),
     relation: formField(z.object({
@@ -620,6 +631,8 @@ export const AGENT_SCHEMA = z.object({
     }).array().optional(), {
         label: "Relations",
         type: "add",
+        description: "You can add multiple relations",
+        tooltip: "The relationships this agent has with other existing agents",
         class: "col-span-full",
     }),
 });
