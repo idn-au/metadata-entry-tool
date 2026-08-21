@@ -191,7 +191,7 @@ onMounted(async () => {
 </script>
 
 <template>
-    <div ref="formRef" class="flex flex-col gap-4 relative border rounded-xl my-4">
+    <div ref="formRef" class="flex flex-col gap-4 relative border rounded-xl my-6">
         <div class="flex flex-row max-sm:flex-wrap gap-2 items-start sticky top-[83px] md:top-[92px] bg-background z-48 border-b rounded-t-xl">
             <div class="flex flex-row gap-2 items-center mx-auto max-w-2xl">
                 <Scores keys="fair" v-bind="fair" compact />
@@ -207,6 +207,17 @@ onMounted(async () => {
             :registry="registry"
             class="md:[&>div>div]:top-[180px] md:[&>div>div]:w-1/5! **:[&.grid]:gap-6 *:[.stepper-buttons]:rounded-b-xl"
         >
+	        <template #step-header="{ stepIndex, label, description }">
+		        <template v-if="stepIndex < 11">
+			        <h3 class="font-bold text-lg mb-2">{{steps.numbered ? stepIndex + ". " : ""}}{{ label }}</h3>
+			        <p v-if="description">{{ description }}</p>
+			        <Alert v-if="steps.steps[stepIndex - 1].info" class="gap-x-3! gap-y-2! mt-6 mb-4">
+				        <Info />
+				        <AlertTitle>Why This Matters</AlertTitle>
+				        <AlertDescription>{{steps.steps[stepIndex - 1].info}}</AlertDescription>
+			        </Alert>
+		        </template>
+	        </template>
             <template #step-1-top="{ nextStep }">
                 <Empty>
                     <EmptyHeader>
@@ -214,52 +225,56 @@ onMounted(async () => {
                             <Play />
                         </EmptyMedia>
                         <EmptyTitle>Get Started</EmptyTitle>
-                        <EmptyDescription>
-                            <p>You can optionally load an existing RDF file into this form or load an example.</p>
-                            <p>Click "Start" below to begin.</p>
-                        </EmptyDescription>
                     </EmptyHeader>
-                    <EmptyContent class="flex flex-row flex-wrap items-center justify-center">
-                        <div class="flex flex-row items-center gap-2">
-                            <Button variant="secondary" asChild>
-                                <Label for="file">
-                                    <span class="max-md:hidden">Import Data</span>
-                                    <Upload class="size-4 md:ml-2" />
-                                </Label>
-                                <Input id="file" type="file" :accept="Object.keys(rdfFormats).map(ext => `.${ext}`).join(',')" hidden @change="uploadFile" />
-                            </Button>
-                            <TooltipProvider>
-                                <Tooltip>
-                                    <TooltipTrigger class="max-md:hidden">
-                                        <Info class="size-4 text-muted-foreground" />
-                                    </TooltipTrigger>
-                                    <TooltipContent>
-                                        <div>Import an existing RDF file to edit in this form.</div>
-                                        <div>Supports {{ Object.keys(rdfFormats).map(ext => `.${ext}`).join(', ') }} files</div>
-                                    </TooltipContent>
-                                </Tooltip>
-                            </TooltipProvider>
-                        </div>
-                        <DropdownMenu>
-                            <div class="flex flex-col max-w-min">
-                                <DropdownMenuTrigger asChild>
-                                    <Button variant="secondary">
-                                        <span class="md:hidden">Eg</span>
-                                        <span class="max-md:hidden">Load Example</span>
-                                        <ChevronDown class="size-4 md:ml-2" />
-                                    </Button>
-                                </DropdownMenuTrigger>
-                            </div>
-                            <DropdownMenuContent class="max-w-80">
-                                <DropdownMenuItem v-for="example in exampleData" class="cursor-pointer flex flex-col items-start" @select="loadExample(example)">
-                                    <span class="line-clamp-1">{{ example.label }}</span>
-                                    <span v-if="example.description" class="text-xs italic text-muted-foreground line-clamp-1">{{ example.description }}</span>
-                                </DropdownMenuItem>
-                            </DropdownMenuContent>
-                        </DropdownMenu>
-                        <Button @click="nextStep">
-                            Start <Play />
-                        </Button>
+                    <EmptyContent class="flex flex-col gap-6 items-center justify-center text-center">
+	                    <div class="flex flex-col items-center justify-center">
+		                    <p>Click "Start" below to begin a new metadata entry.</p>
+		                    <Button @click="nextStep">
+			                    Start <Play />
+		                    </Button>
+	                    </div>
+						<div class="flex flex-col items-center justify-center">
+							<p>Click "Import Data" below to load an existing RDF or draft metadata entry file into this form.</p>
+							<div class="flex flex-row items-center gap-2">
+								<Button variant="secondary" asChild>
+									<Label for="file">
+										<span class="max-md:hidden">Import Data</span>
+										<Upload class="size-4 md:ml-2" />
+									</Label>
+									<Input id="file" type="file" :accept="Object.keys(rdfFormats).map(ext => `.${ext}`).join(',')" hidden @change="uploadFile" />
+								</Button>
+								<TooltipProvider>
+									<Tooltip>
+										<TooltipTrigger class="max-md:hidden cursor-help">
+											<Info class="size-4 text-muted-foreground" />
+										</TooltipTrigger>
+										<TooltipContent>
+											<div>Supports {{ Object.keys(rdfFormats).map(ext => `.${ext}`).join(', ') }} files</div>
+										</TooltipContent>
+									</Tooltip>
+								</TooltipProvider>
+							</div>
+						</div>
+	                    <div class="flex flex-col items-center justify-center">
+		                    <p>If you would like to see an example before you begin, click "Load Example" below.</p>
+		                    <DropdownMenu>
+			                    <div class="flex flex-col max-w-min">
+				                    <DropdownMenuTrigger asChild>
+					                    <Button variant="secondary">
+						                    <span class="md:hidden">Eg</span>
+						                    <span class="max-md:hidden">Load Example</span>
+						                    <ChevronDown class="size-4 md:ml-2" />
+					                    </Button>
+				                    </DropdownMenuTrigger>
+			                    </div>
+			                    <DropdownMenuContent class="max-w-80">
+				                    <DropdownMenuItem v-for="example in exampleData" class="cursor-pointer flex flex-col items-start" @select="loadExample(example)">
+					                    <span class="line-clamp-1">{{ example.label }}</span>
+					                    <span v-if="example.description" class="text-xs italic text-muted-foreground line-clamp-1">{{ example.description }}</span>
+				                    </DropdownMenuItem>
+			                    </DropdownMenuContent>
+		                    </DropdownMenu>
+	                    </div>
                     </EmptyContent>
                 </Empty>
             </template>
