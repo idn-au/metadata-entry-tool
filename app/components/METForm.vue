@@ -31,6 +31,7 @@ const fair = ref({} as TopScoreValueObj);
 const care = ref({} as TopScoreValueObj);
 const isDownloading = ref(false);
 const stepIndex = ref(1);
+const downloadFormat = ref<keyof typeof rdfFormats>("ttl");
 
 const formRef = useTemplateRef("formRef");
 
@@ -52,11 +53,17 @@ function clearForm() {
 
 function downloadFile() {
     isDownloading.value = true;
-    const blob = new Blob([rdfString.value || ""], { type: "text/turtle" });
+    let outputRDF = rdfString.value;
+    if (downloadFormat.value !== "ttl") {
+        const store = new oxigraph.Store();
+        store.load(rdfString.value, { format: "text/turtle" });
+        outputRDF = store.dump({ format: rdfFormats[downloadFormat.value].format, from_graph_name: oxigraph.defaultGraph() });
+    }
+    const blob = new Blob([outputRDF || ""], { type: rdfFormats[downloadFormat.value].format });
     const link = document.createElement("a");
     link.href = URL.createObjectURL(blob);
     const filename = data.value.title || "metadata";
-    const extension = "ttl";
+    const extension = downloadFormat.value;
     link.download = `${filename}.${extension}`;
     link.click();
     URL.revokeObjectURL(link.href);
@@ -66,13 +73,13 @@ function downloadFile() {
     }, 1500);
 }
 
-const rdfFormats: { [key: string]: Format } = {
-    ttl: "text/turtle",
-    trig: "application/trig",
-    nt: "application/n-triples",
-    n3: "text/n3",
-    nq: "application/n-quads",
-    rdf: "application/rdf+xml",
+const rdfFormats: Record<string, { title: string; format: Format; quads?: boolean }> = {
+    ttl: { format: "text/turtle", title: "Turtle" },
+    // trig: {format: "application/trig", title: "TriG", quads: true},
+    nt: { format: "application/n-triples", title: "N-Triples" },
+    n3: { format: "text/n3", title: "N3" },
+    // nq: {format: "application/n-quads", title: "N-Quads", quads: true},
+    rdf: { format: "application/rdf+xml", title: "XML" },
 };
 
 function loadExample(example: Example) {
@@ -82,12 +89,12 @@ function loadExample(example: Example) {
 }
 
 async function uploadFile(e: InputEvent) {
-    if (confirm("Are you sure you want to load an example record? You will lose all progress if you have not saved as a file as this will replace the current data.")) {
+    if (confirm("Are you sure you want to upload a file? You will lose all progress if you have not saved as a file as this will replace the current data.")) {
         const files = (e.target as HTMLInputElement).files!;
         const file = files[0];
         const splitFilename = file.name.split(".");
         const fileExtension = splitFilename[splitFilename.length - 1];
-        const format = rdfFormats[fileExtension];
+        const format = rdfFormats[fileExtension].format;
 
         const rdf = await file.text();
 
@@ -207,17 +214,21 @@ onMounted(async () => {
             :registry="registry"
             class="md:[&>div>div]:top-[180px] md:[&>div>div]:w-1/5! **:[&.grid]:gap-6 *:[.stepper-buttons]:rounded-b-xl"
         >
-	        <template #step-header="{ stepIndex, label, description }">
-		        <template v-if="stepIndex < 11">
-			        <h3 class="font-bold text-lg mb-2">{{steps.numbered ? stepIndex + ". " : ""}}{{ label }}</h3>
-			        <p v-if="description">{{ description }}</p>
-			        <Alert v-if="steps.steps[stepIndex - 1].info" class="gap-x-3! gap-y-2! mt-6 mb-4">
-				        <Info />
-				        <AlertTitle>Why This Matters</AlertTitle>
-				        <AlertDescription>{{steps.steps[stepIndex - 1].info}}</AlertDescription>
-			        </Alert>
-		        </template>
-	        </template>
+            <template #step-header="{ stepIndex, label, description }">
+                <template v-if="stepIndex < 11">
+                    <h3 class="font-bold text-lg mb-2">
+                        {{ steps.numbered ? `${stepIndex}. ` : "" }}{{ label }}
+                    </h3>
+                    <p v-if="description">
+                        {{ description }}
+                    </p>
+                    <Alert v-if="steps.steps[stepIndex - 1].info" class="gap-x-3! gap-y-2! mt-6 mb-4">
+                        <Info />
+                        <AlertTitle>Why This Matters</AlertTitle>
+                        <AlertDescription>{{ steps.steps[stepIndex - 1].info }}</AlertDescription>
+                    </Alert>
+                </template>
+            </template>
             <template #step-1-top="{ nextStep }">
                 <Empty>
                     <EmptyHeader>
@@ -227,54 +238,54 @@ onMounted(async () => {
                         <EmptyTitle>Get Started</EmptyTitle>
                     </EmptyHeader>
                     <EmptyContent class="flex flex-col gap-6 items-center justify-center text-center">
-	                    <div class="flex flex-col items-center justify-center">
-		                    <p>Click "Start" below to begin a new metadata entry.</p>
-		                    <Button @click="nextStep">
-			                    Start <Play />
-		                    </Button>
-	                    </div>
-						<div class="flex flex-col items-center justify-center">
-							<p>Click "Import Data" below to load an existing RDF or draft metadata entry file into this form.</p>
-							<div class="flex flex-row items-center gap-2">
-								<Button variant="secondary" asChild>
-									<Label for="file">
-										<span class="max-md:hidden">Import Data</span>
-										<Upload class="size-4 md:ml-2" />
-									</Label>
-									<Input id="file" type="file" :accept="Object.keys(rdfFormats).map(ext => `.${ext}`).join(',')" hidden @change="uploadFile" />
-								</Button>
-								<TooltipProvider>
-									<Tooltip>
-										<TooltipTrigger class="max-md:hidden cursor-help">
-											<Info class="size-4 text-muted-foreground" />
-										</TooltipTrigger>
-										<TooltipContent>
-											<div>Supports {{ Object.keys(rdfFormats).map(ext => `.${ext}`).join(', ') }} files</div>
-										</TooltipContent>
-									</Tooltip>
-								</TooltipProvider>
-							</div>
-						</div>
-	                    <div class="flex flex-col items-center justify-center">
-		                    <p>If you would like to see an example before you begin, click "Load Example" below.</p>
-		                    <DropdownMenu>
-			                    <div class="flex flex-col max-w-min">
-				                    <DropdownMenuTrigger asChild>
-					                    <Button variant="secondary">
-						                    <span class="md:hidden">Eg</span>
-						                    <span class="max-md:hidden">Load Example</span>
-						                    <ChevronDown class="size-4 md:ml-2" />
-					                    </Button>
-				                    </DropdownMenuTrigger>
-			                    </div>
-			                    <DropdownMenuContent class="max-w-80">
-				                    <DropdownMenuItem v-for="example in exampleData" class="cursor-pointer flex flex-col items-start" @select="loadExample(example)">
-					                    <span class="line-clamp-1">{{ example.label }}</span>
-					                    <span v-if="example.description" class="text-xs italic text-muted-foreground line-clamp-1">{{ example.description }}</span>
-				                    </DropdownMenuItem>
-			                    </DropdownMenuContent>
-		                    </DropdownMenu>
-	                    </div>
+                        <div class="flex flex-col items-center justify-center">
+                            <p>Click "Start" below to begin a new metadata entry.</p>
+                            <Button @click="nextStep">
+                                Start <Play />
+                            </Button>
+                        </div>
+                        <div class="flex flex-col items-center justify-center">
+                            <p>Click "Import Data" below to load an existing RDF or draft metadata entry file into this form.</p>
+                            <div class="flex flex-row items-center gap-2">
+                                <Button variant="secondary" asChild>
+                                    <Label for="file">
+                                        <span class="max-md:hidden">Import Data</span>
+                                        <Upload class="size-4 md:ml-2" />
+                                    </Label>
+                                    <Input id="file" type="file" :accept="Object.keys(rdfFormats).map(ext => `.${ext}`).join(',')" hidden @change="uploadFile" />
+                                </Button>
+                                <TooltipProvider>
+                                    <Tooltip>
+                                        <TooltipTrigger class="max-md:hidden cursor-help">
+                                            <Info class="size-4 text-muted-foreground" />
+                                        </TooltipTrigger>
+                                        <TooltipContent>
+                                            <div>Supports {{ Object.keys(rdfFormats).map(ext => `.${ext}`).join(', ') }} files</div>
+                                        </TooltipContent>
+                                    </Tooltip>
+                                </TooltipProvider>
+                            </div>
+                        </div>
+                        <div class="flex flex-col items-center justify-center">
+                            <p>If you would like to see an example before you begin, click "Load Example" below.</p>
+                            <DropdownMenu>
+                                <div class="flex flex-col max-w-min">
+                                    <DropdownMenuTrigger asChild>
+                                        <Button variant="secondary">
+                                            <span class="md:hidden">Eg</span>
+                                            <span class="max-md:hidden">Load Example</span>
+                                            <ChevronDown class="size-4 md:ml-2" />
+                                        </Button>
+                                    </DropdownMenuTrigger>
+                                </div>
+                                <DropdownMenuContent class="max-w-80">
+                                    <DropdownMenuItem v-for="example in exampleData" class="cursor-pointer flex flex-col items-start" @select="loadExample(example)">
+                                        <span class="line-clamp-1">{{ example.label }}</span>
+                                        <span v-if="example.description" class="text-xs italic text-muted-foreground line-clamp-1">{{ example.description }}</span>
+                                    </DropdownMenuItem>
+                                </DropdownMenuContent>
+                            </DropdownMenu>
+                        </div>
                     </EmptyContent>
                 </Empty>
             </template>
@@ -293,9 +304,31 @@ onMounted(async () => {
                         </EmptyDescription>
                     </EmptyHeader>
                     <EmptyContent class="flex flex-row flex-wrap items-center justify-center">
-                        <Button variant="secondary" @click="downloadFile">
-                            Save<span class="hidden md:flex">File</span> <Download class="size-4" />
-                        </Button>
+                        <ButtonGroup>
+                            <Button variant="secondary" @click="downloadFile">
+                                <Download class="size-4" />
+                                Save<span class="hidden md:flex"> File</span>
+                                <span class="text-xs text-muted-foreground">(.{{ downloadFormat }})</span>
+                            </Button>
+                            <ButtonGroupSeparator />
+                            <DropdownMenu>
+                                <DropdownMenuTrigger asChild>
+                                    <Button variant="secondary" size="icon">
+                                        <ChevronDown />
+                                    </Button>
+                                </DropdownMenuTrigger>
+                                <DropdownMenuContent align="end">
+                                    <DropdownMenuRadioGroup v-model="downloadFormat">
+                                        <DropdownMenuLabel class="text-xs text-muted-foreground">
+                                            Download Format
+                                        </DropdownMenuLabel>
+                                        <DropdownMenuRadioItem v-for="({ title, format }, extension) in rdfFormats" :value="extension">
+                                            {{ title }} <span class="text-xs text-muted-foreground">(.{{ extension }})</span>
+                                        </DropdownMenuRadioItem>
+                                    </DropdownMenuRadioGroup>
+                                </DropdownMenuContent>
+                            </DropdownMenu>
+                        </ButtonGroup>
                         <!--						<Button variant="default" title="Not yet implemented" disabled> -->
                         <!--							Submit <Send class="size-4" /> -->
                         <!--						</Button> -->

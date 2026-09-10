@@ -499,10 +499,24 @@ export const STEP_CONFIG: StepConfig = {
             class: "grid grid-cols-1 md:grid-cols-2 gap-6",
         },
         {
+            id: "agentInfo",
+            label: "People & Orgs",
+            description: "The people and organisations - the \"Agents\" - who play a role with respect to the data, such as owner, publisher, or creator. A \"Role\" must be assigned to the Agent.",
+            info: "Documenting agents and their roles helps users understand the dataset’s provenance, stewardship, and governance.",
+            class: "grid grid-cols-1 md:grid-cols-2 gap-6",
+        },
+        {
             id: "dates",
             label: "Dates",
             description: "The dates the dataset was created, modified, and/or published, plus the period of time the data's content covers. Either of YYYY, MM/YYYY or DD/MM/YYYY are supported.",
             info: "Date information provides important information about context, helping users understand when the data was created, published, updated, and what period it represents.",
+            class: "grid grid-cols-1 md:grid-cols-2 gap-6",
+        },
+        {
+            id: "spatial",
+            label: "Spatial",
+            description: "The geographic area the data covers.",
+            info: "Recording geographic information improves dataset discovery and helps users identify the places and regions represented in the data.",
             class: "grid grid-cols-1 md:grid-cols-2 gap-6",
         },
         {
@@ -517,20 +531,6 @@ export const STEP_CONFIG: StepConfig = {
             label: "Policies",
             description: "Any policies, Indigenous-specific or generic institutional, that govern this data.",
             info: "Documenting relevant policies supports transparency, compliance, and responsible data stewardship.",
-            class: "grid grid-cols-1 md:grid-cols-2 gap-6",
-        },
-        {
-            id: "agentInfo",
-            label: "People & Orgs",
-            description: "The people and organisations - the \"Agents\" - who play a role with respect to the data, such as owner, publisher, or creator. A \"Role\" must be assigned to the Agent.",
-            info: "Documenting agents and their roles helps users understand the dataset’s provenance, stewardship, and governance.",
-            class: "grid grid-cols-1 md:grid-cols-2 gap-6",
-        },
-        {
-            id: "spatial",
-            label: "Spatial",
-            description: "The geographic area the data covers.",
-            info: "Recording geographic information improves dataset discovery and helps users identify the places and regions represented in the data.",
             class: "grid grid-cols-1 md:grid-cols-2 gap-6",
         },
         {
