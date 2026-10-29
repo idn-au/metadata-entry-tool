@@ -58,7 +58,9 @@ function scrollToHelp() {
         Watch the IDN Metadata Entry Tool Tutorial
     </h3>
     <div class="max-w-2xl mx-auto">
-        <iframe class="rounded-xl overflow-hiddenborder aspect-video h-auto w-full" src="https://www.youtube.com/embed/6UXqMmZgRvk" width="560" height="315" frameborder="0" referrerpolicy="strict-origin-when-cross-origin" allow="autoplay; fullscreen; picture-in-picture; clipboard-write; encrypted-media; web-share" allowfullscreen />
+        <ClientOnly>
+		    <iframe class="rounded-xl overflow-hiddenborder aspect-video h-auto w-full" src="https://www.youtube.com/embed/6UXqMmZgRvk" width="560" height="315" frameborder="0" referrerpolicy="strict-origin-when-cross-origin" allow="autoplay; fullscreen; picture-in-picture; clipboard-write; encrypted-media; web-share" allowfullscreen />
+        </ClientOnly>
     </div>
 </template>
 
