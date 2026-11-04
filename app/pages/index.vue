@@ -59,7 +59,7 @@ function scrollToHelp() {
     </h3>
     <div class="max-w-2xl mx-auto">
         <ClientOnly>
-		    <iframe class="rounded-xl overflow-hiddenborder aspect-video h-auto w-full" src="https://www.youtube.com/embed/6UXqMmZgRvk" width="560" height="315" frameborder="0" referrerpolicy="strict-origin-when-cross-origin" allow="autoplay; fullscreen; picture-in-picture; clipboard-write; encrypted-media; web-share" allowfullscreen />
+            <iframe class="rounded-xl overflow-hiddenborder aspect-video h-auto w-full" src="https://www.youtube.com/embed/6UXqMmZgRvk" width="560" height="315" frameborder="0" referrerpolicy="strict-origin-when-cross-origin" allow="autoplay; fullscreen; picture-in-picture; clipboard-write; encrypted-media; web-share" allowfullscreen />
         </ClientOnly>
     </div>
 </template>

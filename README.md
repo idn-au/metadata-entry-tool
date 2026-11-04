@@ -11,6 +11,9 @@ Currently this tool is for testing out and understanding the IDN Catalogue Profi
 ## Developing
 
 ### Install & Run
+> [!IMPORTANT]
+> Installing this repo locally requires installing `@idn-au` NPM packages on the GitHub registry, which requires a token with permissions to access. Read the [GitHub docs](https://docs.github.com/en/packages/working-with-a-github-packages-registry/working-with-the-npm-registry#installing-a-package) for more info.
+
 To install dependencies, run:
 
 ```bash
