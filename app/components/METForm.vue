@@ -13,7 +13,7 @@ import { EmptyContent, EmptyDescription, EmptyHeader, EmptyMedia, EmptyTitle } f
 
 const SAVE_TO_LOCALSTORAGE = true;
 
-const colorMode = useColorMode();
+// const colorMode = useColorMode();
 
 const registry: Registry = {
     iri: REGISTRY.iri,
@@ -356,7 +356,7 @@ onMounted(async () => {
                         readonly
                         hideTheme
                         hideLanguage
-                        :theme="colorMode.unknown || colorMode.value === 'light' ? 'light' : 'dark'"
+                        theme="light"
                         :downloadFilename="data.title || 'metadata'"
                     />
                 </Modal>

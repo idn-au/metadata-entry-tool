@@ -6,10 +6,44 @@ a:not(header a):not(.btn):hover {
     text-decoration: underline;
 } */
 
-body {
-    font-family: "Open Sans", sans-serif;
-}
+/*body {*/
+/*    font-family: "Open Sans", sans-serif;*/
+/*}*/
 
 .stroke-muted:not(.dark .stroke-muted) {
     stroke: color-mix(in oklab, var(--color-muted-foreground) 10%, transparent);
+}
+
+/* temp fixes for idn-lib CSS unnecessarily applying to accordions, modals, etc. */
+[data-orientation="vertical"] h4 {
+    font-family: unset;
+    font-size: unset;
+    font-weight: bold;
+
+    &:not([data-state="active"] h4) {
+        color: unset;
+    }
+}
+
+[role="group"] p {
+    margin: 0;
+}
+
+[role="dialog"] h2 {
+    margin: 0;
+    font-size: 1.5rem;
+}
+
+[data-slot="accordion-item"] h3 {
+    font-family:
+        Open Sans,
+        sans-serif;
+    font-size: 1rem;
+    font-weight: bold;
+    color: unset;
+    margin: 0;
+}
+
+[data-slot="accordion-item"] p {
+    margin: 0;
 }
