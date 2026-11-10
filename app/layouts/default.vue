@@ -19,7 +19,6 @@ import { Acknowledgement, ARDCFooter, IDCFooter, IDCHeader, IDCPageHeader, Scrol
             </div>
         </main>
         <Acknowledgement />
-        <ARDCFooter />
         <IDCFooter />
     </div>
     <ScrollToTopButton />
