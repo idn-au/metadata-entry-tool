@@ -9,3 +9,5 @@ allowBuilds:
   esbuild: true
   sharp: true
   vue-demi: true
+minimumReleaseAgeExclude:
+  - "@idn-au/idn-lib@1.0.2"
