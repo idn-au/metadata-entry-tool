@@ -5,10 +5,7 @@ allowBuilds:
   "@kurrawongai/kai-ui": true
   "@parcel/watcher": true
   "@vulptech/vt-form": true
+  core-js: true
   esbuild: true
   sharp: true
   vue-demi: true
-minimumReleaseAgeExclude:
-  - '@idn-au/score-component-lib@0.5.0'
-  - '@idn-au/scores-calculator-js@0.5.0'
-  - "@idn-au/idn-lib@1.0.1"

@@ -109,7 +109,7 @@ async function rdfToData(rdf: string, format: Format) {
 
     // data.value = schemaCreateEmptyObject();
     if (!initialised) {
-        await init("https://cdn.jsdelivr.net/npm/oxigraph@0.5.9/web_bg.wasm");
+        await init("https://cdn.jsdelivr.net/npm/oxigraph@0.5.13/web_bg.wasm");
         initialised = true;
     }
     const store = new oxigraph.Store();
@@ -127,7 +127,7 @@ const debouncedSerialiseRDF = useDebounceFn(async (newValue: typeof data.value) 
 
     // N-Quads -> Turtle - Oxigraph JS doesn't serialize prefixes or compact [] bnodes yet
     if (!initialised) {
-        await init("https://cdn.jsdelivr.net/npm/oxigraph@0.5.9/web_bg.wasm");
+        await init("https://cdn.jsdelivr.net/npm/oxigraph@0.5.13/web_bg.wasm");
         initialised = true;
     }
     const store = new oxigraph.Store();
@@ -150,7 +150,7 @@ function sparqlQuery(store: oxigraph.Store, query: string, ask: boolean = false)
 }
 
 async function doScoring(scoringObj: ScoreCalculator, rdf: string) {
-    await init({ module_or_path: "https://cdn.jsdelivr.net/npm/oxigraph@0.5.9/web_bg.wasm" });
+    await init({ module_or_path: "https://cdn.jsdelivr.net/npm/oxigraph@0.5.13/web_bg.wasm" });
     const store = new oxigraph.Store();
     store.load(rdf, { format: "text/turtle" });
 
